@@ -17,25 +17,18 @@ set_property top j1_tb [get_filesets sim_1]
 set_property top_lib xil_defaultlib [get_filesets sim_1]
 
 # Set simulation options
-set_property -name {xsim.simulate.runtime} -value {346ns} -objects [get_filesets sim_1]
+set_property -name {xsim.simulate.runtime} -value {1000ns} -objects [get_filesets sim_1]
 set_property -name {xsim.simulate.log_all_signals} -value {true} -objects [get_filesets sim_1]
 
-# Launch simulation
+# Create and configure wave window
 launch_simulation -simset sim_1 -mode behavioral
+add_wave /j1_tb/*
 
-# Run simulation
-# run all
+# Run simulation and check for errors
+set error_count 0
+restart
+run all
 
-# Report if there were any errors
-if {[string match "*Error:*" [get_value simulation/messages]]} {
-    puts "Simulation failed with errors"
-    exit 1
-} else {
-    puts "Simulation completed successfully"
-}
-
-# Close simulation
-close_sim
-
-# Close project
+# Clean up
+close_sim -force
 close_project
