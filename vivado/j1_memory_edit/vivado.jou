@@ -1,0 +1,37 @@
+#-----------------------------------------------------------
+# Vivado v2024.1.2 (64-bit)
+# SW Build 5164865 on Thu Sep  5 14:37:11 MDT 2024
+# IP Build 5164407 on Fri Sep  6 08:18:11 MDT 2024
+# SharedData Build 5164864 on Thu Sep 05 13:09:09 MDT 2024
+# Start of session at: Sun Dec 22 14:41:11 2024
+# Process ID: 34472
+# Current directory: C:/Dev/J1_debug/vivado/j1_memory_edit
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent17336 C:\Dev\J1_debug\vivado\j1_memory_edit\j1_memory_edit.xpr
+# Log file: C:/Dev/J1_debug/vivado/j1_memory_edit/vivado.log
+# Journal file: C:/Dev/J1_debug/vivado/j1_memory_edit\vivado.jou
+# Running On        :bbhome
+# Platform          :Windows Server 2016 or Windows 10
+# Operating System  :22631
+# Processor Detail  :13th Gen Intel(R) Core(TM) i9-13900HX
+# CPU Frequency     :2419 MHz
+# CPU Physical cores:24
+# CPU Logical cores :32
+# Host memory       :34086 MB
+# Swap memory       :2147 MB
+# Total Virtual     :36234 MB
+# Available Virtual :12617 MB
+#-----------------------------------------------------------
+start_gui
+open_project C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.xpr
+update_compile_order -fileset sources_1
+set_property -dict [list \
+  CONFIG.Coe_File {C:/Dev/J1_debug/build/ram.coe} \
+  CONFIG.Fill_Remaining_Memory_Locations {true} \
+] [get_ips j1_memory]
+generate_target all [get_files  C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci]
+export_ip_user_files -of_objects [get_files C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci] -no_script -sync -force -quiet
+export_simulation -of_objects [get_files C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci] -directory C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files/sim_scripts -ip_user_files_dir C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files -ipstatic_source_dir C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files/ipstatic -lib_map_path [list {modelsim=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/modelsim} {questa=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/questa} {riviera=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/riviera} {activehdl=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/activehdl}] -use_ip_compiled_libs -force -quiet
+set_property CONFIG.Coe_File {C:/Dev/J1_debug/build/stack_test.coe} [get_ips j1_memory]
+generate_target all [get_files  C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci]
+export_ip_user_files -of_objects [get_files C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci] -no_script -sync -force -quiet
+export_simulation -of_objects [get_files C:/Dev/J1_debug/ip_repo/j1_memory/j1_memory.xci] -directory C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files/sim_scripts -ip_user_files_dir C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files -ipstatic_source_dir C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.ip_user_files/ipstatic -lib_map_path [list {modelsim=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/modelsim} {questa=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/questa} {riviera=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/riviera} {activehdl=C:/Dev/J1_debug/vivado/j1_memory_edit/j1_memory_edit.cache/compile_simlib/activehdl}] -use_ip_compiled_libs -force -quiet

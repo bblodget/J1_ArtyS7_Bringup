@@ -1,0 +1,4 @@
+*.hex
+*.lst
+*.mem
+ram.v

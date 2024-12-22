@@ -108,7 +108,7 @@ output wire [15 : 0] doutb;
     .C_LOAD_INIT_FILE(1),
     .C_INIT_FILE_NAME("j1_memory.mif"),
     .C_INIT_FILE("j1_memory.mem"),
-    .C_USE_DEFAULT_DATA(0),
+    .C_USE_DEFAULT_DATA(1),
     .C_DEFAULT_DATA("0"),
     .C_HAS_RSTA(0),
     .C_RST_PRIORITY_A("CE"),

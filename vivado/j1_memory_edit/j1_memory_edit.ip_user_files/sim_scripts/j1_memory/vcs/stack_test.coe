@@ -1,0 +1,17 @@
+memory_initialization_radix=16;
+memory_initialization_vector=
+8001,
+8002,
+8003,
+8004,
+8005,
+8006,
+8007,
+8008,
+8009,
+800A,
+800B,
+800C,
+800D,
+800E,
+800F;

@@ -1,8 +1,4 @@
-
 `default_nettype none
-
-`include "../common-verilog/stack2.v"
-`include "../common-verilog/stack3.v"
 
 module j1(
   input wire clk,
@@ -24,9 +20,11 @@ module j1(
 
     wire mem_wr;
     wire [12:0] code_addr;
-    reg  [15:0] insn_from_memory;
-    reg  [15:0] fetch_from_memory;
+    wire  [15:0] insn_from_memory;
+    wire  [15:0] fetch_from_memory;
 
+    // Original memory implementation
+    /*
     reg [15:0] mem [0:MEMWORDS-1]; initial $readmemh("build/iceimage.hex", mem);
 
     always @(posedge clk) begin
@@ -34,6 +32,23 @@ module j1(
         if (mem_wr) mem[io_addr[13:1]] <= io_dout;
         fetch_from_memory <= mem[st0N[13:1]];
     end
+    */
+
+    // New block RAM implementation
+    j1_memory ram (
+        .clka(clk),                    // input wire clka
+        .addra(code_addr[11:0]),       // input wire [11:0] addra
+        .douta(insn_from_memory),      // output wire [15:0] douta
+        .wea(1'b0),                    // input wire [0:0] wea
+        .dina(16'b0),                  // input wire [15:0] dina (unused for read-only port)
+        
+        .clkb(clk),                    // input wire clkb
+        .addrb(mem_wr ? io_addr[12:1] : st0N[12:1]),  // input wire [11:0] addrb
+        .dinb(io_dout),                // input wire [15:0] dinb
+        .doutb(fetch_from_memory),     // output wire [15:0] doutb
+        .web(mem_wr)                   // input wire [0:0] web
+    );
+
 
   // ######   PROCESSOR   #####################################
 
