@@ -129,7 +129,7 @@ module j1_tb();
 
     // Optional: Monitor stack operations
     initial begin
-        $monitor("Time=%0t st0=%h dsp=%0d", $time, uut.st0, uut.dsp);
+        $monitor("Time=%0t st0=%h dsp=%0d insn=%h", $time, uut.st0, uut.dsp, uut.insn);
     end
 
 endmodule

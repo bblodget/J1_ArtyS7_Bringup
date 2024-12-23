@@ -19,6 +19,7 @@ module top (
     
     // UART interface signals
     wire [15:0] uart_dout;     // Data from UART to CPU
+    wire [15:0] uart_dout_cpu;     // Data from UART to CPU
     wire [15:0] uart_din;      // Data from CPU to UART
     wire [15:0] uart_addr;     // Address from CPU
     wire uart_rd;              // Read strobe
@@ -52,7 +53,7 @@ module top (
         .io_wr(uart_wr),
         .io_addr(uart_addr),
         .io_dout(uart_din),     // CPU -> UART
-        .io_din(uart_dout),     // UART -> CPU
+        .io_din(uart_dout_cpu),     // UART -> CPU
         
         .interrupt_request(1'b0), // No interrupts for now
 
@@ -83,5 +84,8 @@ module top (
 
     // Zero-extend the UART rx_data to 16 bits
     assign uart_dout[15:8] = 8'b0;
+
+    // Zero the data if not valid
+    assign uart_dout_cpu[15:0] = uart_valid ? uart_dout[15:0] : 16'h0000;
 
 endmodule
