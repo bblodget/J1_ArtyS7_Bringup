@@ -1,6 +1,6 @@
 # J1 Forth Processor on Spartan-7
 
-This project implements the J1 Forth processor and Mecrisp-Ice Forth system on an AMD/Xilinx Spartan-7 FPGA using Vivado tools. It demonstrates running Mecrisp-Ice on modern FPGA toolchains while maintaining compatibility with the original memory-mapped I/O architecture.
+This repository is a test area for porting the J1 Forth processor and Mecrisp-Ice Forth system to an AMD/Xilinx Spartan-7 FPGA using Vivado tools. 
 
 ## Features
 
