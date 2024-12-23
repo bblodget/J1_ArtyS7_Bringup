@@ -27,21 +27,28 @@ module top (
     wire uart_valid;           // UART has data available
     wire uart_busy;            // UART is busy transmitting
 
-    // UART address decoding
-    localparam UART_RX_ADDR    = 16'h4000;  // Read UART data
-    localparam UART_TX_ADDR    = 16'h4001;  // Write UART data
-    localparam UART_VALID_ADDR = 16'h4002;  // Check if UART has data
-    localparam UART_BUSY_ADDR  = 16'h4003;  // Check if UART is busy
-    
-    wire uart_rx_sel   = (uart_addr == UART_RX_ADDR);
-    wire uart_tx_sel   = (uart_addr == UART_TX_ADDR);
-    wire uart_valid_sel = (uart_addr == UART_VALID_ADDR);
-    wire uart_busy_sel  = (uart_addr == UART_BUSY_ADDR);
-    
+    // UART and system address decoding
+    localparam UART_ADDR      = 16'h1000;  // UART RX/TX at 0x1000
+    localparam MISC_IN_ADDR   = 16'h2000;  // UART status at 0x2000
+    localparam TICKS_ADDR     = 16'h4000;  // Ticks counter/control at 0x4000
+    localparam CYCLES_ADDR    = 16'h8000;  // Cycles counter at 0x8000
+
+    // Add registers for ticks and cycles
+    reg [15:0] ticks;
+    reg [15:0] cycles;
+    wire [16:0] ticks_plus_1 = ticks + 1;
+    wire interrupt;
+
+    // Address decoding
+    wire uart_sel    = (uart_addr == UART_ADDR);
+    wire misc_in_sel = (uart_addr == MISC_IN_ADDR);
+    wire ticks_sel   = (uart_addr == TICKS_ADDR);
+    wire cycles_sel  = (uart_addr == CYCLES_ADDR);
+
     // Decode UART read/write enables
-    wire uart_rd_en = uart_rd & uart_rx_sel;
-    wire uart_wr_en = uart_wr & uart_tx_sel;
-    
+    wire uart_rd_en = uart_rd & uart_sel;
+    wire uart_wr_en = uart_wr & uart_sel;
+
     // Use 12MHz clock directly
     assign sys_clk = clk_12mhz;
     assign sys_rst_n = ~reset;
@@ -59,7 +66,8 @@ module top (
         .io_dout(uart_din),     // CPU -> UART
         .io_din(uart_dout_cpu),     // UART -> CPU
         
-        .interrupt_request(1'b0), // No interrupts for now
+        //.interrupt_request(1'b0), // No interrupts for now
+        .interrupt_request(interrupt), // No interrupts for now
 
         // Connect st0 for LED display
         .st0(cpu_st0)           // Add port for st0
@@ -90,9 +98,31 @@ module top (
     assign uart_dout[15:8] = 8'b0;
 
     // Status registers
-    assign uart_dout_cpu = uart_rx_sel ? (uart_valid ? uart_dout : 16'h0000) :
-                          uart_valid_sel ? {15'b0, uart_valid} :
-                          uart_busy_sel ? {15'b0, uart_busy} :
-                          16'h0000;
+    assign uart_dout_cpu = 
+        uart_sel ? (uart_valid ? {8'b0, uart_dout[7:0]} : 16'h0000) :
+        misc_in_sel ? {14'b0, uart_valid, !uart_busy} :
+        ticks_sel ? ticks :
+        cycles_sel ? cycles :
+        16'h0000;
+
+    // Ticks and cycles counter logic
+    always @(posedge sys_clk) begin
+        if (!sys_rst_n) begin
+            ticks <= 16'h0;
+            cycles <= 16'h0;
+        end else begin
+            // Handle ticks counter
+            if (uart_wr && ticks_sel)
+                ticks <= uart_din;  // Set ticks value
+            else
+                ticks <= ticks_plus_1[15:0];  // Increment ticks
+
+            // Increment cycles counter
+            cycles <= cycles + 1;
+        end
+    end
+
+    // Generate interrupt on ticks overflow (if needed)
+    assign interrupt = ticks_plus_1[16];  // You may need to connect this to the CPU
 
 endmodule
