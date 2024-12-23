@@ -55,3 +55,7 @@ This project requires:
 - [J1 Forth Processor](https://excamera.com/sphinx/fpga-j1.html)
 - [J1a SwapForth built with IceStorm](https://excamera.com/sphinx/article-j1a-swapforth.html)
 - [SwapForth](https://github.com/jamesbowman/swapforth)
+- [Arty-S7 Official Product Page](https://digilent.com/shop/arty-s7-spartan-7-fpga-development-board/)
+- [Arty-S7 Reference Manual](https://digilent.com/reference/programmable-logic/arty-s7/reference-manual)
+- [Arty-S7 Resource Center](https://digilent.com/reference/programmable-logic/arty-s7/start)
+- [Arty-S7 Schematics](https://digilent.com/reference/programmable-logic/arty-s7/schematic)
