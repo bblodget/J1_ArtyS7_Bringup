@@ -58,4 +58,3 @@ This project requires:
 - [Arty-S7 Official Product Page](https://digilent.com/shop/arty-s7-spartan-7-fpga-development-board/)
 - [Arty-S7 Reference Manual](https://digilent.com/reference/programmable-logic/arty-s7/reference-manual)
 - [Arty-S7 Resource Center](https://digilent.com/reference/programmable-logic/arty-s7/start)
-- [Arty-S7 Schematics](https://digilent.com/reference/programmable-logic/arty-s7/schematic)
