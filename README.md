@@ -26,19 +26,50 @@ This project requires:
 - Vivado 2024.1 or later
 - Python 3.x for assembler tools
 - Digilent Arty S7-50 board
+- GNU Make
+- Mecrisp-ICE Cross Compiler
 
 ### Build Steps
 
-1. Create block RAM IP using Block Memory Generator
-   - Configure as True Dual Port RAM
-   - 16KB depth
-   - 16-bit width
-   - Load initialization file (.coe format)
+1. Generate Hex File
+   There are two ways to generate the hex file:
+   
+   a. Using Mecrisp-Ice Cross Compiler (Recommended)
+   - Follow the Mecrisp-Ice installation instructions
+   - See `verilator-16bit-dualport/compilenucleus` for an example compilation script
+   - This will generate a complete Forth system hex file
+   
+   b. Using J1 Assembler (Work in Progress)
+   - Use the provided `asm.py` script to compile J1 assembly
+   - Note: This is still under development and probably won't work.
 
-2. Build Vivado Project
-   - Add source files
-   - Generate bitstream
-   - Program device
+2. Generate Memory Initialization File
+   - Use the provided Python tools to convert your hex file to MIF format
+   - Copy the generated file (e.g., `build/iceimage.mif`) to `ip_repo/j1_memory/j1_memory.mif`
+
+3. Create and Build Vivado Projects
+   ```bash
+   cd vivado
+   # Create memory editing project (optional)
+   make memory
+   
+   # Create implementation project
+   make top
+   ```
+
+4. Program the Device
+   - Open Vivado
+   - Connect to the Arty S7-50 board
+   - Program the device with the generated bitstream
+
+### Cleaning Build Files
+
+```bash
+cd vivado
+make clean
+```
+
+This will remove all generated Vivado project files and logs.
 
 ## Tools
 
