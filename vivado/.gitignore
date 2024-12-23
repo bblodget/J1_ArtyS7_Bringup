@@ -1,0 +1,12 @@
+# Vivado project directories
+j1_memory_edit/
+j1_top/
+
+# Vivado temporary directory
+.Xil/
+
+# Vivado log files
+vivado.jou
+vivado.log
+*.backup.jou
+*.backup.log
