@@ -10,7 +10,9 @@ module j1(
   output wire [15:0] io_dout,
   input  wire [15:0] io_din,
 
-  input  wire interrupt_request
+  input  wire interrupt_request,
+
+  output wire [15:0] st0
 );
 
   parameter MEMWORDS = 8192;       // Maximum of 8k words of 16 bits = 16 kb.
