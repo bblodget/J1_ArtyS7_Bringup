@@ -28,11 +28,15 @@ module top (
     wire uart_busy;            // UART is busy transmitting
 
     // UART address decoding
-    localparam UART_RX_ADDR = 16'h4000;  // Read UART data
-    localparam UART_TX_ADDR = 16'h4001;  // Write UART data
+    localparam UART_RX_ADDR    = 16'h4000;  // Read UART data
+    localparam UART_TX_ADDR    = 16'h4001;  // Write UART data
+    localparam UART_VALID_ADDR = 16'h4002;  // Check if UART has data
+    localparam UART_BUSY_ADDR  = 16'h4003;  // Check if UART is busy
     
-    wire uart_rx_sel = (uart_addr == UART_RX_ADDR);
-    wire uart_tx_sel = (uart_addr == UART_TX_ADDR);
+    wire uart_rx_sel   = (uart_addr == UART_RX_ADDR);
+    wire uart_tx_sel   = (uart_addr == UART_TX_ADDR);
+    wire uart_valid_sel = (uart_addr == UART_VALID_ADDR);
+    wire uart_busy_sel  = (uart_addr == UART_BUSY_ADDR);
     
     // Decode UART read/write enables
     wire uart_rd_en = uart_rd & uart_rx_sel;
@@ -85,7 +89,10 @@ module top (
     // Zero-extend the UART rx_data to 16 bits
     assign uart_dout[15:8] = 8'b0;
 
-    // Zero the data if not valid
-    assign uart_dout_cpu[15:0] = uart_valid ? uart_dout[15:0] : 16'h0000;
+    // Status registers
+    assign uart_dout_cpu = uart_rx_sel ? (uart_valid ? uart_dout : 16'h0000) :
+                          uart_valid_sel ? {15'b0, uart_valid} :
+                          uart_busy_sel ? {15'b0, uart_busy} :
+                          16'h0000;
 
 endmodule
