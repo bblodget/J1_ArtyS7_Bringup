@@ -73,9 +73,39 @@ This will remove all generated Vivado project files and logs.
 
 ## Tools
 
-- J1 Assembler (Python) - Work in progress
-- Hex to COE converter for Vivado memory initialization
-- Hex to MIF converter for other tools
+### J1 Assembler (asm.py)
+A Python-based assembler for the J1 processor (work in progress).
+
+Usage:
+```bash
+python build/asm.py input.asm > output.hex
+```
+
+Supports basic J1 instructions:
+- NOP, DUP, DROP
+- IO@, IO!
+- LIT (immediate values)
+- JMP, CALL, RET
+- 0BRANCH (conditional jumps)
+
+### Memory Initialization File Converters (hex_to_coe.py)
+Converts hex files to Vivado COE (coefficient) or MIF (memory initialization) formats.
+
+Usage:
+```bash
+# Generate COE file (default)
+python build/hex_to_coe.py input.hex output.coe
+
+# Generate MIF file
+python build/hex_to_coe.py input.hex output.mif --format mif
+```
+
+Features:
+- Supports both COE and MIF output formats
+- Automatically handles comments (lines starting with //)
+- Skips empty lines
+- COE format suitable for Vivado IP integration
+- MIF format compatible with other tools
 
 ## References
 
