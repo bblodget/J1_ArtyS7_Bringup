@@ -2,6 +2,9 @@
 
 A collection of tools for working with the J1 Forth CPU.
 
+These tools are a work in progress.  They are in development and
+are not even in an alpha state.
+
 ## Installation
 
 I like to create a python virtual environment at the top
