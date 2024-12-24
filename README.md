@@ -73,12 +73,26 @@ This will remove all generated Vivado project files and logs.
 
 ## Tools
 
-### J1 Assembler (asm.py)
+The project includes Python-based tools for assembling J1 code and converting memory formats. These are available in the `j1tools` package.
+
+### Installation
+
+```bash
+# Create and activate Python virtual environment
+python -m venv venv
+source venv/Scripts/activate  # For Windows
+source venv/bin/activate     # For Linux/MacOS
+
+# Install j1tools package
+cd j1tools
+pip install -e .
+```
+
+### J1 Assembler
 A Python-based assembler for the J1 processor (work in progress).
 
-Usage:
 ```bash
-python build/asm.py input.asm > output.hex
+j1asm input.asm > output.hex
 ```
 
 Supports basic J1 instructions:
@@ -88,16 +102,15 @@ Supports basic J1 instructions:
 - JMP, CALL, RET
 - 0BRANCH (conditional jumps)
 
-### Memory Initialization File Converters (hex_to_coe.py)
+### Memory Format Converters
 Converts hex files to Vivado COE (coefficient) or MIF (memory initialization) formats.
 
-Usage:
 ```bash
-# Generate COE file (default)
-python build/hex_to_coe.py input.hex output.coe
+# Generate COE file
+hex2coe input.hex > output.coe
 
 # Generate MIF file
-python build/hex_to_coe.py input.hex output.mif --format mif
+hex2mif input.hex > output.mif
 ```
 
 Features:
