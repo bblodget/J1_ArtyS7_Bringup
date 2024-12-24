@@ -89,6 +89,9 @@ python -m pytest tests/
 ## References
 
 For more details on the J1 instruction set and architecture, see:
-- [J1 Forth Processor](https://excamera.com/sphinx/fpga-j1.html)
-- [doc/assembly.md](doc/assembly.md) for detailed assembly syntax
+- [doc/j1.pdf](../doc/j1.pdf) the original J1 paper.
+- [doc/j1a-reference.pdf](../doc/j1a-reference.pdf) the J1a reference manual.
+- [doc/assembly.md](../doc/assembly.md) for detailed assembly syntax
+- [J1a SwapForth built with IceStorm](https://excamera.com/sphinx/article-j1a-swapforth.html)
+- [SwapForth](https://github.com/jamesbowman/swapforth)
 
