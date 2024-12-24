@@ -35,3 +35,7 @@ vivado/j1_top/
 
 # Virtual Environment
 venv/
+
+# Download
+download/
+

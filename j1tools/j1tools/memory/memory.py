@@ -36,18 +36,29 @@ def hex_to_mif(hex_file):
         print(binary)
 
 
+def mif_to_mem(mif_file):
+    """Convert MIF format (binary) to MEM format and print to stdout"""
+    with open(mif_file, "r") as f:
+        binary_data = [line.strip() for line in f if line.strip()]
+
+    # Convert each binary line to hex in MEM format
+    for addr, binary in enumerate(binary_data):
+        hex_value = format(int(binary, 2), "04X")
+        print(f"@{addr:04X} {hex_value}")
+
+
 def main():
-    parser = argparse.ArgumentParser(
-        description="Convert hex file to COE or MIF format"
-    )
-    parser.add_argument("hex_file", help="Input hex file")
+    parser = argparse.ArgumentParser(description="Convert between memory file formats")
+    parser.add_argument("input_file", help="Input file")
     args = parser.parse_args()
 
     # Determine format based on command name
     if sys.argv[0].endswith("hex2coe"):
-        hex_to_coe(args.hex_file)
-    else:
-        hex_to_mif(args.hex_file)
+        hex_to_coe(args.input_file)
+    elif sys.argv[0].endswith("hex2mif"):
+        hex_to_mif(args.input_file)
+    elif sys.argv[0].endswith("mif2mem"):
+        mif_to_mem(args.input_file)
 
 
 if __name__ == "__main__":

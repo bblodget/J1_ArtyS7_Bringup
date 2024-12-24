@@ -10,6 +10,7 @@ setup(
             "j1asm=j1tools.assembler.asm:main",
             "hex2coe=j1tools.memory.memory:main",
             "hex2mif=j1tools.memory.memory:main",
+            "mif2mem=j1tools.memory.memory:main",
         ],
     },
     author="Brandon Blodget",
