@@ -122,7 +122,7 @@ module top (
         end
     end
 
-    // Generate interrupt on ticks overflow (if needed)
-    assign interrupt = ticks_plus_1[16];  // You may need to connect this to the CPU
+    // Generate interrupt on ticks overflow 
+    assign interrupt = ticks_plus_1[16];  
 
 endmodule
