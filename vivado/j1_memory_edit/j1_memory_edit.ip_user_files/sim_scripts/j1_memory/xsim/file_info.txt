@@ -1,2 +1,0 @@
-j1_memory.v,verilog,xil_defaultlib,../../../../../../ip_repo/j1_memory/sim/j1_memory.v,
-glbl.v,Verilog,xil_defaultlib,glbl.v

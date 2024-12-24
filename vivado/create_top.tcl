@@ -13,14 +13,14 @@ set_property ip_repo_paths [file normalize "../ip_repo"] [current_project]
 update_ip_catalog
 
 # Add source files
-add_files -norecurse [file normalize "../top.v"]
-add_files -norecurse [file normalize "../j1-universal-16kb-dualport.v"]
-add_files -norecurse [file normalize "../uart-fifo.v"]
-add_files -norecurse [file normalize "../stack2.v"]
-add_files -norecurse [file normalize "../stack3.v"]
+add_files -norecurse [file normalize "../hdl/top.v"]
+add_files -norecurse [file normalize "../hdl/j1-universal-16kb-dualport.v"]
+add_files -norecurse [file normalize "../hdl/uart-fifo.v"]
+add_files -norecurse [file normalize "../hdl/stack2.v"]
+add_files -norecurse [file normalize "../hdl/stack3.v"]
 
 # Add constraints file
-add_files -fileset constrs_1 -norecurse [file normalize "../pinout.xdc"]
+add_files -fileset constrs_1 -norecurse [file normalize "../hdl/pinout.xdc"]
 
 # Add the j1_memory IP
 add_files -norecurse [file normalize "../ip_repo/j1_memory/j1_memory.xci"]

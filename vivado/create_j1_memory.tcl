@@ -13,9 +13,9 @@ set_property ip_repo_paths [file normalize "../ip_repo"] [current_project]
 update_ip_catalog
 
 # Add the J1 processor source
-add_files -norecurse [file normalize "../j1-universal-16kb-dualport.v"]
-add_files -norecurse [file normalize "../stack2.v"]
-add_files -norecurse [file normalize "../stack3.v"]
+add_files -norecurse [file normalize "../hdl/j1-universal-16kb-dualport.v"]
+add_files -norecurse [file normalize "../hdl/stack2.v"]
+add_files -norecurse [file normalize "../hdl/stack3.v"]
 
 # Set j1 as top module
 set_property top j1 [current_fileset]
