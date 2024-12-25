@@ -1,0 +1,4 @@
+8041  // Push 'A'
+9000  // Push UART TX address (0x1000)
+6042  // Write to IO port AND consume both stack values
+0003  // Jump to self (word address 3, this instruction)

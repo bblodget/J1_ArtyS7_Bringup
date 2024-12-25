@@ -1,14 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <MemInfo Version="1" Minor="5">
-  <Processor Endianness="Little" InstPath="my_bram">
-    <AddressSpace Name="my_local_bram" Begin="0" End="16383">
+  <Processor Endianness="Little" InstPath="my_bram_1">
+    <AddressSpace Name="my_local_bram_1" Begin="0" End="16383">
       <BusBlock>
         <BitLane MemType="RAMB36" Placement="RAMB36_X0Y7">
-          <DataWidth MSB="7" LSB="0"/>
-          <AddressRange Begin="0" End="16383"/>
-          <Parity ON="false" NumBits="0"/>
-        </BitLane>
-        <BitLane MemType="RAMB36" Placement="RAMB36_X6Y35">
           <DataWidth MSB="15" LSB="8"/>
           <AddressRange Begin="0" End="16383"/>
           <Parity ON="false" NumBits="0"/>

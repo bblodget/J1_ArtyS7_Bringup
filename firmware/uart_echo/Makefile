@@ -11,15 +11,20 @@ BUILD_DIR = build
 HEX_FILE = $(BUILD_DIR)/$(PROJ_NAME).hex
 MIF_FILE = $(BUILD_DIR)/$(PROJ_NAME).mif
 MEM_FILE = $(BUILD_DIR)/$(PROJ_NAME).mem
+COE_FILE = $(BUILD_DIR)/$(PROJ_NAME).coe
 
 BIT_FILE = $(BUILD_DIR)/j1_base.bit
 MMI_FILE = $(BUILD_DIR)/j1_base.mmi
 
 BIT_UPDATED = $(BUILD_DIR)/$(PROJ_NAME).bit
 
-.PHONY: all clean program
+.PHONY: all clean compile bram program
 
-all: $(BIT_UPDATED)
+all: compile bram
+
+compile: $(MEM_FILE) $(COE_FILE)
+
+bram: $(BIT_UPDATED)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -32,21 +37,23 @@ $(BIT_FILE): | $(BUILD_DIR)
 $(MMI_FILE): | $(BUILD_DIR)
 	cp $(BASE_MMI) $(MMI_FILE)
 
-# Assemble the source file using j1asm
+# Compile target dependencies
 $(HEX_FILE): $(PROJ_NAME).asm | $(BUILD_DIR)
 	j1asm $< > $@
 
-# Convert HEX to MIF format using hex2mif tool
 $(MIF_FILE): $(HEX_FILE)
 	@echo "Converting HEX to MIF format..."
 	hex2mif $< > $@
 
-# Convert MIF to MEM format
 $(MEM_FILE): $(MIF_FILE)
 	@echo "Converting MIF to MEM format..."
 	mif2mem $< > $@
 
-# Update bitstream with new memory contents
+$(COE_FILE): $(HEX_FILE)
+	@echo "Converting HEX to COE format..."
+	hex2coe $< > $@
+
+# BRAM update target
 $(BIT_UPDATED): $(MEM_FILE) $(BIT_FILE) $(MMI_FILE)
 	@echo "Updating bitstream with new memory contents..."
 	updatemem --meminfo $(MMI_FILE) \
@@ -56,10 +63,14 @@ $(BIT_UPDATED): $(MEM_FILE) $(BIT_FILE) $(MMI_FILE)
 		--out $(BIT_UPDATED) \
 		--force
 
-# Program the FPGA
+# Program target
 program: $(BIT_UPDATED)
 	$(VIVADO) -mode batch -nolog -nojournal -source program_fpga.tcl \
 		-tclargs $(BIT_UPDATED) $(CABLE)
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm -rf *.log
+	rm -rf *.jou
+	rm -rf *.*.log
+	rm -rf *.*.jou

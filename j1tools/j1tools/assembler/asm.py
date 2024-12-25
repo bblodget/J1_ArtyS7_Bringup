@@ -14,6 +14,7 @@ class J1Assembler:
             "IO@": 0x6D50,  # io[T] IORD alu
             "IO!": 0x6040,  # N->io[T] alu
             "RET": 0x6080,  # Return from subroutine (T RET r-1 alu)
+            "AND": 0x6203,  # N&T d-1 alu
         }
         self.labels = {}
         self.comments = {}  # Store comments for each instruction
@@ -47,7 +48,7 @@ class J1Assembler:
 
         if opcode == "LIT":
             value = int(target.replace("#", ""), 16)
-            code = 0xC000 | value  # LIT
+            code = 0x8000 | value  # LIT
             self.comments[len(self.code)] = f"Push {value:04X}"
         elif opcode == "JMP":
             addr = 0 if target is None else self.labels.get(target, 0)
