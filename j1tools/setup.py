@@ -4,7 +4,9 @@ setup(
     name="j1tools",
     version="0.1.0",
     packages=find_packages(),
-    install_requires=[],
+    install_requires=[
+        "lark>=1.1.5",
+    ],
     entry_points={
         "console_scripts": [
             "j1asm=j1tools.assembler.asm:main",

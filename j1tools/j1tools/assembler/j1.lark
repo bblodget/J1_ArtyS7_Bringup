@@ -1,0 +1,42 @@
+// J1 Assembly Grammar
+start: line*
+
+?line: empty_line
+     | comment_line
+     | code_line
+
+empty_line: NEWLINE
+comment_line: COMMENT NEWLINE
+code_line: _INDENT? (instruction | label) [COMMENT] NEWLINE
+
+label: CNAME ":"
+
+instruction: LIT immediate    // Special case for LIT
+          | basic_op         // All other instructions
+
+basic_op: BASIC_STACK_OP    // NOP, DUP, DROP, etc.
+        | STACK_MANIP       // >R, R>, R@, etc.
+        | MEM_OP           // @, !
+        | IO_OP            // IO@, IO!
+        | ALU_OP          // +, -, AND, OR, etc.
+        | CONTROL_FLOW    // JMP, CALL, 0BRANCH, RET
+
+LIT: "LIT"
+BASIC_STACK_OP: "NOP" | "DUP" | "DROP" | "OVER" | "SWAP"
+STACK_MANIP: ">R" | "R>" | "R@" | "DEPTH" | "RDEPTH"
+MEM_OP: "@" | "!"
+IO_OP: "IO@" | "IO!"
+ALU_OP: "+" | "-" | "AND" | "OR" | "XOR" | "INVERT" | "LSHIFT" | "RSHIFT" | "ARSHIFT" | "1+" | "1-"
+CONTROL_FLOW: "JMP" | "CALL" | "0BRANCH" | "RET"
+
+immediate: "#" NUMBER
+
+COMMENT: ";" /[^\n]*/
+_INDENT: /[ \t]+/
+
+%import common.CNAME
+%import common.INT -> NUMBER
+%import common.WS_INLINE
+%import common.NEWLINE
+
+%ignore WS_INLINE
