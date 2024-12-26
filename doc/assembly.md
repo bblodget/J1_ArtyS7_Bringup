@@ -63,7 +63,21 @@ U<                   ; Nu<T d-1            ; 6F03 - Unsigned less than
 JMP label           ; 0xxx - Jump to label (xxx = address)
 CALL label          ; 2xxx - Call subroutine (xxx = address)
 0BRANCH label       ; 4xxx - Jump if TOS = 0 (xxx = address)
+RET                 ; 6080 - Return from subroutine (pops return stack)
 ```
+
+## Example Subroutine
+```
+; Example subroutine that adds 1 to TOS
+add_one:
+    1+             ; 6160 - Increment top of stack
+    RET            ; 6080 - Return to caller
+
+; Call the subroutine
+    CALL add_one   ; 2xxx - Call subroutine (pushes return address to R stack)
+```
+
+Note: CALL pushes the return address onto the return stack (R stack), and RET pops it to resume execution after the CALL instruction.
 
 ## Immediate Values
 ```
