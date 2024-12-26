@@ -23,8 +23,19 @@ Format: 010x_xxxx_xxxx_xxxx  - Call
   - 000: Unconditional Jump
   - 001: Conditional Jump (jump if TOS = 0)
   - 010: Call (push return address to R stack)
-- Bits 12-0: Target address (word address)
-- Example: `0003` = Jump to word address 3
+- Bits 12-0: Target address (word address, not byte address)
+  - Each word is 16 bits
+  - Word address 1 = byte address 2
+  - Word address N = byte address N*2
+- Example: `0003` = Jump to word address 3 (byte address 6)
+
+### Memory Addressing Note
+The J1 uses word addressing for all memory operations:
+- Instructions are 16 bits (2 bytes) each
+- Memory addresses in jump/call instructions refer to word locations
+- To convert between addressing modes:
+  - Word address = Byte address ÷ 2
+  - Byte address = Word address × 2
 
 ## 3. ALU Operations (13-bit)
 ```
@@ -109,3 +120,32 @@ Data Stack (dd):
 4. `0003`: Jump
    - 0000 0000 0000 0011
    - Jump to word address 3
+
+## Program Counter and Interrupts
+
+### Program Counter (PC)
+- The PC uses byte addresses internally (unlike jump instructions which use word addresses)
+- PC[15:1] contains the byte address of the current instruction
+  - Each instruction is 2 bytes (16 bits)
+  - PC[15:1] will be even numbers (0,2,4,6...)
+  - To get word address: PC[15:1] ÷ 2
+  - Example: PC[15:1] = 6 means word address 3
+- PC[0] is used as the interrupt enable flag
+  - PC[0] = 0: Interrupts disabled
+  - PC[0] = 1: Interrupts enabled
+- When calculating next instruction:
+  - Normal execution: PC += 2 (moves to next word)
+  - Jumps/Calls: PC = {target_address × 2, interrupt_enable}
+  - Example: JMP 3 sets PC to {3 × 2, interrupt_enable} = {6, interrupt_enable}
+
+### Interrupt Handling
+- When an interrupt occurs (and enabled):
+  - PC[0] is cleared (disables nested interrupts)
+  - Current PC is pushed to return stack
+  - PC is set to interrupt vector (word address 2)
+- EINT instruction (0x6070):
+  - Sets PC[0] to 1
+  - Usually used at end of interrupt handler
+- DINT instruction (0x6060):
+  - Clears PC[0] to 0
+  - Used to disable interrupts
