@@ -1,0 +1,26 @@
+// Ignore whitespace
+%import common.WS
+%ignore WS
+
+// Define what a comment looks like and ignore it
+COMMENT: ";" /[^\n]/*
+%ignore COMMENT
+
+// Define what a number looks like
+NUMBER: "#" /[0-9]+/
+
+// Define what a label looks like
+LABEL: /[a-zA-Z][a-zA-Z0-9_]*/ ":"
+
+// Define instructions
+LIT: "LIT"
+ADD: "+"
+RET: "RET"
+
+// Define the structure of our program
+?start: program    // Added this line to define the start rule
+program: statement*
+statement: (LABEL | instruction)
+instruction: LIT NUMBER
+          | ADD
+          | RET
