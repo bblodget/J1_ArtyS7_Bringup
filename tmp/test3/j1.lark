@@ -9,18 +9,25 @@ COMMENT: ";" /[^\n]/*
 // Define what a number looks like
 NUMBER: "#" /[0-9]+/
 
-// Define what a label looks like
-LABEL: /[a-zA-Z][a-zA-Z0-9_]*/ ":"
+// Define what a label reference looks like
+LABELREF: /[a-zA-Z][a-zA-Z0-9_]*/
+
+// Define what a label looks like using LABELREF
+LABEL: LABELREF ":"
 
 // Define instructions
 LIT: "LIT"
 ADD: "+"
 RET: "RET"
+CALL: "CALL"
+JMP: "JMP"
 
 // Define the structure of our program
-?start: program    // Added this line to define the start rule
+?start: program
 program: statement*
 statement: (LABEL | instruction)
 instruction: LIT NUMBER
           | ADD
           | RET
+          | CALL LABELREF
+          | JMP LABELREF
