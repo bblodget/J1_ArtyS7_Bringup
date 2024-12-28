@@ -1,4 +1,4 @@
-from lark import Lark, Transformer, v_args
+from lark import Lark, Transformer
 from lark.lexer import Token
 
 
@@ -75,13 +75,19 @@ class J1Transformer(Transformer):
         # Remove '#' prefix and convert to integer
         return int(str(token)[1:], 10)
 
-    # No need to define NUMBER since it's already handled by HEX and DECIMAL
+    def IDENT(self, token):
+        print(f"IDENT: token={token}")
+        return str(token)
 
-    def LABEL(self, token):
+    def label(self, items):
         # Return tuple marking this as a label
-        label_name = str(token).rstrip(":")
-        print(f"LABEL: {label_name}")
+        label_name = items[0]
+        print(f"label: {label_name}")
         return ("label", label_name)
+
+    def labelref(self, items):
+        # Return the identifier for the label reference
+        return items[0]
 
 
 # Create the parser

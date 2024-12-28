@@ -10,25 +10,28 @@ COMMENT: ";" /[^\n]*/
 HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#[0-9]+/
 
-// Define what a label reference looks like
-LABELREF: /[a-zA-Z][a-zA-Z0-9_]*/
+// Define what an identifier looks like (for labels)
+IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 
-// Define what a label looks like using LABELREF
-LABEL: LABELREF ":"
-
-// Define instructions
+// Define instructions (terminals)
 LIT: "LIT"
 ADD: "+"
 RET: "RET"
 CALL: "CALL"
 JMP: "JMP"
 
-// Define the structure of our program
+// Define the structure of our program (rules)
 ?start: program
 program: statement*
-statement: (LABEL | instruction)
+statement: (label | instruction)
+
+// Label rules
+labelref: IDENT
+label: IDENT ":"
+
+// Instruction rules
 instruction: LIT (HEX | DECIMAL)
           | ADD
           | RET
-          | CALL LABELREF
-          | JMP LABELREF
+          | CALL labelref
+          | JMP labelref
