@@ -3,11 +3,12 @@
 %ignore WS
 
 // Define what a comment looks like and ignore it
-COMMENT: ";" /[^\n]/*
+COMMENT: ";" /[^\n]*/
 %ignore COMMENT
 
-// Define what a number looks like
-NUMBER: "#" /[0-9]+/
+// Define what a number looks like - treat entire number as one token
+HEX: /#\$[0-9a-fA-F]+/
+DECIMAL: /#[0-9]+/
 
 // Define what a label reference looks like
 LABELREF: /[a-zA-Z][a-zA-Z0-9_]*/
@@ -26,7 +27,7 @@ JMP: "JMP"
 ?start: program
 program: statement*
 statement: (LABEL | instruction)
-instruction: LIT NUMBER
+instruction: LIT (HEX | DECIMAL)
           | ADD
           | RET
           | CALL LABELREF

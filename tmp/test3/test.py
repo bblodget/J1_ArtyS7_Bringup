@@ -1,4 +1,5 @@
-from lark import Lark, Transformer
+from lark import Lark, Transformer, v_args
+from lark.lexer import Token
 
 
 class J1Transformer(Transformer):
@@ -6,8 +7,6 @@ class J1Transformer(Transformer):
         super().__init__()
         self.labels = {}
         self.current_address = 0
-        self.unresolved_calls = []
-        self.unresolved_jumps = []
 
     def program(self, statements):
         # First pass: collect all labels and their addresses
@@ -50,31 +49,39 @@ class J1Transformer(Transformer):
         return items[0]
 
     def instruction(self, items):
+        print(f"instruction: items={items}, types={[type(x) for x in items]}")
         if len(items) == 2 and items[0] == "LIT":
-            # LIT instruction: Convert number and set high bit
-            number = int(items[1].replace("#", ""))
+            number = items[1]
+            print(f"LIT number={number}, type={type(number)}")
             return 0x8000 | number
         elif items[0] == "+":
-            # ADD instruction: ALU operation
             return 0x6203
         elif items[0] == "RET":
-            # RET instruction
             return 0x6080
         elif items[0] == "CALL":
-            # Return tuple for resolution in second pass
             return ("call", items[1])
         elif items[0] == "JMP":
-            # Return tuple for resolution in second pass
             return ("jump", items[1])
         else:
             raise ValueError(f"Unknown instruction: {items}")
 
-    def NUMBER(self, token):
-        return str(token)
+    def HEX(self, token):
+        print(f"HEX: token={token}")
+        # Remove '#$' prefix and convert to integer
+        return int(str(token)[2:], 16)
+
+    def DECIMAL(self, token):
+        print(f"DECIMAL: token={token}")
+        # Remove '#' prefix and convert to integer
+        return int(str(token)[1:], 10)
+
+    # No need to define NUMBER since it's already handled by HEX and DECIMAL
 
     def LABEL(self, token):
         # Return tuple marking this as a label
-        return ("label", str(token).rstrip(":"))
+        label_name = str(token).rstrip(":")
+        print(f"LABEL: {label_name}")
+        return ("label", label_name)
 
 
 # Create the parser
@@ -82,18 +89,12 @@ parser = Lark.open("j1.lark")
 
 # Test program
 test_program = """
-; Simple test program with subroutine
-; Defines an add_one subroutine that adds 1 to top of stack
-
+; Simple test program with hex and decimal numbers
 start:
-    LIT #5          ; Push 5 onto stack
-    CALL add_one    ; Call our subroutine
-    JMP start       ; Loop forever
-
-add_one:
-    LIT #1          ; Push 1
-    +               ; Add it to previous value
-    RET             ; Return to caller
+    LIT #$2A        ; Push hex 2A (decimal 42)
+    LIT #10         ; Push decimal 10
+    +               ; Add them together
+    RET            ; Return
 """
 
 # Parse and transform the program
