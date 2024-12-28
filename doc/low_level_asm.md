@@ -103,9 +103,15 @@ T[T->R,r-1]         ; Copy T to R and return
 ## Custom Instructions
 For advanced users, custom instructions can be created using direct bit patterns:
 ```
-ALU #$6203          ; Explicit bit pattern for T+N,d-1
-ALU #$6283          ; T+N with d-1 and r-1 (Add and return)
+CODE #$6203         ; Explicit bit pattern for T+N,d-1 (ALU)
+CODE #$2000         ; Call to address 0 (Jump)
+BYTE #$62 #$03     ; Same as above, but byte by byte
 ```
+
+The instruction encoding can represent any valid J1 instruction type:
+- Literal (8xxx)
+- Jump/Call (0xxx-2xxx)
+- ALU (6xxx)
 
 ## Instruction Encoding
 The J1 ALU instruction format is:
