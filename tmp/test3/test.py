@@ -89,6 +89,12 @@ class J1Transformer(Transformer):
         # Return the identifier for the label reference
         return items[0]
 
+    def number(self, items):
+        print(f"number: items={items}")
+        # Since HEX and DECIMAL methods already convert to int,
+        # we just pass through their result
+        return items[0]
+
 
 # Create the parser
 parser = Lark.open("j1.lark")

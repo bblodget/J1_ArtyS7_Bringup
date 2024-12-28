@@ -29,8 +29,11 @@ statement: (label | instruction)
 labelref: IDENT
 label: IDENT ":"
 
+// Number rule
+number: (HEX | DECIMAL)
+
 // Instruction rules
-instruction: LIT (HEX | DECIMAL)
+instruction: LIT number
           | ADD
           | RET
           | CALL labelref
