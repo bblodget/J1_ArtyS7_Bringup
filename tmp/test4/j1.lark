@@ -13,6 +13,9 @@ DECIMAL: /#[0-9]+/
 // Define what an identifier looks like (for labels)
 IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 
+// Add COLON token definition
+COLON: ":"
+
 // ALU Operations
 T: "T"
 N: "N"
@@ -35,6 +38,11 @@ DECREMENT: "1-"
 T_TO_N: "T->N"
 T_TO_R: "T->R"
 N_TO_MEM: "N->[T]"
+N_TO_IO: "N->io[T]"
+IO_READ: "IORD"
+DINT: "fDINT"
+EINT: "fEINT"
+RET: "RET"
 STACK_D: /d[+-][012]/
 STACK_R: /r[+-][012]/
 
@@ -50,7 +58,7 @@ statement: (label | instruction)
 
 // Label rules
 labelref: IDENT
-label: IDENT ":"
+label: IDENT COLON
 
 // Number rule
 number: (HEX | DECIMAL)
@@ -58,6 +66,7 @@ number: (HEX | DECIMAL)
 // Instruction rules
 instruction: number
            | alu_op modifiers?
+           | jump_op labelref
 
 // ALU instruction rules (reordered to prioritize longer patterns)
 alu_op: T PLUS N
@@ -81,9 +90,24 @@ alu_op: T PLUS N
 modifier: T_TO_N
         | T_TO_R
         | N_TO_MEM
+        | N_TO_IO
+        | IO_READ
+        | DINT
+        | EINT
+        | RET
         | STACK_D
         | STACK_R
 
 modifier_list: modifier ("," modifier)*
 
 modifiers: LBRACKET modifier_list RBRACKET
+
+// Jump Instructions
+JMP: "JMP"
+ZJMP: "ZJMP"
+CALL: "CALL"
+
+// Jump instruction rules
+jump_op: JMP
+       | ZJMP
+       | CALL
