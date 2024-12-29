@@ -176,7 +176,6 @@ start:
     N[d-1]                  ; DROP - Remove top item
 """
 
-
 # Parse and transform the program
 tree = parser.parse(test_program)
 transformer = J1Transformer()

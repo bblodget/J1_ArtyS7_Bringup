@@ -59,23 +59,23 @@ number: (HEX | DECIMAL)
 instruction: number
            | alu_op modifiers?
 
-// ALU instruction rules
-alu_op: T
-      | N
-      | T "+" N
-      | T "-" N
-      | T "&" N
-      | T "|" N
-      | T "^" N
-      | "~" T
-      | N "==" T
-      | N "<" T
-      | N "u<" T
-      | N "<<" T
-      | N ">>" T
-      | N ">>>" T
+// ALU instruction rules (reordered to prioritize longer patterns)
+alu_op: T PLUS N
+      | T MINUS N
+      | T AND N
+      | T OR N
+      | T XOR N
+      | NOT T
+      | N EQUALS T
+      | N LESS T
+      | N ULESS T
+      | N LSHIFT T
+      | N RSHIFT T
+      | N ARSHIFT T
       | INCREMENT
       | DECREMENT
+      | T
+      | N
 
 // Modifier rules
 modifier: T_TO_N
