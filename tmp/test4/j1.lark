@@ -13,12 +13,35 @@ DECIMAL: /#[0-9]+/
 // Define what an identifier looks like (for labels)
 IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 
-// Define instructions (terminals)
-LIT: "LIT"
-ADD: "+"
-RET: "RET"
-CALL: "CALL"
-JMP: "JMP"
+// ALU Operations
+T: "T"
+N: "N"
+PLUS: "+"
+MINUS: "-"
+AND: "&"
+OR: "|"
+XOR: "^"
+NOT: "~"
+EQUALS: "=="
+LESS: "<"
+ULESS: "u<"
+LSHIFT: "<<"
+RSHIFT: ">>"
+ARSHIFT: ">>>"
+INCREMENT: "1+"
+DECREMENT: "1-"
+
+// Stack and Memory Modifiers
+T_TO_N: "T->N"
+T_TO_R: "T->R"
+N_TO_MEM: "N->[T]"
+STACK_D: /d[+-][012]/
+STACK_R: /r[+-][012]/
+
+// Bracket syntax for modifiers
+LBRACKET: "["
+RBRACKET: "]"
+COMMA: ","
 
 // Define the structure of our program (rules)
 ?start: program
@@ -33,8 +56,34 @@ label: IDENT ":"
 number: (HEX | DECIMAL)
 
 // Instruction rules
-instruction: LIT number
-          | ADD
-          | RET
-          | CALL labelref
-          | JMP labelref
+instruction: number
+           | alu_op modifiers?
+
+// ALU instruction rules
+alu_op: T
+      | N
+      | T "+" N
+      | T "-" N
+      | T "&" N
+      | T "|" N
+      | T "^" N
+      | "~" T
+      | N "==" T
+      | N "<" T
+      | N "u<" T
+      | N "<<" T
+      | N ">>" T
+      | N ">>>" T
+      | INCREMENT
+      | DECREMENT
+
+// Modifier rules
+modifier: T_TO_N
+        | T_TO_R
+        | N_TO_MEM
+        | STACK_D
+        | STACK_R
+
+modifier_list: modifier ("," modifier)*
+
+modifiers: LBRACKET modifier_list RBRACKET
