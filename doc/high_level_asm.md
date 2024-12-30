@@ -17,6 +17,12 @@ SWAP    ( n1 n2 -- n2 n1 )  ; Exchange top two items
 
 OVER    ( n1 n2 -- n1 n2 n1 ) ; Copy second item to top
         ; Maps to: N[T->N,d+1]       ; 6111
+
+NIP     ( n1 n2 -- n2 )      ; Drop second item
+        ; Maps to: T[d-1]            ; 6003
+
+NOOP    ( -- )               ; No operation
+        ; Maps to: T                 ; 6000
 ```
 
 ### Return Stack Operations
@@ -41,6 +47,22 @@ R@      ( -- n ) (R: n -- n) ; Copy from return stack
         ; Maps to: T-N[d-1]          ; 6C03
         ; With +RET: T-N[RET,d-1,r-1] ; 6C8B
 
+1+      ( n -- n+1 )         ; Increment
+        ; Maps to: T+1               ; 7600
+        ; With +RET: T+1[RET,r-1]    ; 7688
+
+1-      ( n -- n-1 )         ; Decrement
+        ; Maps to: T-1               ; 7700
+        ; With +RET: T-1[RET,r-1]    ; 7788
+
+2*      ( n -- n*2 )         ; Left shift by 1
+        ; Maps to: T2*               ; 6A00
+        ; With +RET: T2*[RET,r-1]    ; 6A88
+
+2/      ( n -- n/2 )         ; Right shift by 1
+        ; Maps to: T2/               ; 6900
+        ; With +RET: T2/[RET,r-1]    ; 6988
+
 AND     ( n1 n2 -- n3 )      ; Bitwise AND
         ; Maps to: T&N[d-1]          ; 6303
         ; With +RET: T&N[RET,d-1,r-1] ; 638B
@@ -58,15 +80,53 @@ INVERT  ( n1 -- n2 )         ; Bitwise NOT
         ; With +RET: ~T[RET,r-1]     ; 6688
 ```
 
-## Memory Operations
+## Comparison Words
 ```
-@       ( addr -- n )        ; Fetch
+=       ( n1 n2 -- flag )    ; Equal
+        ; Maps to: N==T[d-1]         ; 6703
+        ; With +RET: N==T[RET,d-1,r-1] ; 678B
+
+<       ( n1 n2 -- flag )    ; Less than (signed)
+        ; Maps to: N<T[d-1]          ; 6803
+        ; With +RET: N<T[RET,d-1,r-1] ; 688B
+
+U<      ( n1 n2 -- flag )    ; Less than (unsigned)
+        ; Maps to: Nu<T[d-1]         ; 6F03
+        ; With +RET: Nu<T[RET,d-1,r-1] ; 6F8B
+```
+
+## Memory/IO Operations
+```
+@       ( addr -- n )        ; Fetch from memory
         ; Maps to: T[T->N]           ; 6010
         ; With +RET: T[T->N,RET,r-1] ; 6098
 
-!       ( n addr -- )        ; Store
+!       ( n addr -- )        ; Store to memory
         ; Maps to: T[N->[T],d-2]     ; 6032
         ; With +RET: T[N->[T],RET,d-2,r-1] ; 60BA
+
+IO@     ( port -- n )        ; Input from I/O port
+        ; Maps to: io[T],IORD        ; 6D50
+        ; With +RET: io[T],IORD[RET,r-1] ; 6DD8
+
+IO!     ( n port -- )        ; Output to I/O port
+        ; Maps to: T[N->io[T],d-2]   ; 6042
+        ; With +RET: T[N->io[T],RET,d-2,r-1] ; 60CA
+```
+
+## System Control Words
+```
+DINT    ( -- )               ; Disable interrupts
+        ; Maps to: T,fDINT           ; 6060
+
+EINT    ( -- )               ; Enable interrupts
+        ; Maps to: T,fEINT           ; 6070
+
+DEPTH   ( -- n )             ; Get data stack depth
+        ; Maps to: status,T->N,d+1   ; 6E11
+
+RDEPTH  ( -- n )             ; Get return stack depth
+        ; Maps to: rstatus,T->N,d+1  ; 7311
 ```
 
 ## Return Optimization
