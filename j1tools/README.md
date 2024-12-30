@@ -87,11 +87,33 @@ Features:
 
 ## Development
 
-To run tests:
+### Running Tests
 
+To run the test suite:
 ```bash
-python -m pytest tests/
+pytest tests/
 ```
+
+For verbose output:
+```bash
+pytest tests/ -v
+```
+
+### Test Coverage
+
+To check test coverage:
+```bash
+# Basic coverage report
+pytest --cov=j1tools tests/
+
+# Detailed coverage with missing lines
+pytest --cov=j1tools --cov-report=term-missing tests/
+
+# Generate HTML coverage report
+pytest --cov=j1tools --cov-report=html tests/
+```
+
+The HTML report will be generated in the `htmlcov` directory. Open `htmlcov/index.html` in your browser for an interactive coverage report.
 
 ## References
 
