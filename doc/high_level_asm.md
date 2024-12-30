@@ -196,20 +196,6 @@ REPEAT             ; End loop, jump back to BEGIN
 
 ## Examples
 
-### Absolute Value
-```
-; Get absolute value ( n -- |n| )
-abs:
-    DUP             ; Duplicate number
-    LIT #0          ; Push 0
-    N<T             ; Compare n < 0
-    ZJMP pos        ; Skip negate if n >= 0
-    INVERT          ; Bitwise NOT
-    1+              ; Add 1 (two's complement negation)
-pos:
-    RET             ; Return
-```
-
 ### Fibonacci Sequence
 ```
 ; Calculate nth Fibonacci number ( n -- fib(n) )
@@ -235,19 +221,34 @@ recur:
     ++RET           ; fib(n-2)+fib(n-1)
 ```
 
-### Greatest Common Divisor
+### Absolute Value
 ```
-; Calculate GCD using Euclidean algorithm ( a b -- gcd )
-; Example: 48 18 -> 6
-gcd:
+; Get absolute value ( n -- |n| )
+abs:
+    DUP             ; Duplicate number
+    LIT #0          ; Push 0
+    N<T             ; Compare n < 0
+    ZJMP pos        ; Skip negate if n >= 0
+    INVERT          ; Bitwise NOT
+    1+              ; Add 1 (two's complement negation)
+pos:
+    RET             ; Return
+```
+
+### Countdown
+```
+; Count down from n to 0, leaving 0 on stack ( n -- 0 )
+; Example: 5 -> prints 5,4,3,2,1 and leaves 0 on stack
+countdown:
     BEGIN
-        DUP         ; a b b
-        ZJMP done   ; Exit if b == 0
-        SWAP        ; a b -> b a
-        OVER        ; b a -> b a b
-        MOD         ; b (a mod b)
+        DUP         ; n n
+        ZJMP done   ; Exit if zero
+        DUP         ; n n
+        LIT #1      ; Write to output port 1
+        IO!         ; (prints number)
+        LIT #1      ; n 1
+        -           ; n-1
     UNTIL
 done:
-    DROP            ; Remove b (which is 0)
-    RET            ; Return a (the GCD)
+    RET
 ```
