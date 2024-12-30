@@ -6,96 +6,185 @@ from lark import Lark, Transformer, Tree, Token
 from pathlib import Path
 
 
-class J1Assembler:
+class J1Assembler(Transformer):
     def __init__(self, debug=False):
+        super().__init__()
+        self.labels = {}
+        self.current_address = 0
         self.debug = debug
-        # Load grammar
-        grammar_path = Path(__file__).parent / "j1.lark"
-        with open(grammar_path) as f:
-            self.parser = Lark(
-                f.read(), parser="earley", debug=self.debug, ambiguity="explicit"
-            )
 
-        # Instruction encodings
-        self.opcodes = {
-            # Basic Stack Operations
-            "NOP": 0x6000,  # T alu
-            "DUP": 0x6011,  # T T->N d+1 alu
-            "DROP": 0x6103,  # N d-1 alu
-            "OVER": 0x6101,  # N T->N d+1 alu
-            "SWAP": 0x6111,  # N T->N alu
-            # Stack Manipulation
-            ">R": 0x6024,  # N T->R r+1 d-1 alu
-            "R>": 0x6B01,  # rT T->N r-1 d+1 alu
-            "R@": 0x6B01,  # rT T->N d+1 alu
-            # Memory & I/O
-            "@": 0x6900,  # mem[T] alu
-            "!": 0x6032,  # N->[T] d-2 alu
-            "IO@": 0x6D50,  # io[T] IORD alu
-            "IO!": 0x6042,  # N->io[T] d-2 alu
-            # ALU Operations
-            "+": 0x6203,  # T+N d-1 alu
-            # Control Flow
-            "RET": 0x6080,  # Return (T RET r-1 alu)
+        # Load the grammar
+        grammar_path = Path(__file__).parent / "j1.lark"
+        if not grammar_path.exists():
+            raise FileNotFoundError(f"Grammar file not found: {grammar_path}")
+            
+        try:
+            self.parser = Lark.open(grammar_path, start="start")
+            if self.debug:
+                print(f"Loaded grammar from {grammar_path}", file=sys.stderr)
+        except Exception as e:
+            raise Exception(f"Failed to load grammar: {e}")
+
+    def parse(self, source):
+        return self.parser.parse(source)
+
+    def program(self, statements):
+        # First pass: collect all labels and their addresses
+        self.current_address = 0
+        instructions = []
+
+        # Process all statements to collect labels
+        for stmt in statements:
+            if isinstance(stmt, tuple) and stmt[0] == "label":
+                label_name = stmt[1]
+                if label_name in self.labels:
+                    raise ValueError(f"Duplicate label: {label_name}")
+                self.labels[label_name] = self.current_address
+            else:
+                self.current_address += 1
+                if stmt is not None:
+                    instructions.append(stmt)
+
+        # Second pass: resolve label references
+        resolved_instructions = []
+        for inst in instructions:
+            if isinstance(inst, tuple) and inst[0] == "jump":
+                jump_type, label = inst[1], inst[2]
+                if label not in self.labels:
+                    raise ValueError(f"Undefined label: {label}")
+                target_address = self.labels[label]
+                resolved_instructions.append(jump_type | target_address)
+            else:
+                resolved_instructions.append(inst)
+
+        return resolved_instructions
+
+    def statement(self, items):
+        """
+        Handles the 'statement' rule by returning the transformed child.
+        """
+        return items[0]
+
+    def jump_op(self, items):
+        jump_codes = {
+            "JMP": 0x0000,  # Unconditional jump
+            "ZJMP": 0x2000,  # Jump if TOS = 0
+            "CALL": 0x4000,  # Call subroutine
+        }
+        op = str(items[0])
+        if op not in jump_codes:
+            raise ValueError(f"Unknown jump operation: {op}")
+        return jump_codes[op]
+
+    def instruction(self, items):
+        if len(items) == 1:
+            if isinstance(items[0], int):  # Number literal
+                return 0x8000 | items[0]
+            else:  # ALU operation without modifiers
+                return items[0]
+        elif len(items) == 2:
+            if isinstance(items[0], int) and isinstance(items[1], str):
+                # It's a jump instruction with labelref
+                return ("jump", items[0], items[1])
+            else:
+                # It's an ALU operation with modifiers
+                alu_op, modifiers = items
+                return alu_op | modifiers
+        else:
+            raise ValueError(f"Invalid instruction format: {items}")
+
+    def alu_op(self, items):
+        # Base ALU operation codes
+        alu_codes = {
+            "T": 0x6000,  # T
+            "N": 0x6100,  # N
+            "T+N": 0x6200,  # Add
+            "T-N": 0x6C00,  # Subtract
+            "T&N": 0x6300,  # AND
+            "T|N": 0x6400,  # OR
+            "T^N": 0x6500,  # XOR
+            "~T": 0x6600,  # NOT
+            "N==T": 0x6700,  # Equal
+            "N<T": 0x6800,  # Less than
+            "Nu<T": 0x6F00,  # Unsigned less than
+            "N<<T": 0x6A00,  # Left shift
+            "N>>T": 0x6900,  # Right shift (logical)
+            "N>>>T": 0x6900,  # Right shift (arithmetic)
+            "1+": 0x6160,  # Increment
+            "1-": 0x6170,  # Decrement
         }
 
-    def assemble_line(self, tree):
-        if self.debug:
-            print(f"Processing instruction: {tree}", file=sys.stderr)
-
-        if tree.data == "instruction":
-            # Handle LIT instruction
-            if (
-                len(tree.children) == 2
-                and isinstance(tree.children[0], Token)
-                and tree.children[0].value == "LIT"
-            ):
-                value = int(tree.children[1].children[1].value)
-                if self.debug:
-                    print(f"LIT value: {value}", file=sys.stderr)
-                return 0x8000 | (value & 0x7FFF)
-
-            # Handle other instructions
-            opcode = tree.children[0].value
-            if opcode in self.opcodes:
-                return self.opcodes[opcode]
+        if len(items) == 1:
+            op = str(items[0])
+        elif len(items) == 2:
+            if str(items[0]) == "~":
+                op = f"~{items[1]}"
             else:
-                raise ValueError(f"Unknown opcode: {opcode}")
-        return None
+                op = f"{items[0]}"
+        elif len(items) == 3:
+            op = f"{items[0]}{items[1]}{items[2]}"
+        else:
+            raise ValueError(f"Invalid ALU operation format: {items}")
 
-    def assemble(self, source):
-        # Parse source
-        tree = self.parser.parse(source)
+        if op not in alu_codes:
+            raise ValueError(f"Unknown ALU operation: {op}")
 
-        if self.debug:
-            try:
-                print(f"Parse tree:\n{tree.pretty()}", file=sys.stderr)
-            except Exception as e:
-                print(f"Error printing parse tree: {e}", file=sys.stderr)
-                print(f"Raw tree: {tree}", file=sys.stderr)
+        return alu_codes[op]
 
-        # First pass - collect labels
-        self.labels = {}
-        addr = 0
-        for line in tree.children:
-            if line.children:  # Skip empty lines
-                child = line.children[0]
-                if isinstance(child, Tree):  # Check if it's a Tree node
-                    if child.data == "label":
-                        self.labels[child.children[0].value] = addr
-                    elif child.data == "instruction":
-                        addr += 1
+    def modifier(self, items):
+        # Stack operation codes
+        stack_ops = {
+            "T->N": 0x0010,  # Copy T to N
+            "T->R": 0x0020,  # Copy T to R
+            "N->[T]": 0x0030,  # Memory write
+            "N->io[T]": 0x0040,  # I/O write
+            "IORD": 0x0050,  # I/O read
+            "fDINT": 0x0060,  # Disable interrupts
+            "fEINT": 0x0070,  # Enable interrupts
+            "RET": 0x0080,  # Return
+        }
 
-        # Second pass - generate code
-        code = []
-        for line in tree.children:
-            if line.children:  # Skip empty lines
-                child = line.children[0]
-                if isinstance(child, Tree) and child.data == "instruction":
-                    if instr := self.assemble_line(child):
-                        code.append(instr)
+        # Stack Delta Codes
+        stack_d = {"d+0": 0x0, "d+1": 0x1, "d-2": 0x2, "d-1": 0x3}
+        stack_r = {"r+0": 0x0, "r+1": 0x4, "r-2": 0x8, "r-1": 0xC}
 
-        return code
+        mod = str(items[0])
+        if mod in stack_ops:
+            return stack_ops[mod]
+        elif mod in stack_d:
+            return stack_d[mod]
+        elif mod in stack_r:
+            return stack_r[mod]
+        else:
+            raise ValueError(f"Unknown modifier: {mod}")
+
+    def modifier_list(self, items):
+        """
+        Combines all modifiers into a single integer using bitwise OR.
+        """
+        result = 0
+        for mod in items:
+            result |= mod
+        return result
+
+    def modifiers(self, items):
+        # 0:LBracket, 1:value, 2:RBracket
+        return items[1]
+
+    def labelref(self, items):
+        return str(items[0])
+
+    def label(self, items):
+        return ("label", str(items[0]))
+
+    def number(self, items):
+        token = items[0]
+        if token.type == "HEX":
+            return int(str(token)[2:], 16)
+        elif token.type == "DECIMAL":
+            return int(str(token)[1:], 10)
+        else:
+            raise ValueError(f"Unknown number format: {token}")
 
 
 def main():
@@ -113,20 +202,17 @@ def main():
             if args.debug:
                 print(f"Source code:\n{source}", file=sys.stderr)
 
-        asm = J1Assembler(debug=args.debug)
-
         if args.debug:
             print("Parsing source...", file=sys.stderr)
 
-        code = asm.assemble(source)
-
-        if args.debug:
-            print(f"Labels found: {asm.labels}", file=sys.stderr)
-            print(f"Generated {len(code)} instructions", file=sys.stderr)
+        assembler = J1Assembler(debug=args.debug)
+        tree = assembler.parse(source)
+        instructions = assembler.transform(tree)
 
         # Output hex format
-        for word in code:
-            print(f"{word:04X}")
+        for i, inst in enumerate(instructions):
+            # print(f"{i:04x}: {inst:04x}")
+            print(f"{inst:04x}")
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
@@ -135,7 +221,6 @@ def main():
 
             traceback.print_exc()
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
