@@ -194,30 +194,7 @@ REPEAT             ; End loop, jump back to BEGIN
         ; Maps to: JMP <BEGIN_address>   ; 0xxx - Unconditional jump
 ```
 
-## Note on Optimization
-
-While high-level words do not accept modifiers directly, a future optimization pass may combine compatible instructions. For example:
-
-```
-T+N[d-1]           ; Add top two items
-T[RET,r-1]         ; Return from subroutine
-
-; Could be optimized to:
-T+N[RET,d-1,r-1]   ; Combined add and return
-```
-
-This optimization would be controlled by a command-line option and would not change the semantics of the high-level words.
-
 ## Examples
-
-### Square a Number
-```
-; Square the number on top of stack ( n -- n^2 )
-square:
-    DUP             ; Duplicate number
-    *               ; Multiply
-    RET             ; Return
-```
 
 ### Absolute Value
 ```
@@ -231,4 +208,46 @@ abs:
     1+              ; Add 1 (two's complement negation)
 pos:
     RET             ; Return
+```
+
+### Fibonacci Sequence
+```
+; Calculate nth Fibonacci number ( n -- fib(n) )
+; Example: 7 -> 13 (0,1,1,2,3,5,8,13)
+fib:
+    DUP             ; n n
+    LIT #2          ; n n 2
+    U<              ; n (n<2)?
+    ZJMP recur      ; Jump if not base case
+    DROP            ; Return n for n < 2
+    RET
+
+recur:
+    DUP             ; n n
+    LIT #1          ; n n 1
+    -               ; n n-1
+    >R              ; n        (R: n-1)
+    LIT #2          ; n 2
+    -               ; n-2      (R: n-1)
+    CALL fib        ; fib(n-2) (R: n-1)
+    R>              ; fib(n-2) n-1
+    CALL fib        ; fib(n-2) fib(n-1)
+    ++RET           ; fib(n-2)+fib(n-1)
+```
+
+### Greatest Common Divisor
+```
+; Calculate GCD using Euclidean algorithm ( a b -- gcd )
+; Example: 48 18 -> 6
+gcd:
+    BEGIN
+        DUP         ; a b b
+        ZJMP done   ; Exit if b == 0
+        SWAP        ; a b -> b a
+        OVER        ; b a -> b a b
+        MOD         ; b (a mod b)
+    UNTIL
+done:
+    DROP            ; Remove b (which is 0)
+    RET            ; Return a (the GCD)
 ```
