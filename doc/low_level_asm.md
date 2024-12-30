@@ -230,3 +230,20 @@ T+N[T->N,T->R]      ; Invalid: two stack operations
 T+N[d-1,d+1]        ; Invalid: two data stack deltas
 T+N[r-1,r+1]        ; Invalid: two return stack deltas
 ```
+
+## ALU Operations and Stack Effects
+
+### Default Stack Behavior
+When no stack modifiers are specified, ALU operations default to `[d+0,r+0]` (no stack changes). These are equivalent:
+```
+T+N           ; Implicit: no stack changes
+T+N[d+0,r+0] ; Explicit: no stack changes
+```
+
+### Explicit Stack Modifiers
+Stack effects can be modified using the bracket syntax:
+```
+T+N[d-1]     ; Add and pop from data stack
+T[T->N,d+1]  ; Copy T to N and push (DUP)
+N[d-1]       ; Remove T, bring up N (DROP)
+```

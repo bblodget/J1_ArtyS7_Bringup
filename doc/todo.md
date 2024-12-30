@@ -17,28 +17,35 @@
 - [x] Add support for literals (LIT)
 - [x] Add support for jumps (JMP, ZJMP, CALL)
 - [x] Add label resolution for jumps
-- [ ] Add proper error handling with line numbers
+- [x] Add proper error handling with line numbers
 
 ## Testing Infrastructure
 - [x] Create test cases for:
   - [x] Basic ALU operations
   - [x] Stack operations with modifiers
   - [x] Jump instructions with labels
-  - [ ] Error conditions
-  - [ ] Edge cases in instruction encoding
+  - [x] Error conditions
+  - [x] Edge cases in instruction encoding
+- [x] Add test coverage reporting
+- [x] Update README with testing instructions
 
 ## Documentation
-- [ ] Add comments explaining instruction encoding
-- [ ] Document supported syntax
+- [x] Add comments explaining instruction encoding
+- [x] Document supported syntax
 - [x] Add examples in test files
-- [ ] Update README.md with usage instructions
+- [x] Update README.md with usage instructions
+- [x] Add development setup instructions
+- [x] Add testing documentation
 
 ## Integration
-- [ ] Merge working code into j1tools package
-- [ ] Update package structure
-- [ ] Add command line interface
-- [ ] Add proper error messages
-- [ ] Add debug output option
+- [x] Merge working code into j1tools package
+- [x] Update package structure
+- [ ] Add command line interface improvements
+  - [ ] Add verbose output option
+  - [ ] Add listing file output
+  - [ ] Add symbol table output
+- [ ] Add proper error messages with line numbers
+- [x] Add debug output option
 
 ## Future Enhancements
 - [ ] Add high-level assembly support
@@ -46,6 +53,7 @@
 - [ ] Add symbol table for constants
 - [ ] Add listing file output
 - [ ] Add binary output format
+- [ ] Add disassembler support
 
 ## Notes
 - Start with low-level assembly support first
