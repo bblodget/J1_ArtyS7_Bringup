@@ -48,8 +48,8 @@ class J1Transformer(Transformer):
     def jump_op(self, items):
         jump_codes = {
             "JMP": 0x0000,  # Unconditional jump
-            "ZJMP": 0x1000,  # Jump if TOS = 0
-            "CALL": 0x2000,  # Call subroutine
+            "ZJMP": 0x2000,  # Jump if TOS = 0
+            "CALL": 0x4000,  # Call subroutine
         }
         op = str(items[0])
         if op not in jump_codes:
@@ -178,12 +178,17 @@ start:                    ; Note the colon after label
     #10                  ; Push decimal 10
     CALL add_nums        ; Call our addition subroutine
     N[d-1]               ; DROP the result
-    JMP start            ; Loop forever
+    JMP wait_forever     ; Jump to end of program
 
 add_nums:                ; Note the colon after label
      T+N[d-1]            ; Add top two stack items
-     T[T->R]             ; Save result to return stack
-     T[RET]                 ; Return to caller
+     T[T->R,r+1]         ; Save result to return stack (push, don't overwrite)
+     T[r-1]              ; Pop our saved value to T
+     T[RET,r-1]          ; Return to caller
+
+wait_forever:
+    T[d+0]               ; NOOP
+    JMP wait_forever     ; Loop forever
 """
 
 # Parse and transform the program

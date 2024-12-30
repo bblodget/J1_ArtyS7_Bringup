@@ -103,9 +103,9 @@ modifier_list: modifier ("," modifier)*
 modifiers: LBRACKET modifier_list RBRACKET
 
 // Jump Instructions
-JMP: "JMP"
-ZJMP: "ZJMP"
-CALL: "CALL"
+JMP: "JMP"      // 0000 base
+ZJMP: "ZJMP"    // 2000 base
+CALL: "CALL"    // 4000 base    
 
 // Jump instruction rules
 jump_op: JMP
