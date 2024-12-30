@@ -7,6 +7,7 @@ are not even in an alpha state.
 
 ## Installation
 
+### For Development
 I like to create a python virtual environment at the top
 level of this project. Note, the venv directory is ignored
 by the .gitignore file.
@@ -22,18 +23,21 @@ python -m venv venv
 # Activate the virtual environment
 source venv/Scripts/activate  # For Windows
 source venv/bin/activate     # For Linux/MacOS
-```
 
-Then install the package in editable mode.
-
-```bash
+# Install in development mode with dev dependencies
 cd j1tools
-pip install -e .
+pip install -e ".[dev]"
 ```
 
 Note: For Windows PowerShell users, activate the virtual environment with:
 ```bash
 .\venv\Scripts\Activate.ps1
+```
+
+### For Users
+To install j1tools for normal use:
+```bash
+pip install j1tools
 ```
 
 ## Tools Included

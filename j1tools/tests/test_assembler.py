@@ -1,84 +1,117 @@
 import pytest
+from pathlib import Path
 from j1tools.assembler.asm import J1Assembler
+from lark.exceptions import VisitError
 
-# Test assembly code
-TEST_ASM = """
-start:          ; Program start
-    NOP         ; Do nothing
-    DUP         ; Duplicate top of stack
-    DROP        ; Drop top of stack
-    LIT #1234   ; Push value
-    IO@         ; Read from IO
-    IO!         ; Write to IO
-loop:
-    JMP loop    ; Infinite loop
-    RET         ; Never reached
-"""
 
 @pytest.fixture
-def asm_file(tmp_path):
-    # Create a temporary assembly file
-    asm_file = tmp_path / "test.asm"
-    asm_file.write_text(TEST_ASM)
-    return asm_file
+def assembler():
+    return J1Assembler(debug=False)
 
-def test_basic_instructions(asm_file):
-    asm = J1Assembler()
-    code, comments = asm.assemble(asm_file)
-    
-    # Expected opcodes
+
+@pytest.fixture
+def add_test_source():
+    test_file = Path(__file__).parent.parent.parent / "firmware/add_test/add_test.asm"
+    with open(test_file, "r") as f:
+        return f.read()
+
+
+def test_number_literals(assembler):
+    # Test hex and decimal number handling
+    hex_result = assembler.transform(assembler.parse("#$2A"))
+    dec_result = assembler.transform(assembler.parse("#10"))
+
+    assert hex_result[0] == 0x802A  # 0x8000 | 0x2A
+    assert dec_result[0] == 0x800A  # 0x8000 | 10
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("T+N", 0x6200),
+        ("T-N", 0x6C00),
+        ("T&N", 0x6300),
+        ("T|N", 0x6400),
+        ("T^N", 0x6500),
+        ("~T", 0x6600),
+    ],
+)
+def test_alu_operations(assembler, source, expected):
+    tree = assembler.parse(source)
+    result = assembler.transform(tree)
+    assert result[0] == expected
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("T[d+1]", 0x6001),
+        ("T[d-1]", 0x6003),
+        ("T[r+1]", 0x6004),
+        ("T[r-1]", 0x600C),
+    ],
+)
+def test_stack_modifiers(assembler, source, expected):
+    result = assembler.transform(assembler.parse(source))
+    assert result[0] == expected
+
+
+def test_jump_instructions(assembler):
+    source = """
+    start:
+        JMP end
+    middle:
+        ZJMP start
+    end:
+        CALL middle
+    """
+    result = assembler.transform(assembler.parse(source))
+
+    # Check that jumps resolve to correct addresses
+    assert result[0] == 0x0002  # JMP to end (addr 2)
+    assert result[1] == 0x2000  # ZJMP to start (addr 0)
+    assert result[2] == 0x4001  # CALL to middle (addr 1)
+
+
+def test_add_test_program(assembler, add_test_source):
+    result = assembler.transform(assembler.parse(add_test_source))
+
+    # Expected instruction sequence for add_test.asm
     expected = [
-        0x6000,  # NOP
-        0x6011,  # DUP
-        0x6103,  # DROP
-        0xD234,  # LIT #1234
-        0x6D50,  # IO@
-        0x6040,  # IO!
-        0x0006,  # JMP loop (address 6)
-        0x6080,  # RET
+        0x802A,  # Push 2A hex
+        0x800A,  # Push 10 decimal
+        0x4005,  # CALL add_nums (at address 5)
+        0x6103,  # N[d-1] - N operation with d-1 modifier
+        0x0009,  # JMP wait_forever (at address 9)
+        0x6203,  # T+N[d-1]
+        0x6024,  # T[T->R,r+1]
+        0x600C,  # T[r-1]
+        0x608C,  # T[RET,r-1]
+        0x6000,  # T[d+0]
+        0x0009,  # JMP wait_forever (at address 9)
     ]
-    
-    assert code == expected
-    assert comments[0] == "Do nothing"
-    assert comments[3] == "Push 1234"
 
-def test_labels(asm_file):
-    asm = J1Assembler()
-    code, _ = asm.assemble(asm_file)
-    
-    # Check that JMP loop points to correct address
-    assert code[6] & 0x1FFF == 6  # Lower 13 bits should be loop address
+    assert result == expected
 
-def test_file_not_found():
-    asm = J1Assembler()
-    with pytest.raises(FileNotFoundError):
-        asm.assemble("nonexistent.asm")
 
-def test_invalid_instruction(tmp_path):
-    # Create assembly file with invalid instruction
-    bad_asm = tmp_path / "bad.asm"
-    bad_asm.write_text("INVALID_OP")
-    
-    asm = J1Assembler()
-    with pytest.raises(KeyError):
-        asm.assemble(bad_asm)
+def test_invalid_syntax(assembler):
+    with pytest.raises(Exception):
+        assembler.transform(assembler.parse("INVALID"))
 
-def test_invalid_literal(tmp_path):
-    # Create assembly file with invalid literal
-    bad_asm = tmp_path / "bad.asm"
-    bad_asm.write_text("LIT #ZZZZ")
-    
-    asm = J1Assembler()
-    with pytest.raises(ValueError):
-        asm.assemble(bad_asm)
 
-def test_missing_label(tmp_path):
-    # Create assembly file with undefined label
-    bad_asm = tmp_path / "bad.asm"
-    bad_asm.write_text("JMP missing_label")
-    
-    asm = J1Assembler()
-    code, _ = asm.assemble(bad_asm)
-    
-    # Should default to address 0
-    assert code[0] & 0x1FFF == 0
+def test_undefined_label(assembler):
+    with pytest.raises((ValueError, VisitError)) as exc_info:
+        assembler.transform(assembler.parse("JMP undefined_label"))
+    # Verify the error message regardless of exception type
+    assert "Undefined label" in str(exc_info.value)
+
+
+def test_duplicate_label(assembler):
+    source = """
+    label: T
+    label: N
+    """
+    with pytest.raises((ValueError, VisitError)) as exc_info:
+        assembler.transform(assembler.parse(source))
+    # Verify the error message regardless of exception type
+    assert "Duplicate label" in str(exc_info.value)

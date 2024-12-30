@@ -7,6 +7,12 @@ setup(
     install_requires=[
         "lark>=1.1.5",
     ],
+    extras_require={
+        "dev": [
+            "pytest>=7.0.0",
+            "pytest-cov>=4.0.0",  # for coverage reporting
+        ],
+    },
     entry_points={
         "console_scripts": [
             "j1asm=j1tools.assembler.asm:main",

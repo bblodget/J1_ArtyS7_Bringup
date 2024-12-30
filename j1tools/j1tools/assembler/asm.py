@@ -17,7 +17,7 @@ class J1Assembler(Transformer):
         grammar_path = Path(__file__).parent / "j1.lark"
         if not grammar_path.exists():
             raise FileNotFoundError(f"Grammar file not found: {grammar_path}")
-            
+
         try:
             self.parser = Lark.open(grammar_path, start="start")
             if self.debug:
@@ -78,10 +78,16 @@ class J1Assembler(Transformer):
 
     def instruction(self, items):
         if len(items) == 1:
-            if isinstance(items[0], int):  # Number literal
-                return 0x8000 | items[0]
-            else:  # ALU operation without modifiers
-                return items[0]
+            item = items[0]
+            if isinstance(item, int):  # Number literal
+                return 0x8000 | item
+            elif isinstance(item, str):  # Label reference
+                return item
+            elif isinstance(item, tuple):
+                if item[0] == "alu":  # ALU operation
+                    return item[1]  # Return just the operation code
+            else:
+                raise ValueError(f"Invalid instruction type: {type(item)}")
         elif len(items) == 2:
             if isinstance(items[0], int) and isinstance(items[1], str):
                 # It's a jump instruction with labelref
@@ -89,7 +95,10 @@ class J1Assembler(Transformer):
             else:
                 # It's an ALU operation with modifiers
                 alu_op, modifiers = items
-                return alu_op | modifiers
+                if isinstance(alu_op, tuple) and alu_op[0] == "alu":
+                    return alu_op[1] | modifiers
+                else:
+                    raise ValueError(f"Invalid ALU operation with modifiers: {items}")
         else:
             raise ValueError(f"Invalid instruction format: {items}")
 
@@ -129,7 +138,8 @@ class J1Assembler(Transformer):
         if op not in alu_codes:
             raise ValueError(f"Unknown ALU operation: {op}")
 
-        return alu_codes[op]
+        # Return tuple indicating this is an ALU operation
+        return ("alu", alu_codes[op])
 
     def modifier(self, items):
         # Stack operation codes
@@ -221,6 +231,7 @@ def main():
 
             traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
