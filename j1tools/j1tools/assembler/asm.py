@@ -206,9 +206,9 @@ class J1Assembler(Transformer):
             "OVER": 0x6100 | 0x0011,  # N    [T->N,d+1]
             "NIP": 0x6000 | 0x0003,  # T    [d-1]
             "NOOP": 0x6000 | 0x0000,  # T    []
-            ">R": 0x6000 | 0x0023,  # T    [T->R,d-1]
-            "R>": 0x6800 | 0x0001,  # R    [d+1]
-            "R@": 0x6700 | 0x0001,  # R    [d+1]
+            ">R": 0x6100 | 0x0020 | 0x0004 | 0x0003,  # N [T->R,r+1,d-1]
+            "R>": 0x6B00 | 0x0010 | 0x000C | 0x0001,  # rT [T->N,r-1,d+1]
+            "R@": 0x6B00 | 0x0010 | 0x0001,  # rT [T->N,d+1]
         }
         op = str(items[0])
         if op not in stack_codes:
