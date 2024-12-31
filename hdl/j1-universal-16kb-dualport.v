@@ -37,7 +37,7 @@ module j1(
     */
 
     // New block RAM implementation
-    j1_memory ram (
+    j1_memory_4k ram (
         .clka(clk),                    // input wire clka
         .addra(code_addr[11:0]),       // input wire [11:0] addra
         .douta(insn_from_memory),      // output wire [15:0] douta
