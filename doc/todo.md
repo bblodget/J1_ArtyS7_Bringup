@@ -56,8 +56,8 @@
 - [ ] Add disassembler support
 
 ## High-Level Assembly Support
-- [ ] Implement basic high-level words
-  - [ ] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
+- [x] Implement basic high-level words
+  - [x] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
   - [ ] Return stack operations (>R, R>, R@)
   - [ ] Arithmetic operations (+, -, 1+, 1-, 2*, 2/, etc.)
   - [ ] Logic operations (AND, OR, XOR, INVERT)
@@ -78,7 +78,7 @@
   - [ ] Control structure validation
   - [ ] Invalid +RET usage detection
 - [ ] Add test cases
-  - [ ] Basic word tests
+  - [x] Basic word tests
   - [ ] Control structure tests
   - [ ] +RET optimization tests
   - [ ] Error condition tests

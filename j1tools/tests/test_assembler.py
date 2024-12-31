@@ -16,6 +16,15 @@ def add_test_source():
         return f.read()
 
 
+@pytest.fixture
+def stack_test_source():
+    test_file = (
+        Path(__file__).parent.parent.parent / "firmware/stack_test/stack_test.asm"
+    )
+    with open(test_file, "r") as f:
+        return f.read()
+
+
 def test_number_literals(assembler):
     # Test hex and decimal number handling
     hex_result = assembler.transform(assembler.parse("#$2A"))
@@ -134,3 +143,25 @@ def test_stack_words(assembler, source, expected):
     assert (
         result[0] == expected
     ), f"Stack operation {source} should generate {expected:04x}, got {result[0]:04x}"
+
+
+def test_stack_test_program(assembler, stack_test_source):
+    result = assembler.transform(assembler.parse(stack_test_source))
+
+    # Expected instruction sequence for stack_test.asm
+    expected = [
+        0x802A,  # LIT #42      - Push 42 onto stack
+        0x6001,  # DUP          - Duplicate top of stack
+        0x8018,  # LIT #24      - Push 24 onto stack
+        0x6111,  # OVER         - Copy second item to top
+        0x6110,  # SWAP         - Exchange top two items
+        0x6003,  # NIP          - Drop second item
+        0x6103,  # DROP         - Remove top item
+        0x6000,  # NOOP         - No operation
+    ]
+
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
