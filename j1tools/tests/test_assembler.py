@@ -175,3 +175,22 @@ def test_stack_test_program(assembler, stack_test_source):
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("T+N", 0x6200),  # Add
+        ("T-N", 0x6C00),  # Subtract
+        ("1+", 0x6160),  # Increment
+        ("1-", 0x6170),  # Decrement
+        ("2*", 0x6180),  # Double (left shift by 1)
+        ("2/", 0x6190),  # Half (right shift by 1)
+    ],
+)
+def test_arithmetic_operations(assembler, source, expected):
+    """Test that arithmetic operations generate the correct machine code."""
+    result = assembler.transform(assembler.parse(source))
+    assert (
+        result[0] == expected
+    ), f"Arithmetic operation {source} should generate {expected:04x}, got {result[0]:04x}"

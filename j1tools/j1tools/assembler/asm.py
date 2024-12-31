@@ -123,6 +123,8 @@ class J1Assembler(Transformer):
             "N>>>T": 0x6900,  # Right shift (arithmetic)
             "1+": 0x6160,  # Increment
             "1-": 0x6170,  # Decrement
+            "2*": 0x6180,  # Double (left shift by 1)
+            "2/": 0x6190,  # Half (right shift by 1)
         }
 
         if len(items) == 1:
