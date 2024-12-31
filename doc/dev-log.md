@@ -1,5 +1,22 @@
 # Development Log
 
+## 2024-01-01
+
+- Added support for return stack operations:
+  - Implemented >R, R>, R@ instructions
+  - Added correct instruction encodings:
+    - >R: N [T->R,r+1,d-1] = 0x6127
+    - R>: rT [T->N,r-1,d+1] = 0x6b1d
+    - R@: rT [T->N,d+1] = 0x6b11
+  - Updated stack_test.asm to test return stack operations
+  - Added unit tests for individual return stack operations
+  - Added integration test for full return stack sequence
+  - Verified correct operation using simulator
+- Updated documentation:
+  - Marked return stack operations as completed in todo.md
+  - Added return stack operation machine code mappings
+  - Added stack/return-stack effect comments in test files
+
 ## 2024-12-31
 
 - Added support for basic stack operation words:

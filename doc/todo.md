@@ -58,7 +58,7 @@
 ## High-Level Assembly Support
 - [x] Implement basic high-level words
   - [x] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
-  - [ ] Return stack operations (>R, R>, R@)
+  - [x] Return stack operations (>R, R>, R@)
   - [ ] Arithmetic operations (+, -, 1+, 1-, 2*, 2/, etc.)
   - [ ] Logic operations (AND, OR, XOR, INVERT)
   - [ ] Comparison operations (=, <, U<)
