@@ -86,6 +86,8 @@ class J1Assembler(Transformer):
             elif isinstance(item, tuple):
                 if item[0] == "alu":  # ALU operation
                     return item[1]  # Return just the operation code
+                elif item[0] == "stack_word":  # Stack operation
+                    return item[1]  # Return just the operation code
             else:
                 raise ValueError(f"Invalid instruction type: {type(item)}")
         elif len(items) == 2:
@@ -195,6 +197,20 @@ class J1Assembler(Transformer):
             return int(str(token)[1:], 10)
         else:
             raise ValueError(f"Unknown number format: {token}")
+
+    def stack_words(self, items):
+        stack_codes = {
+            "DUP": 0x6000 | 0x0001,  # T    [d+1]
+            "DROP": 0x6100 | 0x0003,  # N    [d-1]
+            "SWAP": 0x6100 | 0x0010,  # N    [T->N]
+            "OVER": 0x6100 | 0x0011,  # N    [T->N,d+1]
+            "NIP": 0x6000 | 0x0003,  # T    [d-1]
+            "NOOP": 0x6000 | 0x0000,  # T    []
+        }
+        op = str(items[0])
+        if op not in stack_codes:
+            raise ValueError(f"Unknown stack operation: {op}")
+        return ("stack_word", stack_codes[op])
 
 
 def main():

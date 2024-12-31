@@ -67,6 +67,7 @@ number: (HEX | DECIMAL)
 instruction: number
            | alu_op modifiers?
            | jump_op labelref
+           | stack_words
 
 // ALU instruction rules (reordered to prioritize longer patterns)
 alu_op: T PLUS N
@@ -111,3 +112,19 @@ CALL: "CALL"    // 4000 base
 jump_op: JMP
        | ZJMP
        | CALL
+
+// Stack Operation Words
+DUP: "DUP"
+DROP: "DROP"
+SWAP: "SWAP"
+OVER: "OVER"
+NIP: "NIP"
+NOOP: "NOOP"
+
+// Stack operation rules
+stack_words: DUP
+          | DROP
+          | SWAP
+          | OVER
+          | NIP
+          | NOOP

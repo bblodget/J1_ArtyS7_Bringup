@@ -115,3 +115,22 @@ def test_duplicate_label(assembler):
         assembler.transform(assembler.parse(source))
     # Verify the error message regardless of exception type
     assert "Duplicate label" in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("DUP", 0x6001),  # T    [d+1]
+        ("DROP", 0x6103),  # N    [d-1]
+        ("SWAP", 0x6110),  # N    [T->N]
+        ("OVER", 0x6111),  # N    [T->N,d+1]
+        ("NIP", 0x6003),  # T    [d-1]
+        ("NOOP", 0x6000),  # T    []
+    ],
+)
+def test_stack_words(assembler, source, expected):
+    """Test that stack operation words generate the correct machine code."""
+    result = assembler.transform(assembler.parse(source))
+    assert (
+        result[0] == expected
+    ), f"Stack operation {source} should generate {expected:04x}, got {result[0]:04x}"

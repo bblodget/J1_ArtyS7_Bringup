@@ -55,6 +55,39 @@
 - [ ] Add binary output format
 - [ ] Add disassembler support
 
+## High-Level Assembly Support
+- [ ] Implement basic high-level words
+  - [ ] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
+  - [ ] Return stack operations (>R, R>, R@)
+  - [ ] Arithmetic operations (+, -, 1+, 1-, 2*, 2/, etc.)
+  - [ ] Logic operations (AND, OR, XOR, INVERT)
+  - [ ] Comparison operations (=, <, U<)
+  - [ ] Memory/IO operations (@, !, IO@, IO!)
+  - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
+- [ ] Add +RET optimization support
+  - [ ] Identify compatible operations
+  - [ ] Implement suffix parsing
+  - [ ] Generate optimized machine code
+- [ ] Implement control structures
+  - [ ] IF THEN
+  - [ ] IF ELSE THEN
+  - [ ] BEGIN UNTIL
+  - [ ] BEGIN WHILE REPEAT
+- [ ] Add error handling
+  - [ ] Stack effect validation
+  - [ ] Control structure validation
+  - [ ] Invalid +RET usage detection
+- [ ] Add test cases
+  - [ ] Basic word tests
+  - [ ] Control structure tests
+  - [ ] +RET optimization tests
+  - [ ] Error condition tests
+- [ ] Update documentation
+  - [ ] Add examples for each control structure
+  - [ ] Document stack effects
+  - [ ] Document machine code mappings
+  - [ ] Add error message documentation
+
 ## Notes
 - Start with low-level assembly support first
 - Use test4 files as starting point
