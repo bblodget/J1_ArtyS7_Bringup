@@ -21,4 +21,13 @@ DROP            ; ( 42 42 )
 ; Test NOOP (should not affect stack)
 NOOP            ; ( 42 42 )
 
-; Final stack should be ( 42 42 )
+; Test Return Stack Operations
+DUP             ; ( 42 42 42 )
+>R              ; ( 42 42 )     R: ( 42 )
+DUP             ; ( 42 42 42 )  R: ( 42 )
+>R              ; ( 42 42 )     R: ( 42 42 )
+R@              ; ( 42 42 42 )  R: ( 42 42 )
+R>              ; ( 42 42 42 42 ) R: ( 42 )
+R>              ; ( 42 42 42 42 42 ) R: ( )
+
+; Final stack should be ( 42 42 42 42 42 )

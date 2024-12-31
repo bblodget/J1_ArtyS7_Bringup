@@ -135,6 +135,9 @@ def test_duplicate_label(assembler):
         ("OVER", 0x6111),  # N    [T->N,d+1]
         ("NIP", 0x6003),  # T    [d-1]
         ("NOOP", 0x6000),  # T    []
+        (">R", 0x6023),  # T    [T->R,d-1]
+        ("R>", 0x6801),  # R    [d+1]
+        ("R@", 0x6701),  # R    [d+1]
     ],
 )
 def test_stack_words(assembler, source, expected):
@@ -158,6 +161,13 @@ def test_stack_test_program(assembler, stack_test_source):
         0x6003,  # NIP          - Drop second item
         0x6103,  # DROP         - Remove top item
         0x6000,  # NOOP         - No operation
+        0x6001,  # DUP          - Duplicate top of stack
+        0x6023,  # >R           - Move to return stack
+        0x6001,  # DUP          - Duplicate top of stack
+        0x6023,  # >R           - Move to return stack
+        0x6701,  # R@           - Copy from return stack
+        0x6801,  # R>           - Move from return stack
+        0x6801,  # R>           - Move from return stack
     ]
 
     assert result == expected, "\n".join(

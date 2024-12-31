@@ -120,6 +120,10 @@ SWAP: "SWAP"
 OVER: "OVER"
 NIP: "NIP"
 NOOP: "NOOP"
+// Return Stack Operations
+TO_R: ">R"
+R_FROM: "R>"
+R_FETCH: "R@"
 
 // Stack operation rules
 stack_words: DUP
@@ -128,3 +132,7 @@ stack_words: DUP
           | OVER
           | NIP
           | NOOP
+          // Return Stack Operations
+          | TO_R
+          | R_FROM
+          | R_FETCH
