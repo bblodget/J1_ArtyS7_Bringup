@@ -4,6 +4,14 @@ import sys
 import argparse
 from lark import Lark, Transformer, Tree, Token
 from pathlib import Path
+from .instructionset_16kb_dualport import (
+    ALU_OPS,
+    STACK_EFFECTS,
+    D_EFFECTS,
+    R_EFFECTS,
+    INST_TYPES,
+    HIGH_LEVEL_WORDS,
+)
 
 
 class J1Assembler(Transformer):
@@ -105,28 +113,8 @@ class J1Assembler(Transformer):
             raise ValueError(f"Invalid instruction format: {items}")
 
     def alu_op(self, items):
-        # Base ALU operation codes
-        alu_codes = {
-            "T": 0x6000,  # T
-            "N": 0x6100,  # N
-            "T+N": 0x6200,  # Add
-            "T-N": 0x6C00,  # Subtract
-            "T&N": 0x6300,  # AND
-            "T|N": 0x6400,  # OR
-            "T^N": 0x6500,  # XOR
-            "~T": 0x6600,  # NOT
-            "N==T": 0x6700,  # Equal
-            "N<T": 0x6800,  # Less than
-            "Nu<T": 0x6F00,  # Unsigned less than
-            "N<<T": 0x6A00,  # Left shift
-            "N>>T": 0x6900,  # Right shift (logical)
-            "N>>>T": 0x6900,  # Right shift (arithmetic)
-            "1+": 0x6160,  # Increment
-            "1-": 0x6170,  # Decrement
-            "2*": 0x6180,  # Double (left shift by 1)
-            "2/": 0x6190,  # Half (right shift by 1)
-        }
-
+        """Convert ALU operations into their machine code representation."""
+        # Build operation string from items
         if len(items) == 1:
             op = str(items[0])
         elif len(items) == 2:
@@ -135,15 +123,34 @@ class J1Assembler(Transformer):
             else:
                 op = f"{items[0]}"
         elif len(items) == 3:
+            # Handle compound operations like "T+N"
             op = f"{items[0]}{items[1]}{items[2]}"
         else:
             raise ValueError(f"Invalid ALU operation format: {items}")
 
-        if op not in alu_codes:
-            raise ValueError(f"Unknown ALU operation: {op}")
+        # First check if it's a high-level word
+        if op in HIGH_LEVEL_WORDS:
+            return ("alu", HIGH_LEVEL_WORDS[op])
 
-        # Return tuple indicating this is an ALU operation
-        return ("alu", alu_codes[op])
+        # Then check if it's a low-level ALU operation
+        if op in ALU_OPS:
+            return ("alu", INST_TYPES["alu"] | ALU_OPS[op])
+
+        # Special cases for operations that need stack effects
+        if op == "T+N":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["T+N"])
+        elif op == "T-N":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["N-T"])
+        elif op == "T&N":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["T&N"])
+        elif op == "T|N":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["T|N"])
+        elif op == "T^N":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["T^N"])
+        elif op == "~T":
+            return ("alu", INST_TYPES["alu"] | ALU_OPS["~T"])
+
+        raise ValueError(f"Unknown ALU operation: {op}")
 
     def modifier(self, items):
         # Stack operation codes
