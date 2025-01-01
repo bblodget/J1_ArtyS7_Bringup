@@ -182,10 +182,10 @@ def test_stack_test_program(assembler, stack_test_source):
     [
         ("T+N", 0x6200),  # Add
         ("T-N", 0x6C00),  # Subtract
-        ("1+", 0x6160),  # Increment
-        ("1-", 0x6170),  # Decrement
-        ("2*", 0x6180),  # Double (left shift by 1)
-        ("2/", 0x6190),  # Half (right shift by 1)
+        ("1+", 0x7600),  # Increment (0x1600 with ALU base)
+        ("1-", 0x7700),  # Decrement (0x1700 with ALU base)
+        ("2*", 0x6A00),  # Double (0x0A00 with ALU base)
+        ("2/", 0x6900),  # Half (0x0900 with ALU base)
     ],
 )
 def test_arithmetic_operations(assembler, source, expected):
