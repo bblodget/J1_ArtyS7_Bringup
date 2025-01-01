@@ -21,10 +21,10 @@ T: "T"
 N: "N"
 PLUS: "+"
 MINUS: "-"
-AND: "&"
-OR: "|"
-XOR: "^"
-NOT: "~"
+ALU_AND: "&"
+ALU_OR: "|"
+ALU_XOR: "^"
+ALU_NOT: "~"
 EQUALS: "=="
 LESS: "<"
 ULESS: "u<"
@@ -70,14 +70,15 @@ instruction: number
            | alu_op modifiers?
            | jump_op labelref
            | stack_words
+           | arith_words
 
 // ALU instruction rules (reordered to prioritize longer patterns)
 alu_op: T PLUS N
       | T MINUS N
-      | T AND N
-      | T OR N
-      | T XOR N
-      | NOT T
+      | T ALU_AND N
+      | T ALU_OR N
+      | T ALU_XOR N
+      | ALU_NOT T
       | N EQUALS T
       | N LESS T
       | N ULESS T
@@ -140,3 +141,18 @@ stack_words: DUP
           | TO_R
           | R_FROM
           | R_FETCH
+
+// High-Level Arithmetic/Logic words
+ADD: "ADD"
+SUBTRACT: "SUBTRACT"
+AND: "AND"
+OR: "OR"
+XOR: "XOR"
+INVERT: "INVERT"
+
+arith_words: ADD
+           | SUBTRACT
+           | AND
+           | OR
+           | XOR
+           | INVERT
