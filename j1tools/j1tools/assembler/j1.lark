@@ -65,28 +65,13 @@ number: (HEX | DECIMAL)
 
 // Instruction rules
 instruction: number
-         | alu_op modifiers?
+         | alu_op
          | jump_op
          | stack_words
          | arith_words
 
-// ALU instruction rules (reordered to prioritize longer patterns)
-alu_op: T PLUS N
-      | T MINUS N
-      | T ALU_AND N
-      | T ALU_OR N
-      | T ALU_XOR N
-      | ALU_NOT T
-      | N EQUALS T
-      | N LESS T
-      | N ULESS T
-      | N LSHIFT T
-      | N RSHIFT T
-      | N ARSHIFT T
-      | INC
-      | DEC
-      | T
-      | N
+// ALU instruction rules
+alu_op: (T PLUS N | N MINUS T | T ALU_AND N | T ALU_OR N | T ALU_XOR N | ALU_NOT T | T | N) modifiers?
 
 // Modifier rules
 modifier: T_TO_N

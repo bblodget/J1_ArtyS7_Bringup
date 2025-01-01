@@ -47,7 +47,7 @@ def test_number_literals(assembler):
     "source,expected",
     [
         ("T+N", 0x6200),
-        ("T-N", 0x6C00),
+        ("N-T", 0x6C00),
         ("T&N", 0x6300),
         ("T|N", 0x6400),
         ("T^N", 0x6500),
@@ -190,7 +190,7 @@ def test_stack_test_program(assembler, stack_test_source):
     "source,expected",
     [
         ("T+N", 0x6200),  # Add
-        ("T-N", 0x6C00),  # Subtract
+        ("N-T", 0x6C00),  # Subtract
         ("1+", 0x7600),  # Increment (0x1600 with ALU base)
         ("1-", 0x7700),  # Decrement (0x1700 with ALU base)
         ("2*", 0x6A00),  # Double (0x0A00 with ALU base)

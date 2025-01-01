@@ -95,23 +95,14 @@ class J1Assembler(Transformer):
         """
         Handles the 'instruction' rule by converting all inputs to either 'byte_code' or 'label'.
         """
-        item_type, value = items[0]  # First item is always a typed tuple
+        item_type, value = items[0]
 
         if item_type == "literal":
             return ("byte_code", INST_TYPES["imm"] | value)
         elif item_type == "label":
             return items[0]  # Pass through labels unchanged
         elif item_type == "jump":
-            # Don't try to resolve the label yet, just pass it through
-            return items[0]  # Pass through jump instructions for later resolution
-        elif item_type == "alu":
-            result = INST_TYPES["alu"] | value
-            # Get modifier if present
-            if len(items) > 1:
-                mod_type, mod_value = items[1]  # Should be the combined modifier value
-                if mod_type == "modifier":
-                    result |= mod_value
-            return ("byte_code", result)
+            return items[0]  # Pass through jump instructions
         elif item_type == "byte_code":
             return items[0]  # Already final form
 
@@ -185,38 +176,50 @@ class J1Assembler(Transformer):
         return ("byte_code", HIGH_LEVEL_WORDS[op])
 
     def alu_op(self, items):
-        """Convert ALU operations into their machine code representation with type."""
-        # Build operation string from items
-        if len(items) == 1:
-            op = str(items[0])
-        elif len(items) == 2:
-            if str(items[0]) == "~":
-                op = f"~{items[1]}"
-            else:
-                op = f"{items[0]}"
-        elif len(items) == 3:
-            op = f"{items[0]}{items[1]}{items[2]}"
+        """
+        Convert ALU operations into their machine code representation.
+        Handles both the ALU operation and any modifiers.
+        """
+        # Extract operation and modifiers
+        base_op = None
+        modifiers = 0
+
+        # First item is always the operation
+        if str(items[0]) == "~":
+            if len(items) < 2:
+                raise ValueError("Expected operand after ~")
+            base_op = f"~{items[1]}"
+            modifier_start = 2
         else:
-            raise ValueError(f"Invalid ALU operation format: {items}")
+            base_op = str(items[0])
+            modifier_start = 1
 
-        if op in ALU_OPS:
-            return ("alu", ALU_OPS[op])
+        # Handle binary operations (T+N, N-T, etc.)
+        if len(items) > modifier_start and isinstance(items[modifier_start], str):
+            if items[modifier_start] == "-":
+                base_op = "N-T"  # Convert T-N to N-T
+                modifier_start += 2
+            elif items[modifier_start] in ["+", "&", "|", "^"]:
+                base_op = f"{items[0]}{items[modifier_start]}{items[modifier_start+1]}"
+                modifier_start += 2
 
-        # Special cases for operations that need stack effects
-        if op == "T+N":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["T+N"])
-        elif op == "T-N":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["N-T"])
-        elif op == "T&N":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["T&N"])
-        elif op == "T|N":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["T|N"])
-        elif op == "T^N":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["T^N"])
-        elif op == "~T":
-            return ("byte_code", INST_TYPES["alu"] | ALU_OPS["~T"])
+        # Process any modifiers
+        if len(items) > modifier_start:
+            for item in items[modifier_start:]:
+                if isinstance(item, tuple) and item[0] == "modifier":
+                    modifiers |= item[1]
+                else:
+                    raise ValueError(f"Expected modifier, got {item}")
 
-        raise ValueError(f"Unknown ALU operation: {op}")
+        # Get the base ALU operation code
+        if base_op not in ALU_OPS:
+            raise ValueError(f"Unknown ALU operation: {base_op}")
+        result = ALU_OPS[base_op]
+
+        # Add any modifiers
+        result |= modifiers
+
+        return ("byte_code", INST_TYPES["alu"] | result)
 
 
 def main():
