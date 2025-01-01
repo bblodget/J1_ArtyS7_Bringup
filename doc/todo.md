@@ -44,7 +44,7 @@
   - [ ] Add verbose output option
   - [ ] Add listing file output
   - [ ] Add symbol table output
-- [ ] Add proper error messages with line numbers
+- [x] Add proper error messages with line numbers
 - [x] Add debug output option
 
 ## Future Enhancements
@@ -59,11 +59,11 @@
 - [x] Implement basic high-level words
   - [x] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
   - [x] Return stack operations (>R, R>, R@)
-  - [ ] Arithmetic operations (+, -, 1+, 1-, 2*, 2/, etc.)
-  - [ ] Logic operations (AND, OR, XOR, INVERT)
-  - [ ] Comparison operations (=, <, U<)
-  - [ ] Memory/IO operations (@, !, IO@, IO!)
-  - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
+  - [x] Arithmetic operations (+, -, 1+, 1-, 2*, 2/, etc.)
+  - [x] Logic operations (AND, OR, XOR, INVERT)
+  - [x] Comparison operations (=, <, U<)
+  - [x] Memory/IO operations (@, !, IO@, IO!)
+  - [x] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support
   - [ ] Identify compatible operations
   - [ ] Implement suffix parsing
@@ -77,7 +77,7 @@
   - [ ] Stack effect validation
   - [ ] Control structure validation
   - [ ] Invalid +RET usage detection
-- [ ] Add test cases
+- [x] Add test cases
   - [x] Basic word tests
   - [ ] Control structure tests
   - [ ] +RET optimization tests

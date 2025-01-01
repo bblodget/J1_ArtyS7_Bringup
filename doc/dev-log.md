@@ -2,20 +2,26 @@
 
 ## 2024-01-01
 
-- Added support for return stack operations:
-  - Implemented >R, R>, R@ instructions
-  - Added correct instruction encodings:
-    - >R: N [T->R,r+1,d-1] = 0x6127
-    - R>: rT [T->N,r-1,d+1] = 0x6b1d
-    - R@: rT [T->N,d+1] = 0x6b11
-  - Updated stack_test.asm to test return stack operations
-  - Added unit tests for individual return stack operations
-  - Added integration test for full return stack sequence
-  - Verified correct operation using simulator
-- Updated documentation:
-  - Marked return stack operations as completed in todo.md
-  - Added return stack operation machine code mappings
-  - Added stack/return-stack effect comments in test files
+- Fixed ALU operation handling in assembler:
+  - Added support for operations with multiple modifiers
+  - Fixed handling of T-N vs N-T operations
+  - Improved modifier combination logic using bitwise OR
+  - Added proper handling of unary operations (like ~T)
+  - Fixed binary operations (T+N, T&N, etc.)
+- Fixed test cases:
+  - All stack modifier tests now passing
+  - All arithmetic operation tests now passing
+  - Full add_test.asm program now assembles correctly
+- Improved error handling:
+  - Better error messages for invalid modifiers
+  - Better error messages for invalid operations
+  - Added validation for modifier combinations
+- Code improvements:
+  - Refactored alu_op method for better clarity
+  - Added proper handling of modifier chains
+  - Improved documentation of ALU operation handling
+  - Added comments explaining bitwise operations
+
 
 ## 2024-12-31
 
@@ -34,6 +40,20 @@
   - Individual operation tests
   - Full program test
   - Error handling for invalid operations
+- Added support for return stack operations:
+  - Implemented >R, R>, R@ instructions
+  - Added correct instruction encodings:
+    - >R: N [T->R,r+1,d-1] = 0x6127
+    - R>: rT [T->N,r-1,d+1] = 0x6b1d
+    - R@: rT [T->N,d+1] = 0x6b11
+  - Updated stack_test.asm to test return stack operations
+  - Added unit tests for individual return stack operations
+  - Added integration test for full return stack sequence
+  - Verified correct operation using simulator
+- Updated documentation:
+  - Marked return stack operations as completed in todo.md
+  - Added return stack operation machine code mappings
+  - Added stack/return-stack effect comments in test files
 
 ## 2024-12-30
 

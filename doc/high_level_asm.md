@@ -39,11 +39,11 @@ R@      ( -- n ) (R: n -- n) ; Copy from return stack
 
 ## Arithmetic/Logic Words
 ```
-+       ( n1 n2 -- sum )     ; Add
+ADD     ( n1 n2 -- sum )     ; Add
         ; Maps to: T+N[d-1]          ; 6203
         ; With +RET: T+N[RET,d-1,r-1] ; 628B
 
--       ( n1 n2 -- diff )    ; Subtract
+SUBTRACT ( n1 n2 -- diff )    ; Subtract
         ; Maps to: T-N[d-1]          ; 6C03
         ; With +RET: T-N[RET,d-1,r-1] ; 6C8B
 
