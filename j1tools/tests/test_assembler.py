@@ -25,6 +25,15 @@ def stack_test_source():
         return f.read()
 
 
+@pytest.fixture
+def arith_test_source():
+    test_file = (
+        Path(__file__).parent.parent.parent / "firmware/arith_test/arith_test.asm"
+    )
+    with open(test_file, "r") as f:
+        return f.read()
+
+
 def test_number_literals(assembler):
     # Test hex and decimal number handling
     hex_result = assembler.transform(assembler.parse("#$2A"))
@@ -194,3 +203,26 @@ def test_arithmetic_operations(assembler, source, expected):
     assert (
         result[0] == expected
     ), f"Arithmetic operation {source} should generate {expected:04x}, got {result[0]:04x}"
+
+
+def test_arith_test_program(assembler, arith_test_source):
+    result = assembler.transform(assembler.parse(arith_test_source))
+
+    # Expected instruction sequence for arith_test.asm
+    expected = [
+        0x8005,  # LIT #5       - Push 5 onto stack
+        0x7600,  # 1+           - Increment (should be 6)
+        0x7700,  # 1-           - Decrement (back to 5)
+        0x6103,  # DROP         - Remove top item
+        0x8004,  # LIT #4       - Push 4 onto stack
+        0x6A00,  # 2*           - Double (should be 8)
+        0x6900,  # 2/           - Half (back to 4)
+        0x6103,  # DROP         - Remove top item
+        0x0000,  # JMP start    - Loop forever
+    ]
+
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
