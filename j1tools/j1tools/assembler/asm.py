@@ -51,13 +51,19 @@ class J1Assembler(Transformer):
                     self.current_address += 1
                     instructions.append(stmt)
 
-        # Second pass: resolve to final bytecode
+        # Second pass: resolve labels and convert to final bytecode
         resolved = []
         for inst in instructions:
             type_, value = inst
-            if type_ != "byte_code":
+            if type_ == "jump":
+                jump_type, label = value
+                if label not in self.labels:
+                    raise ValueError(f"Undefined label: {label}")
+                resolved.append(jump_type | self.labels[label])
+            elif type_ == "byte_code":
+                resolved.append(value)
+            else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
-            resolved.append(value)
 
         return resolved
 
@@ -68,15 +74,22 @@ class J1Assembler(Transformer):
         return items[0]
 
     def jump_op(self, items):
+        """
+        Handle jump operations with their labels.
+        First item is the jump type, second is the label reference.
+        """
         jump_codes = {
             "JMP": 0x0000,
             "ZJMP": 0x2000,
             "CALL": 0x4000,
         }
         op = str(items[0])
+        label_type, label = items[1]  # Should be ("label", label_name)
         if op not in jump_codes:
             raise ValueError(f"Unknown jump operation: {op}")
-        return ("jump", (jump_codes[op], items[1]))
+        if label_type != "label":
+            raise ValueError(f"Expected label reference, got {label_type}")
+        return ("jump", (jump_codes[op], label))
 
     def instruction(self, items):
         """
@@ -89,10 +102,8 @@ class J1Assembler(Transformer):
         elif item_type == "label":
             return items[0]  # Pass through labels unchanged
         elif item_type == "jump":
-            jump_type, label = value
-            if label not in self.labels:
-                raise ValueError(f"Undefined label: {label}")
-            return ("byte_code", jump_type | self.labels[label])
+            # Don't try to resolve the label yet, just pass it through
+            return items[0]  # Pass through jump instructions for later resolution
         elif item_type == "alu":
             result = INST_TYPES["alu"] | value
             # Get modifier if present

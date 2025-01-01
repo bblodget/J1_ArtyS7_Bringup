@@ -31,10 +31,8 @@ ULESS: "u<"
 LSHIFT: "<<"
 RSHIFT: ">>"
 ARSHIFT: ">>>"
-INCREMENT: "1+"
-DECREMENT: "1-"
-DOUBLE: "2*"
-HALF: "2/"
+INC: "T+1"
+DEC: "T-1"
 
 // Stack and Memory Modifiers
 T_TO_N: "T->N"
@@ -67,10 +65,10 @@ number: (HEX | DECIMAL)
 
 // Instruction rules
 instruction: number
-           | alu_op modifiers?
-           | jump_op labelref
-           | stack_words
-           | arith_words
+         | alu_op modifiers?
+         | jump_op
+         | stack_words
+         | arith_words
 
 // ALU instruction rules (reordered to prioritize longer patterns)
 alu_op: T PLUS N
@@ -85,10 +83,8 @@ alu_op: T PLUS N
       | N LSHIFT T
       | N RSHIFT T
       | N ARSHIFT T
-      | INCREMENT
-      | DECREMENT
-      | DOUBLE
-      | HALF
+      | INC
+      | DEC
       | T
       | N
 
@@ -114,9 +110,9 @@ ZJMP: "ZJMP"    // 2000 base
 CALL: "CALL"    // 4000 base    
 
 // Jump instruction rules
-jump_op: JMP
-       | ZJMP
-       | CALL
+jump_op: JMP labelref
+       | ZJMP labelref
+       | CALL labelref
 
 // Stack Operation Words
 DUP: "DUP"
@@ -149,6 +145,10 @@ AND: "AND"
 OR: "OR"
 XOR: "XOR"
 INVERT: "INVERT"
+INCREMENT: "1+"
+DECREMENT: "1-"
+DOUBLE: "2*"
+HALF: "2/"
 
 arith_words: ADD
            | SUBTRACT
@@ -156,3 +156,8 @@ arith_words: ADD
            | OR
            | XOR
            | INVERT
+           | INCREMENT
+           | DECREMENT
+           | DOUBLE
+           | HALF
+
