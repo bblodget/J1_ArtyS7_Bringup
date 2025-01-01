@@ -16,7 +16,7 @@
 //    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-uses crt, math;
+uses crt;
 
 // Configuration of the emulator
 
@@ -89,6 +89,7 @@ var pc : word = 0;
     rstack : array[0..rstacksize-1] of word;
     memory : array[0..$0FFF] of word;
 
+(*
 
 procedure printstate; // Just for debugging. uses math
 var k : integer;
@@ -101,6 +102,7 @@ begin
   writeln ('*>');
 end;
 
+*)
 
 // Load memory image for startup
 
@@ -213,7 +215,6 @@ procedure cpu_step;
 var insn, tos, nos, rtos, tosN : word;
 
 begin
-  printstate;
   ticks := (ticks + 1) and $FFFF; // Cycle counter is available as IO register.
 
   insn := memory[pc and $FFF]; // High-Call = Memory Fetch, mask away the topmost address bit.
