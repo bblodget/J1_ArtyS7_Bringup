@@ -1,6 +1,22 @@
 # Development Log
 
-## 2024-01-01
+## 2025-01-02
+
+- Improved error reporting in assembler:
+  - Added consistent error message format: filename:line:column: message
+  - Fixed line number counting for accurate error locations
+  - Added proper error context display with pointer to error location
+  - Updated all error messages to include file location information
+  - Fixed error reporting to show actual error line instead of next line
+  - Added debug mode to show detailed error context
+  - Improved grammar error messages with better context
+- Simplified ALU operation handling:
+  - Added direct token definitions for compound operations (T+N, N-T, etc.)
+  - Removed special case handling in alu_op method
+  - Made grammar more explicit about valid operations
+  - Improved error detection for invalid ALU operations
+
+## 2025-01-01
 
 - Fixed ALU operation handling in assembler:
   - Added support for operations with multiple modifiers

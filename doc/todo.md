@@ -40,10 +40,10 @@
 ## Integration
 - [x] Merge working code into j1tools package
 - [x] Update package structure
-- [ ] Add command line interface improvements
-  - [ ] Add verbose output option
-  - [ ] Add listing file output
-  - [ ] Add symbol table output
+- [x] Add command line interface improvements
+  - [x] Add verbose output option
+  - [x] Add listing file output
+  - [x] Add symbol table output
 - [x] Add proper error messages with line numbers
 - [x] Add debug output option
 
@@ -73,10 +73,10 @@
   - [ ] IF ELSE THEN
   - [ ] BEGIN UNTIL
   - [ ] BEGIN WHILE REPEAT
-- [ ] Add error handling
-  - [ ] Stack effect validation
-  - [ ] Control structure validation
-  - [ ] Invalid +RET usage detection
+- [x] Add error handling
+  - [x] Stack effect validation
+  - [x] Control structure validation
+  - [x] Invalid +RET usage detection
 - [x] Add test cases
   - [x] Basic word tests
   - [ ] Control structure tests
