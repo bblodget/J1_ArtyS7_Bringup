@@ -49,7 +49,14 @@ class J1Assembler(Transformer):
             if isinstance(stmt, tuple):
                 if stmt[0] == "label":
                     if stmt[1] in self.labels:
-                        raise ValueError(f"Duplicate label: {stmt[1]}")
+                        token = stmt[2] if len(stmt) > 2 else None
+                        if token:
+                            raise ValueError(
+                                f"{self.current_file}:{token.line}:{token.column}: "
+                                f"Duplicate label: {stmt[1]}"
+                            )
+                        else:
+                            raise ValueError(f"Duplicate label: {stmt[1]}")
                     self.labels[stmt[1]] = self.current_address
                 else:
                     self.current_address += 1
@@ -60,9 +67,12 @@ class J1Assembler(Transformer):
         for inst in instructions:
             type_, value = inst
             if type_ == "jump":
-                jump_type, label = value
+                jump_type, label, token = value
                 if label not in self.labels:
-                    raise ValueError(f"Undefined label: {label}")
+                    raise ValueError(
+                        f"{self.current_file}:{token.line}:{token.column}: "
+                        f"Undefined label: {label}"
+                    )
                 resolved.append(jump_type | self.labels[label])
             elif type_ == "byte_code":
                 resolved.append(value)
@@ -78,10 +88,7 @@ class J1Assembler(Transformer):
         return items[0]
 
     def jump_op(self, items):
-        """
-        Handle jump operations with their labels.
-        First item is the jump type, second is the label reference.
-        """
+        """Handle jump operations with their labels."""
         jump_codes = {
             "JMP": 0x0000,
             "ZJMP": 0x2000,
@@ -90,16 +97,24 @@ class J1Assembler(Transformer):
         op = str(items[0])
         label_type, label = items[1]  # Should be ("label", label_name)
         if op not in jump_codes:
-            raise ValueError(f"Unknown jump operation: {op}")
+            raise ValueError(
+                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"Unknown jump operation: {op}"
+            )
         if label_type != "label":
-            raise ValueError(f"Expected label reference, got {label_type}")
-        return ("jump", (jump_codes[op], label))
+            raise ValueError(
+                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"Expected label reference, got {label_type}"
+            )
+        return (
+            "jump",
+            (jump_codes[op], label, items[0]),
+        )  # Include token for error reporting
 
     def instruction(self, items):
-        """
-        Handles the 'instruction' rule by converting all inputs to either 'byte_code' or 'label'.
-        """
+        """Handles the 'instruction' rule."""
         item_type, value = items[0]
+        token = items[0][2] if len(items[0]) > 2 else None
 
         if item_type == "literal":
             return ("byte_code", INST_TYPES["imm"] | value)
@@ -110,11 +125,17 @@ class J1Assembler(Transformer):
         elif item_type == "byte_code":
             return items[0]  # Already final form
 
+        if token:
+            raise ValueError(
+                f"{self.current_file}:{token.line}:{token.column}: "
+                f"Invalid instruction type: {item_type}"
+            )
         raise ValueError(f"Invalid instruction type: {item_type}")
 
     def modifier(self, items):
         """Convert modifiers into their machine code representation with type."""
-        mod = str(items[0])
+        token = items[0]
+        mod = str(token)
         if mod in STACK_EFFECTS:
             return ("modifier", STACK_EFFECTS[mod])
         elif mod in D_EFFECTS:
@@ -122,17 +143,23 @@ class J1Assembler(Transformer):
         elif mod in R_EFFECTS:
             return ("modifier", R_EFFECTS[mod])
         else:
-            raise ValueError(f"Unknown modifier: {mod}")
+            raise ValueError(
+                f"{self.current_file}:{token.line}:{token.column}: "
+                f"Unknown modifier: {mod}"
+            )
 
     def modifier_list(self, items):
-        """
-        Combines all modifiers into a single integer using bitwise OR and returns as a typed tuple.
-        """
+        """Combines all modifiers into a single integer using bitwise OR."""
         result = 0
-        for mod_type, value in items:
-            if mod_type != "modifier":
-                raise ValueError(f"Expected modifier, got {mod_type}")
-            result |= value
+        for item in items:
+            if isinstance(item, tuple) and item[0] == "modifier":
+                result |= item[1]
+            else:
+                token = item if isinstance(item, Token) else items[0]
+                raise ValueError(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"Expected modifier, got {item}"
+                )
         return ("modifier", result)
 
     def modifiers(self, items):
