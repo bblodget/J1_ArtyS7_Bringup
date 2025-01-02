@@ -46,12 +46,12 @@ def test_number_literals(assembler):
 @pytest.mark.parametrize(
     "source,expected",
     [
+        ("~T", 0x6600),
         ("T+N", 0x6200),
         ("N-T", 0x6C00),
         ("T&N", 0x6300),
         ("T|N", 0x6400),
         ("T^N", 0x6500),
-        ("~T", 0x6600),
     ],
 )
 def test_alu_operations(assembler, source, expected):

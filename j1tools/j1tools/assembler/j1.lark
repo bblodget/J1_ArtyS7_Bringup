@@ -19,12 +19,12 @@ COLON: ":"
 // ALU Operations
 T: "T"
 N: "N"
-PLUS: "+"
-MINUS: "-"
-ALU_AND: "&"
-ALU_OR: "|"
-ALU_XOR: "^"
-ALU_NOT: "~"
+T_PLUS_N: "T+N"
+N_MINUS_T: "N-T"
+T_AND_N: "T&N"
+T_OR_N: "T|N"
+T_XOR_N: "T^N"
+NOT_T: "~T"
 EQUALS: "=="
 LESS: "<"
 ULESS: "u<"
@@ -71,7 +71,7 @@ instruction: number
          | arith_words
 
 // ALU instruction rules
-alu_op: (T PLUS N | N MINUS T | T ALU_AND N | T ALU_OR N | T ALU_XOR N | ALU_NOT T | T | N) modifiers?
+alu_op: (T | N | T_PLUS_N | N_MINUS_T | T_AND_N | T_OR_N | T_XOR_N | NOT_T) modifiers?
 
 // Modifier rules
 modifier: T_TO_N

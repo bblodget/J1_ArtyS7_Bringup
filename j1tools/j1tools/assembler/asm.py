@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import lark
 from lark import Lark, Transformer, Tree, Token
 from pathlib import Path
 from .instructionset_16kb_dualport import (
@@ -20,6 +21,7 @@ class J1Assembler(Transformer):
         self.labels = {}
         self.current_address = 0
         self.debug = debug
+        self.current_file = "<unknown>"
 
         # Load the grammar
         grammar_path = Path(__file__).parent / "j1.lark"
@@ -33,7 +35,9 @@ class J1Assembler(Transformer):
         except Exception as e:
             raise Exception(f"Failed to load grammar: {e}")
 
-    def parse(self, source):
+    def parse(self, source, filename="<unknown>"):
+        """Parse source code with optional filename for error reporting."""
+        self.current_file = filename
         return self.parser.parse(source)
 
     def program(self, statements):
@@ -181,39 +185,25 @@ class J1Assembler(Transformer):
         Handles both the ALU operation and any modifiers.
         """
         # Extract operation and modifiers
-        base_op = None
+        token = items[0]  # Keep the token object for error reporting
+        base_op = str(token)
         modifiers = 0
 
-        # First item is always the operation
-        if str(items[0]) == "~":
-            if len(items) < 2:
-                raise ValueError("Expected operand after ~")
-            base_op = f"~{items[1]}"
-            modifier_start = 2
-        else:
-            base_op = str(items[0])
-            modifier_start = 1
-
-        # Handle binary operations (T+N, N-T, etc.)
-        if len(items) > modifier_start and isinstance(items[modifier_start], str):
-            if items[modifier_start] == "-":
-                base_op = "N-T"  # Convert T-N to N-T
-                modifier_start += 2
-            elif items[modifier_start] in ["+", "&", "|", "^"]:
-                base_op = f"{items[0]}{items[modifier_start]}{items[modifier_start+1]}"
-                modifier_start += 2
-
-        # Process any modifiers
-        if len(items) > modifier_start:
-            for item in items[modifier_start:]:
+        # Process any modifiers after the operation
+        if len(items) > 1:
+            for item in items[1:]:
                 if isinstance(item, tuple) and item[0] == "modifier":
                     modifiers |= item[1]
                 else:
-                    raise ValueError(f"Expected modifier, got {item}")
+                    raise ValueError(
+                        f"{self.current_file}:{token.line}:{token.column}: Expected modifier, got {item}"
+                    )
 
         # Get the base ALU operation code
         if base_op not in ALU_OPS:
-            raise ValueError(f"Unknown ALU operation: {base_op}")
+            raise ValueError(
+                f"{self.current_file}:{token.line}:{token.column}: Unknown ALU operation '{base_op}'"
+            )
         result = ALU_OPS[base_op]
 
         # Add any modifiers
@@ -241,13 +231,27 @@ def main():
             print("Parsing source...", file=sys.stderr)
 
         assembler = J1Assembler(debug=args.debug)
-        tree = assembler.parse(source)
-        instructions = assembler.transform(tree)
+        try:
+            tree = assembler.parse(source, filename=args.input)
+            instructions = assembler.transform(tree)
 
-        # Output hex format
-        for i, inst in enumerate(instructions):
-            # print(f"{i:04x}: {inst:04x}")
-            print(f"{inst:04x}")
+            # Output hex format
+            for inst in instructions:
+                print(f"{inst:04x}")
+
+        except lark.exceptions.UnexpectedInput as e:
+            # Format Lark's parsing errors to match our style
+            # Remove the redundant line/column info from the error message
+            error_msg = str(e)
+            if ", at line" in error_msg:
+                error_msg = error_msg.split(", at line")[0]
+
+            print(
+                f"Error: {args.input}:{e.line}:{e.column}: {error_msg}", file=sys.stderr
+            )
+            if args.debug:
+                print(f"\n{e.get_context()}", file=sys.stderr)
+            sys.exit(1)
 
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
