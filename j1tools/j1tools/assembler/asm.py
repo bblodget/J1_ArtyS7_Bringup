@@ -246,11 +246,24 @@ def main():
             if ", at line" in error_msg:
                 error_msg = error_msg.split(", at line")[0]
 
+            # Find the actual line with the error by counting non-empty, non-comment lines
+            real_line = 0
+            source_lines = source.splitlines()
+            for i, line in enumerate(source_lines[: e.line - 1], 1):
+                stripped = line.strip()
+                if stripped and not stripped.startswith(";"):
+                    real_line = i
+
+            # Get the actual error line for context display
+            error_line = source_lines[real_line - 1]
+            context = f"\n    {error_line}\n    {' ' * (e.column-1)}^"
+
             print(
-                f"Error: {args.input}:{e.line}:{e.column}: {error_msg}", file=sys.stderr
+                f"Error: {args.input}:{real_line}:{e.column}: {error_msg}",
+                file=sys.stderr,
             )
             if args.debug:
-                print(f"\n{e.get_context()}", file=sys.stderr)
+                print(context, file=sys.stderr)
             sys.exit(1)
 
     except Exception as e:
