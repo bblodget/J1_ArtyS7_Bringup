@@ -13,6 +13,9 @@
 
 - Updated firmware tests to use source *.asm and expected output *.hex.
 
+- **Learned about handling negative numbers on the stack**:
+  - To push negative values onto the data stack, one can load a positive value and then use the `INVERT` instruction. For example, to push `-2`, load `$0002`, subtract `1` using `1-`, and then apply `INVERT`, resulting in `0xFFFE` on the stack.
+
 ## 2025-01-02
 
 - Improved error reporting in assembler:
