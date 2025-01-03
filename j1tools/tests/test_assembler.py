@@ -6,7 +6,7 @@ from lark.exceptions import VisitError
 
 @pytest.fixture
 def assembler():
-    return J1Assembler(debug=False)
+    return J1Assembler(debug=True)
 
 
 @pytest.fixture
@@ -248,6 +248,10 @@ def test_alu_modifiers(assembler, source, expected):
 def test_multiple_alu_instructions(assembler):
     """Test that multiple ALU operations in sequence work correctly."""
     source = """
+        #$2A                ; Push hex 2A (decimal 42)
+        #10                 ; Push decimal 10
+        T+N[d-1]            ; Add and drop
+        #10                 ; Push decimal 10
     start:
         T+N[d-1]            ; Add and drop
         T[T->R,r+1]         ; Push to return stack
@@ -256,6 +260,10 @@ def test_multiple_alu_instructions(assembler):
     """
     result = assembler.transform(assembler.parse(source))
     expected = [
+        0x802A,  # Push hex 2A
+        0x800A,  # Push decimal 10
+        0x6203,  # T+N[d-1]
+        0x800A,  # Push decimal 10
         0x6203,  # T+N[d-1]
         0x6024,  # T[T->R,r+1]
         0x600C,  # T[r-1]

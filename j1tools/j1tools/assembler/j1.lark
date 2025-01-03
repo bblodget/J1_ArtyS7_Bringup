@@ -17,8 +17,6 @@ IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 COLON: ":"
 
 // ALU Operations
-T: "T"
-N: "N"
 T_PLUS_N: "T+N"
 N_MINUS_T: "N-T"
 T_AND_N: "T&N"
@@ -33,6 +31,8 @@ RSHIFT: ">>"
 ARSHIFT: ">>>"
 INC: "T+1"
 DEC: "T-1"
+T: "T"
+N: "N"
 
 // Stack and Memory Modifiers
 T_TO_N: "T->N"
@@ -127,8 +127,10 @@ stack_words: DUP
           | R_FETCH
 
 // High-Level Arithmetic/Logic words
-ADD: "ADD" | "+"
-SUBTRACT: "SUBTRACT" | "-"
+//ADD: "ADD" | "+"
+//SUBTRACT: "SUBTRACT" | "-"
+ADD: "ADD"
+SUBTRACT: "SUBTRACT"
 AND: "AND"
 OR: "OR"
 XOR: "XOR"

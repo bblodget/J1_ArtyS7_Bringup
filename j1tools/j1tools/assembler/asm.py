@@ -38,16 +38,30 @@ class J1Assembler(Transformer):
     def parse(self, source, filename="<unknown>"):
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
-        return self.parser.parse(source)
+        tree = self.parser.parse(source)
+        if self.debug:
+            print("\n=== Tokens ===")
+            # Print all tokens in the tree
+            for token in tree.scan_values(lambda v: isinstance(v, Token)):
+                print(f"Token: {token.type} = '{token.value}'")
+        return tree
 
     def program(self, statements):
         # First pass: collect labels
         self.current_address = 0
         instructions = []
 
+        if self.debug:
+            print("\n=== Parse Tree ===")
+            for i, stmt in enumerate(statements):
+                print(f"Statement {i}: type={type(stmt)}, value={stmt}")
+
         for stmt in statements:
             if isinstance(stmt, tuple):
                 if stmt[0] == "label":
+                    if self.debug:
+                        print(f"\nProcessing label at {self.current_address}")
+                        print(f"Label: {stmt}")
                     if stmt[1] in self.labels:
                         token = stmt[2] if len(stmt) > 2 else None
                         if token:
@@ -59,8 +73,17 @@ class J1Assembler(Transformer):
                             raise ValueError(f"Duplicate label: {stmt[1]}")
                     self.labels[stmt[1]] = self.current_address
                 else:
+                    if self.debug:
+                        print(f"\nProcessing instruction at {self.current_address}")
+                        print(f"Instruction: {stmt}")
+                        print(f"Current instructions: {instructions}")
                     self.current_address += 1
                     instructions.append(stmt)
+
+        if self.debug:
+            print("\n=== Second Pass ===")
+            print(f"Labels collected: {self.labels}")
+            print(f"Instructions to resolve: {instructions}")
 
         # Second pass: resolve labels and convert to final bytecode
         resolved = []
@@ -113,6 +136,8 @@ class J1Assembler(Transformer):
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
+        if self.debug:
+            print(f"Processing instruction: {items}")
         item_type, value = items[0]
         token = items[0][2] if len(items[0]) > 2 else None
 
@@ -211,6 +236,11 @@ class J1Assembler(Transformer):
         Convert ALU operations into their machine code representation.
         Handles both the ALU operation and any modifiers.
         """
+        if self.debug:
+            print(f"\nALU Operation:")
+            print(f"Items: {items}")
+            print(f"Current address: {self.current_address}")
+
         # Extract operation and modifiers
         token = items[0]  # Keep the token object for error reporting
         base_op = str(token)
