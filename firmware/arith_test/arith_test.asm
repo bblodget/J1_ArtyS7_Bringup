@@ -39,18 +39,24 @@ start:
     DROP        ; Clean up result
 
     ; Test bitwise operations
-;    #$FF00      ; Load first test value
-;    #$0FF0      ; Load second test value
-;    AND         ; Bitwise AND (should be 0x0F00)
-;    DROP        ; Clean up result
+    #$FF00      ; Load first test value
+    #$0FF0      ; Load second test value
+    AND         ; Bitwise AND (should be 0x0F00)
+    DROP        ; Clean up result
 
-;    #$F0F0      ; Load first test value
-;    #$0F0F      ; Load second test value
-;    OR          ; Bitwise OR (should be 0xFFFF)
-;    DROP        ; Clean up result
+    #$F0FF      ; Load first test value
+    #$0F0F      ; Load second test value
+    OR          ; Bitwise OR (should be 0xFFFF)
+    DROP        ; Clean up result
 
-;    #$FFFF      ; Load test value
-;    INVERT      ; Bitwise NOT (should be 0x0000)
-;    DROP        ; Clean up result
+    #$F0FF      ; Load first test value
+    #$0F0F      ; Load second test value
+    XOR          ; Bitwise OR (should be 0xFFF0)
+    DROP        ; Clean up result
+
+    #$FFFF      ; Load test value
+    INVERT      ; Bitwise NOT (should be 0x0000)
+    INVERT      ; Bitwise NOT (should be 0xFFFF)
+    DROP        ; Clean up result
     
     JMP start   ; Loop forever
