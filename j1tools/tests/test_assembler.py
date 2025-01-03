@@ -248,6 +248,7 @@ def test_alu_modifiers(assembler, source, expected):
 def test_multiple_alu_instructions(assembler):
     """Test that multiple ALU operations in sequence work correctly."""
     source = """
+    start:
         T+N[d-1]            ; Add and drop
         T[T->R,r+1]         ; Push to return stack
         T[r-1]              ; Pop from return stack
