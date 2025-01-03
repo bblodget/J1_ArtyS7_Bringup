@@ -60,9 +60,9 @@
 - [x] Implement basic high-level words
   - [x] Stack operations (DUP, DROP, SWAP, OVER, NIP, NOOP)
   - [x] Return stack operations (>R, R>, R@)
-  - [ ] Complete arith_test.asm
-    - [ ] Arithmetic operations (ADD(+), SUBTRACT(-), 1+, 1-, 2*, 2/, etc.)
-    - [ ] Logic operations (AND, OR, XOR, INVERT)
+  - [x] Complete arith_test.asm
+    - [x] Arithmetic operations (ADD(+), SUBTRACT(-), 1+, 1-, 2*, 2/, etc.)
+    - [x] Logic operations (AND, OR, XOR, INVERT)
   - [ ] Comparison operations (=, <, U<)
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
