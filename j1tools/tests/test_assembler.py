@@ -6,7 +6,7 @@ from lark.exceptions import VisitError
 
 @pytest.fixture
 def assembler():
-    return J1Assembler(debug=True)
+    return J1Assembler(debug=False)
 
 
 @pytest.fixture

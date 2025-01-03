@@ -51,10 +51,10 @@ class J1Assembler(Transformer):
         self.current_address = 0
         instructions = []
 
-        if self.debug:
-            print("\n=== Parse Tree ===")
-            for i, stmt in enumerate(statements):
-                print(f"Statement {i}: type={type(stmt)}, value={stmt}")
+        # if self.debug:
+        #    print("\n=== Parse Tree ===")
+        #    for i, stmt in enumerate(statements):
+        #        print(f"Statement {i}: type={type(stmt)}, value={stmt}")
 
         for stmt in statements:
             if isinstance(stmt, tuple):
@@ -73,17 +73,17 @@ class J1Assembler(Transformer):
                             raise ValueError(f"Duplicate label: {stmt[1]}")
                     self.labels[stmt[1]] = self.current_address
                 else:
-                    if self.debug:
-                        print(f"\nProcessing instruction at {self.current_address}")
-                        print(f"Instruction: {stmt}")
-                        print(f"Current instructions: {instructions}")
+                    # if self.debug:
+                    #    print(f"\nProcessing instruction at {self.current_address}")
+                    #    print(f"Instruction: {stmt}")
+                    #    print(f"Current instructions: {instructions}")
                     self.current_address += 1
                     instructions.append(stmt)
 
-        if self.debug:
-            print("\n=== Second Pass ===")
-            print(f"Labels collected: {self.labels}")
-            print(f"Instructions to resolve: {instructions}")
+        # if self.debug:
+        #    print("\n=== Second Pass ===")
+        #    print(f"Labels collected: {self.labels}")
+        #    print(f"Instructions to resolve: {instructions}")
 
         # Second pass: resolve labels and convert to final bytecode
         resolved = []
@@ -136,10 +136,14 @@ class J1Assembler(Transformer):
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
-        if self.debug:
-            print(f"Processing instruction: {items}")
         item_type, value = items[0]
         token = items[0][2] if len(items[0]) > 2 else None
+
+        if self.debug:
+            if item_type == "literal" or item_type == "byte_code":
+                print(f"Processing instruction: {item_type} {hex(value)}")
+            else:
+                print(f"Processing instruction: {item_type} {value}")
 
         if item_type == "literal":
             return ("byte_code", INST_TYPES["imm"] | value)
