@@ -39,24 +39,24 @@ start:
     DROP        ; Clean up result
 
     ; Test bitwise operations
-    #$FF00      ; Load first test value
-    #$0FF0      ; Load second test value
+    #$FF00      ; Load first test value (0x7F00)
+    #$0FF0      ; Load second test value (0x00F0)
     AND         ; Bitwise AND (should be 0x0F00)
     DROP        ; Clean up result
 
-    #$F0FF      ; Load first test value
-    #$0F0F      ; Load second test value
-    OR          ; Bitwise OR (should be 0xFFFF)
+    #$F0FF      ; Load first test value (0x70FF)
+    #$0F0F      ; Load second test value (0x0F0F)
+    OR          ; Bitwise OR (should be 0x7FFF)
     DROP        ; Clean up result
 
-    #$F0FF      ; Load first test value
-    #$0F0F      ; Load second test value
-    XOR          ; Bitwise OR (should be 0xFFF0)
+    #$F0FF      ; Load first test value (0x70FF)
+    #$0F0F      ; Load second test value (0x0F0F)
+    XOR          ; Bitwise OR (should be 0x7FF0)
     DROP        ; Clean up result
 
     #$FFFF      ; Load test value
-    INVERT      ; Bitwise NOT (should be 0x0000)
-    INVERT      ; Bitwise NOT (should be 0xFFFF)
+    INVERT      ; Bitwise NOT (should be 0x8000)
+    INVERT      ; Bitwise NOT (should be 0x7FFF)
     DROP        ; Clean up result
 
     #$0000      ; Load test value
@@ -66,7 +66,7 @@ start:
 
 		; Load -2 onto stack
     #$0002      ; Load test value
-    1-		; Subtract 1
+    1-		    ; Subtract 1
     INVERT      ; Bitwise NOT (should be 0xFFFE)
     DROP        ; Clean up result
     
