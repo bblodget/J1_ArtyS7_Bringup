@@ -4,14 +4,14 @@
 
 - Resolved issues with ALU operation parsing:
   - Adjusted the grammar in `j1.lark` to prioritize combined ALU operations (e.g., `T+N`) over standalone operators (`+`).
-  - Despite attempts to maintain standalone `+` and `-` operators, conflicts arose, leading to incorrect parsing of ALU operations.
-  - Temporarily removed `+` and `-` from `ADD` and `SUBTRACT` definitions to ensure all tests pass.
+  - Specified priority for terminal tokens using the notation `TERM.number`, allowing `T_PLUS_N.2` and `N_MINUS_T.2` to match before the raw `ADD` and `SUBTRACT` words.
+  - Reintroduced standalone `+` and `-` operators in the grammar without conflicts.
 
 - Conducted extensive testing:
   - Ran the test suite, resulting in all 45 tests passing successfully.
   - Confirmed that the assembler correctly processes ALU operations without errors.
 
-- Update firmware tests to use source *.asm and expected output *.hex
+- Updated firmware tests to use source *.asm and expected output *.hex.
 
 ## 2025-01-02
 

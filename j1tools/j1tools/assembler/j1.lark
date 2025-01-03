@@ -25,6 +25,9 @@ MINUS: "-"
 // ALU Operations
 T: "T"
 N: "N"
+// The .2 specifies a higher precedence rule
+// This makes T_PLUS_N match before T PLUS N
+// And N_MINUS_T match before N MINUS T
 T_PLUS_N.2: T PLUS N // "T+N"
 N_MINUS_T.2: N MINUS T // "N-T"
 T_AND_N: "T&N"
