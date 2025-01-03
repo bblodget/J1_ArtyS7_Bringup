@@ -3,10 +3,10 @@
 
 start:
     ; Test addition
-;    #$1234      ; Load first test value
-;    #$5678      ; Load second test value
-;    ADD         ; Add them together (should be 0x68AC)
-;    DROP        ; Clean up result
+    #$1234      ; Load first test value
+    #$5678      ; Load second test value
+    ADD         ; Add them together (should be 0x68AC)
+    DROP        ; Clean up result
 
     ; Test subtraction
 ;    #$5000      ; Load first test value
