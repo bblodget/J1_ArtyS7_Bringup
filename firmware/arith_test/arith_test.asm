@@ -2,17 +2,29 @@
 ; Tests basic arithmetic operations of the J1 processor
 
 start:
-    ; Test addition
+    ; Test addition 1
     #$1234      ; Load first test value
     #$5678      ; Load second test value
     ADD         ; Add them together (should be 0x68AC)
     DROP        ; Clean up result
 
-    ; Test subtraction
-;    #$5000      ; Load first test value
-;    #$2000      ; Load value to subtract
-;    SUBTRACT    ; Subtract (should be 0x3000)
-;    DROP        ; Clean up result
+    ; Test addition 2
+    #$1234      ; Load first test value
+    #$5678      ; Load second test value
+    +         ; Add them together (should be 0x68AC)
+    DROP        ; Clean up result
+
+    ; Test subtraction 1
+    #$5000      ; Load first test value
+    #$2000      ; Load value to subtract
+    SUBTRACT    ; Subtract (should be 0x3000)
+    DROP        ; Clean up result
+
+    ; Test subtraction 2
+    #$5000      ; Load first test value
+    #$2000      ; Load value to subtract
+    -           ; Subtract (should be 0x3000)
+    DROP        ; Clean up result
 
     ; Test increment/decrement
     #$0005      ; Load test value
