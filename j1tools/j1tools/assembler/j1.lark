@@ -124,8 +124,8 @@ stack_words: DUP
           | R_FETCH
 
 // High-Level Arithmetic/Logic words
-ADD: "ADD"
-SUBTRACT: "SUBTRACT"
+ADD: "ADD" | "+"
+SUBTRACT: "SUBTRACT" | "-"
 AND: "AND"
 OR: "OR"
 XOR: "XOR"

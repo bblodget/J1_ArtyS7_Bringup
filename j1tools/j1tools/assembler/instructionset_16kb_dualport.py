@@ -83,7 +83,9 @@ HIGH_LEVEL_WORDS = {
     "NIP": INST_TYPES["alu"] | ALU_OPS["T"] | D_EFFECTS["d-1"],
     # Arithmetic/Logic
     "ADD": INST_TYPES["alu"] | ALU_OPS["T+N"] | D_EFFECTS["d-1"],
+    "+": INST_TYPES["alu"] | ALU_OPS["T+N"] | D_EFFECTS["d-1"],
     "SUBTRACT": INST_TYPES["alu"] | ALU_OPS["N-T"] | D_EFFECTS["d-1"],
+    "-": INST_TYPES["alu"] | ALU_OPS["N-T"] | D_EFFECTS["d-1"],
     "AND": INST_TYPES["alu"] | ALU_OPS["T&N"] | D_EFFECTS["d-1"],
     "OR": INST_TYPES["alu"] | ALU_OPS["T|N"] | D_EFFECTS["d-1"],
     "XOR": INST_TYPES["alu"] | ALU_OPS["T^N"] | D_EFFECTS["d-1"],

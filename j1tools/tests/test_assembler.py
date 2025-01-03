@@ -10,28 +10,33 @@ def assembler():
 
 
 @pytest.fixture
-def add_test_source():
-    test_file = Path(__file__).parent.parent.parent / "firmware/add_test/add_test.asm"
-    with open(test_file, "r") as f:
-        return f.read()
+def add_test_files():
+    base_path = Path(__file__).parent.parent.parent / "firmware/low_level_add_subroutine"
+    with open(base_path / "low_level_add_subroutine.asm", "r") as f:
+        source = f.read()
+    with open(base_path / "low_level_add_subroutine.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+    return source, expected
 
 
 @pytest.fixture
-def stack_test_source():
-    test_file = (
-        Path(__file__).parent.parent.parent / "firmware/stack_test/stack_test.asm"
-    )
-    with open(test_file, "r") as f:
-        return f.read()
+def stack_test_files():
+    base_path = Path(__file__).parent.parent.parent / "firmware/stack_test"
+    with open(base_path / "stack_test.asm", "r") as f:
+        source = f.read()
+    with open(base_path / "stack_test.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+    return source, expected
 
 
 @pytest.fixture
-def arith_test_source():
-    test_file = (
-        Path(__file__).parent.parent.parent / "firmware/arith_test/arith_test.asm"
-    )
-    with open(test_file, "r") as f:
-        return f.read()
+def arith_test_files():
+    base_path = Path(__file__).parent.parent.parent / "firmware/arith_test"
+    with open(base_path / "arith_test.asm", "r") as f:
+        source = f.read()
+    with open(base_path / "arith_test.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+    return source, expected
 
 
 def test_number_literals(assembler):
@@ -91,25 +96,14 @@ def test_jump_instructions(assembler):
     assert result[2] == 0x4001  # CALL to middle (addr 1)
 
 
-def test_add_test_program(assembler, add_test_source):
-    result = assembler.transform(assembler.parse(add_test_source))
-
-    # Expected instruction sequence for add_test.asm
-    expected = [
-        0x802A,  # Push 2A hex
-        0x800A,  # Push 10 decimal
-        0x4005,  # CALL add_nums (at address 5)
-        0x6103,  # N[d-1] - N operation with d-1 modifier
-        0x0009,  # JMP wait_forever (at address 9)
-        0x6203,  # T+N[d-1]
-        0x6024,  # T[T->R,r+1]
-        0x600C,  # T[r-1]
-        0x608C,  # T[RET,r-1]
-        0x6000,  # T[d+0]
-        0x0009,  # JMP wait_forever (at address 9)
-    ]
-
-    assert result == expected
+def test_add_test_program(assembler, add_test_files):
+    source, expected = add_test_files
+    result = assembler.transform(assembler.parse(source))
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
 
 
 def test_invalid_syntax(assembler):
@@ -157,28 +151,9 @@ def test_stack_words(assembler, source, expected):
     ), f"Stack operation {source} should generate {expected:04x}, got {result[0]:04x}"
 
 
-def test_stack_test_program(assembler, stack_test_source):
-    result = assembler.transform(assembler.parse(stack_test_source))
-
-    # Expected instruction sequence for stack_test.asm
-    expected = [
-        0x802A,  # LIT #42      - Push 42 onto stack
-        0x6001,  # DUP          - Duplicate top of stack
-        0x8018,  # LIT #24      - Push 24 onto stack
-        0x6111,  # OVER         - Copy second item to top
-        0x6110,  # SWAP         - Exchange top two items
-        0x6003,  # NIP          - Drop second item
-        0x6103,  # DROP         - Remove top item
-        0x6000,  # NOOP         - No operation
-        0x6001,  # DUP          - Duplicate top of stack
-        0x6127,  # >R           - Move to return stack (N [T->R,r+1,d-1])
-        0x6001,  # DUP          - Duplicate top of stack
-        0x6127,  # >R           - Move to return stack (N [T->R,r+1,d-1])
-        0x6B11,  # R@           - Copy from return stack (rT [T->N,d+1])
-        0x6B1D,  # R>           - Move from return stack (rT [T->N,r-1,d+1])
-        0x6B1D,  # R>           - Move from return stack (rT [T->N,r-1,d+1])
-    ]
-
+def test_stack_test_program(assembler, stack_test_files):
+    source, expected = stack_test_files
+    result = assembler.transform(assembler.parse(source))
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
         for i, (exp, act) in enumerate(zip(expected, result))
@@ -205,24 +180,40 @@ def test_arithmetic_operations(assembler, source, expected):
     ), f"Arithmetic operation {source} should generate {expected:04x}, got {result[0]:04x}"
 
 
-def test_arith_test_program(assembler, arith_test_source):
-    result = assembler.transform(assembler.parse(arith_test_source))
-
-    # Expected instruction sequence for arith_test.asm
-    expected = [
-        0x8005,  # LIT #5       - Push 5 onto stack
-        0x7600,  # 1+           - Increment (should be 6)
-        0x7700,  # 1-           - Decrement (back to 5)
-        0x6103,  # DROP         - Remove top item
-        0x8004,  # LIT #4       - Push 4 onto stack
-        0x6A00,  # 2*           - Double (should be 8)
-        0x6900,  # 2/           - Half (back to 4)
-        0x6103,  # DROP         - Remove top item
-        0x0000,  # JMP start    - Loop forever
-    ]
-
+def test_arith_test_program(assembler, arith_test_files):
+    source, expected = arith_test_files
+    result = assembler.transform(assembler.parse(source))
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
+
+
+def load_test_files(test_name):
+    """Helper function to load .asm and .hex files for a test.
+
+    Args:
+        test_name: Name of the test (e.g., 'add_test', 'stack_test')
+
+    Returns:
+        tuple: (source_code, expected_hex_values)
+
+    Raises:
+        FileNotFoundError: If either .asm or .hex file is missing
+    """
+    base_path = Path(__file__).parent.parent.parent / f"firmware/{test_name}"
+    asm_path = base_path / f"{test_name}.asm"
+    hex_path = base_path / f"{test_name}.hex"
+
+    if not asm_path.exists():
+        raise FileNotFoundError(f"Assembly file not found: {asm_path}")
+    if not hex_path.exists():
+        raise FileNotFoundError(f"Hex file not found: {hex_path}")
+
+    with open(asm_path, "r") as f:
+        source = f.read()
+    with open(hex_path, "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+
+    return source, expected
