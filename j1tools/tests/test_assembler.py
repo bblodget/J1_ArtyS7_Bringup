@@ -11,7 +11,9 @@ def assembler():
 
 @pytest.fixture
 def add_test_files():
-    base_path = Path(__file__).parent.parent.parent / "firmware/low_level_add_subroutine"
+    base_path = (
+        Path(__file__).parent.parent.parent / "firmware/low_level_add_subroutine"
+    )
     with open(base_path / "low_level_add_subroutine.asm", "r") as f:
         source = f.read()
     with open(base_path / "low_level_add_subroutine.hex", "r") as f:
@@ -217,3 +219,49 @@ def load_test_files(test_name):
         expected = [int(line.strip(), 16) for line in f if line.strip()]
 
     return source, expected
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("T+N[d-1]", 0x6203),  # Add and drop
+        ("T[d+0]", 0x6000),  # No effect
+        ("T[T->R,r+1]", 0x6024),  # Push to return stack
+        ("T[r-1]", 0x600C),  # Pop from return stack
+        ("T[RET,r-1]", 0x608C),  # Return
+        ("N[d-1]", 0x6103),  # Drop from data stack
+        ("N-T[d-1]", 0x6C03),  # Subtract and drop
+        ("T&N[d-1]", 0x6303),  # AND and drop
+        ("T|N[d-1]", 0x6403),  # OR and drop
+        ("T^N[d-1]", 0x6503),  # XOR and drop
+        ("~T[d-1]", 0x6603),  # Invert and drop
+    ],
+)
+def test_alu_modifiers(assembler, source, expected):
+    """Test that ALU operations with modifiers generate the correct machine code."""
+    result = assembler.transform(assembler.parse(source))
+    assert (
+        result[0] == expected
+    ), f"ALU operation {source} should generate {expected:04x}, got {result[0]:04x}"
+
+
+def test_multiple_alu_instructions(assembler):
+    """Test that multiple ALU operations in sequence work correctly."""
+    source = """
+        T+N[d-1]            ; Add and drop
+        T[T->R,r+1]         ; Push to return stack
+        T[r-1]              ; Pop from return stack
+        T[RET,r-1]          ; Return
+    """
+    result = assembler.transform(assembler.parse(source))
+    expected = [
+        0x6203,  # T+N[d-1]
+        0x6024,  # T[T->R,r+1]
+        0x600C,  # T[r-1]
+        0x608C,  # T[RET,r-1]
+    ]
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )

@@ -55,6 +55,9 @@ COMMA: ","
 ?start: program
 program: statement*
 statement: (label | instruction)
+//statement: label instruction  // Label with instruction
+//        | label              // Just a label
+//        | instruction        // Just an instruction
 
 // Label rules
 labelref: IDENT
@@ -71,7 +74,7 @@ instruction: number
          | arith_words
 
 // ALU instruction rules
-alu_op: (T | N | T_PLUS_N | N_MINUS_T | T_AND_N | T_OR_N | T_XOR_N | NOT_T) modifiers?
+alu_op: (T_PLUS_N | N_MINUS_T | T_AND_N | T_OR_N | T_XOR_N | NOT_T | T | N) modifiers?
 
 // Modifier rules
 modifier: T_TO_N
