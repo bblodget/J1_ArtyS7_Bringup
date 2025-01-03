@@ -28,7 +28,7 @@
   - [x] Edge cases in instruction encoding
 - [x] Add test coverage reporting
 - [x] Update README with testing instructions
-- [ ] Update firmware tests to use source *.asm and expected output *.hex
+- [X] Update firmware tests to use source *.asm and expected output *.hex
 
 ## Documentation
 - [x] Add comments explaining instruction encoding

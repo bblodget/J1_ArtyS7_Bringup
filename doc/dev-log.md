@@ -1,5 +1,18 @@
 # Development Log
 
+## 2025-01-03
+
+- Resolved issues with ALU operation parsing:
+  - Adjusted the grammar in `j1.lark` to prioritize combined ALU operations (e.g., `T+N`) over standalone operators (`+`).
+  - Despite attempts to maintain standalone `+` and `-` operators, conflicts arose, leading to incorrect parsing of ALU operations.
+  - Temporarily removed `+` and `-` from `ADD` and `SUBTRACT` definitions to ensure all tests pass.
+
+- Conducted extensive testing:
+  - Ran the test suite, resulting in all 45 tests passing successfully.
+  - Confirmed that the assembler correctly processes ALU operations without errors.
+
+- Update firmware tests to use source *.asm and expected output *.hex
+
 ## 2025-01-02
 
 - Improved error reporting in assembler:
