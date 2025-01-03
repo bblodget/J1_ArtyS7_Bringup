@@ -16,9 +16,17 @@ IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 // Add COLON token definition
 COLON: ":"
 
+// Add PLUS token definition
+PLUS: "+"
+
+// Add MINUS token definition
+MINUS: "-"
+
 // ALU Operations
-T_PLUS_N: "T+N"
-N_MINUS_T: "N-T"
+T: "T"
+N: "N"
+T_PLUS_N.2: T PLUS N // "T+N"
+N_MINUS_T.2: N MINUS T // "N-T"
 T_AND_N: "T&N"
 T_OR_N: "T|N"
 T_XOR_N: "T^N"
@@ -31,8 +39,6 @@ RSHIFT: ">>"
 ARSHIFT: ">>>"
 INC: "T+1"
 DEC: "T-1"
-T: "T"
-N: "N"
 
 // Stack and Memory Modifiers
 T_TO_N: "T->N"
@@ -129,8 +135,8 @@ stack_words: DUP
 // High-Level Arithmetic/Logic words
 //ADD: "ADD" | "+"
 //SUBTRACT: "SUBTRACT" | "-"
-ADD: "ADD"
-SUBTRACT: "SUBTRACT"
+ADD: "ADD" | PLUS
+SUBTRACT: "SUBTRACT" | MINUS
 AND: "AND"
 OR: "OR"
 XOR: "XOR"
