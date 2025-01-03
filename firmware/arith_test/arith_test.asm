@@ -58,5 +58,16 @@ start:
     INVERT      ; Bitwise NOT (should be 0x0000)
     INVERT      ; Bitwise NOT (should be 0xFFFF)
     DROP        ; Clean up result
+
+    #$0000      ; Load test value
+    INVERT      ; Bitwise NOT (should be 0xFFFF)
+    INVERT      ; Bitwise NOT (should be 0x0000)
+    DROP        ; Clean up result
+
+		; Load -2 onto stack
+    #$0002      ; Load test value
+    1-		; Subtract 1
+    INVERT      ; Bitwise NOT (should be 0xFFFE)
+    DROP        ; Clean up result
     
     JMP start   ; Loop forever
