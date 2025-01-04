@@ -41,6 +41,16 @@ def arith_test_files():
     return source, expected
 
 
+@pytest.fixture
+def arith_ret_test_files():
+    base_path = Path(__file__).parent.parent.parent / "firmware/arith_ret_test"
+    with open(base_path / "arith_ret_test.asm", "r") as f:
+        source = f.read()
+    with open(base_path / "arith_ret_test.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+    return source, expected
+
+
 def test_number_literals(assembler):
     # Test hex and decimal number handling
     hex_result = assembler.transform(assembler.parse("#$2A"))
@@ -192,6 +202,16 @@ def test_arith_test_program(assembler, arith_test_files):
     )
 
 
+def test_arith_ret_test_program(assembler, arith_ret_test_files):
+    source, expected = arith_ret_test_files
+    result = assembler.transform(assembler.parse(source))
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
+
+
 def load_test_files(test_name):
     """Helper function to load .asm and .hex files for a test.
 
@@ -274,3 +294,28 @@ def test_multiple_alu_instructions(assembler):
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
+
+
+@pytest.mark.parametrize(
+    "source,expected",
+    [
+        ("ADD+RET", 0x628F),  # ADD with RET
+        ("++RET", 0x628F),  # Alternative ADD with RET
+        ("-+RET", 0x6C8F),  # Subtract with RET
+        ("SUBTRACT+RET", 0x6C8F),  # Alternative subtract with RET
+        ("1++RET", 0x768C),  # Increment with RET
+        ("1-+RET", 0x778C),  # Decrement with RET
+        ("2*+RET", 0x6A8C),  # Double with RET
+        ("2/+RET", 0x698C),  # Half with RET
+        ("AND+RET", 0x638F),  # AND with RET
+        ("OR+RET", 0x648F),  # OR with RET
+        ("XOR+RET", 0x658F),  # XOR with RET
+        ("INVERT+RET", 0x668C),  # INVERT with RET
+    ],
+)
+def test_arith_ret_operations(assembler, source, expected):
+    """Test that arithmetic operations with RET generate the correct machine code."""
+    result = assembler.transform(assembler.parse(source))
+    assert (
+        result[0] == expected
+    ), f"Operation {source} should generate {expected:04x}, got {result[0]:04x}"
