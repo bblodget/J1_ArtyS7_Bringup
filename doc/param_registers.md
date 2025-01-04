@@ -62,6 +62,42 @@ When a word using parameter registers calls another word that also uses paramete
 - Both solutions provide single-cycle access
 - BRAM solution better aligned with J1's existing architecture
 
+### Parameter Return Stack Integration
+
+The existing RET instruction could automatically handle parameter context management:
+
+```
+// When executing CALL:
+- Push current PC to return stack
+- Push current PBP to parameter return stack
+- Increment PBP for new parameter space
+
+// When executing RET:
+- Pop return address from return stack
+- Pop and restore PBP from parameter return stack
+- Jump to return address
+```
+
+This automatic handling would:
+1. Make parameter scope management transparent
+2. Ensure parameters are always properly restored
+3. Add no additional instruction overhead
+4. Maintain the simplicity of the Forth calling convention
+
+Example usage would remain clean:
+```forth
+: INNER  ( x y -- z )
+    >P2         \ Store parameters in registers
+    $1 $2 *    \ Use parameters
+;              \ RET automatically restores caller's parameter context
+
+: OUTER  ( a b c -- d )
+    >P3         \ Store parameters
+    $1 $2 INNER \ Call inner word (params automatically saved)
+    $3 *       \ Original parameters still accessible after return
+;
+```
+
 ## Future Exploration
 - Parameter space allocation strategies
 - Compiler optimizations for parameter usage
