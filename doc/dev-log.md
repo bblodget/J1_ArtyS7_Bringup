@@ -1,5 +1,45 @@
 # Development Log
 
+## 2025-01-04
+
+- Added support for arithmetic/logic operations with RET:
+  - Implemented +RET suffix for all arithmetic operations
+  - Added support for both forms (e.g., `ADD+RET` and `++RET`)
+  - Added machine code generation for combined operations
+  - Created comprehensive test program `arith_ret_test.asm`
+  - Verified correct operation using simulator
+
+- Added instruction encodings for arithmetic+RET operations:
+  - ADD+RET/++RET: `0x628F` (T+N [T->N,d-1,r-1])
+  - SUBTRACT+RET/-+RET: `0x6C8F` (N-T [T->N,d-1,r-1])
+  - AND+RET: `0x638F` (T&N [T->N,d-1,r-1])
+  - OR+RET: `0x648F` (T|N [T->N,d-1,r-1])
+  - XOR+RET: `0x658F` (T^N [T->N,d-1,r-1])
+  - INVERT+RET: `0x668C` (~T [T->N,r-1])
+  - 1++RET: `0x768C` (T+1 [T->N,r-1])
+  - 1-+RET: `0x778C` (T-1 [T->N,r-1])
+  - 2*+RET: `0x6A8C` (<< [T->N,r-1])
+  - 2/+RET: `0x698C` (>> [T->N,r-1])
+
+- Grammar improvements:
+  - Added RET_SUFFIX token for +RET combinations
+  - Limited +RET suffix to arithmetic/logic operations only
+  - Maintained proper error handling for invalid combinations
+  - Verified clear error messages with line number and context
+
+- Updated test suite:
+  - Added arith_ret_test.asm to test coverage
+  - Verified all arithmetic+RET operations generate correct machine code
+  - Confirmed proper error handling for invalid combinations
+  - All 58 tests passing successfully
+
+- Documented parameter register file concept:
+  - Proposed enhancement for quick access to frequently used parameters
+  - Detailed instruction encoding for >P(n) operation
+  - Explored parameter scope management approaches using BRAM or base pointer
+  - Documented integration with return stack for automatic context management
+  - Provided example usage in Forth with clean parameter handling
+
 ## 2025-01-03
 
 - Resolved issues with ALU operation parsing:

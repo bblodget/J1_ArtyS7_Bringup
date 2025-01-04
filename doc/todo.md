@@ -63,14 +63,14 @@
   - [x] Complete arith_test.asm
     - [x] Arithmetic operations (ADD(+), SUBTRACT(-), 1+, 1-, 2*, 2/, etc.)
     - [x] Logic operations (AND, OR, XOR, INVERT)
-    - [ ] Add +RET optimization support for arithmetic/logic words
+    - [x] Add +RET optimization support for arithmetic/logic words
   - [ ] Comparison operations (=, <, U<)
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support
-  - [ ] Identify compatible operations
-  - [ ] Implement suffix parsing
-  - [ ] Generate optimized machine code
+  - [x] Identify compatible operations
+  - [x] Implement suffix parsing
+  - [x] Generate optimized machine code
 - [ ] Implement control structures
   - [ ] IF THEN
   - [ ] IF ELSE THEN
@@ -83,13 +83,22 @@
 - [x] Add test cases
   - [x] Basic word tests
   - [ ] Control structure tests
-  - [ ] +RET optimization tests
-  - [ ] Error condition tests
+  - [x] +RET optimization tests
+  - [x] Error condition tests
 - [ ] Update documentation
   - [ ] Add examples for each control structure
   - [ ] Document stack effects
   - [ ] Document machine code mappings
   - [ ] Add error message documentation
+
+## Hardware Enhancements
+- [ ] Parameter Register File
+  - [x] Document concept and design
+  - [ ] Implement >P(n) instruction in HDL
+  - [ ] Add parameter scope management
+  - [ ] Add assembler support
+  - [ ] Add test cases
+  - [ ] Update documentation
 
 ## Notes
 - Start with low-level assembly support first
