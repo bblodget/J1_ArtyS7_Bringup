@@ -14,8 +14,8 @@ ALU_OPS = {
     "~T": 0x0600,
     "N==T": 0x0700,
     "N<T": 0x0800,
-    #"T2/": 0x0900,
-    #"T2*": 0x0A00,
+    # "T2/": 0x0900,
+    # "T2*": 0x0A00,
     ">>": 0x0900,
     "<<": 0x0A00,
     "rT": 0x0B00,
@@ -94,4 +94,60 @@ HIGH_LEVEL_WORDS = {
     "1-": INST_TYPES["alu"] | ALU_OPS["T-1"],
     "2*": INST_TYPES["alu"] | ALU_OPS["<<"],
     "2/": INST_TYPES["alu"] | ALU_OPS[">>"],
+    # Arithmetic/Logic with RET
+    "ADD+RET": INST_TYPES["alu"]
+        | ALU_OPS["T+N"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "++RET": INST_TYPES["alu"]
+        | ALU_OPS["T+N"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "SUBTRACT+RET": INST_TYPES["alu"]
+        | ALU_OPS["N-T"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "-+RET": INST_TYPES["alu"]
+        | ALU_OPS["N-T"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "AND+RET": INST_TYPES["alu"]
+        | ALU_OPS["T&N"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "OR+RET": INST_TYPES["alu"]
+        | ALU_OPS["T|N"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "XOR+RET": INST_TYPES["alu"]
+        | ALU_OPS["T^N"]
+        | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
+        | R_EFFECTS["r-1"],
+    "INVERT+RET": INST_TYPES["alu"]
+        | ALU_OPS["~T"]
+        | STACK_EFFECTS["RET"]
+        | R_EFFECTS["r-1"],
+    "1++RET": INST_TYPES["alu"]
+        | ALU_OPS["T+1"]
+        | STACK_EFFECTS["RET"]
+        | R_EFFECTS["r-1"],
+    "1-+RET": INST_TYPES["alu"]
+        | ALU_OPS["T-1"]
+        | STACK_EFFECTS["RET"]
+        | R_EFFECTS["r-1"],
+    "2*+RET": INST_TYPES["alu"]
+        | ALU_OPS["<<"]
+        | STACK_EFFECTS["RET"]
+        | R_EFFECTS["r-1"],
+    "2/+RET": INST_TYPES["alu"]
+        | ALU_OPS[">>"]
+        | STACK_EFFECTS["RET"]
+        | R_EFFECTS["r-1"],                    
 }

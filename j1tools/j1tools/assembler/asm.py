@@ -231,9 +231,15 @@ class J1Assembler(Transformer):
     def arith_words(self, items):
         """Convert high-level arithmetic words into their machine code representation."""
         op = str(items[0])
-        if op not in HIGH_LEVEL_WORDS:
-            raise ValueError(f"Unknown arithmetic operation: {op}")
-        return ("byte_code", HIGH_LEVEL_WORDS[op])
+        has_ret = len(items) > 1 and str(items[1]) == "+RET"
+
+        # Construct the operation name with optional RET suffix
+        full_op = f"{op}+RET" if has_ret else op
+
+        if full_op not in HIGH_LEVEL_WORDS:
+            raise ValueError(f"Unknown arithmetic operation: {full_op}")
+
+        return ("byte_code", HIGH_LEVEL_WORDS[full_op])
 
     def alu_op(self, items):
         """

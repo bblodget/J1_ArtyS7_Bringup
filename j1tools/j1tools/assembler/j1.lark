@@ -149,14 +149,9 @@ DECREMENT: "1-"
 DOUBLE: "2*"
 HALF: "2/"
 
-arith_words: ADD
-           | SUBTRACT
-           | AND
-           | OR
-           | XOR
-           | INVERT
-           | INCREMENT
-           | DECREMENT
-           | DOUBLE
-           | HALF
+// Add RET_SUFFIX definition
+RET_SUFFIX: "+RET"
+
+// Update arith_words rule to include optional RET_SUFFIX
+arith_words: (ADD | SUBTRACT | AND | OR | XOR | INVERT | INCREMENT | DECREMENT | DOUBLE | HALF) RET_SUFFIX?
 

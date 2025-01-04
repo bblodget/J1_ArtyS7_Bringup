@@ -63,6 +63,7 @@
   - [x] Complete arith_test.asm
     - [x] Arithmetic operations (ADD(+), SUBTRACT(-), 1+, 1-, 2*, 2/, etc.)
     - [x] Logic operations (AND, OR, XOR, INVERT)
+    - [ ] Add +RET optimization support for arithmetic/logic words
   - [ ] Comparison operations (=, <, U<)
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
