@@ -111,3 +111,46 @@ main:
 ```
 
 This enhancement would maintain the simplicity of our assembler while adding documentation and optimization features from Forth.
+
+## Assembler vs Forth Compiler
+
+While our enhanced J1 assembler uses Forth-like syntax and concepts, it remains fundamentally different from a traditional Forth compiler:
+
+### Traditional Forth Compiler
+- Interactive environment with immediate execution
+- Runtime dictionary for word lookup
+- Dynamic memory allocation
+- Immediate and compile-time words
+- Full interpreter for interactive development
+- Runtime overhead for dictionary searches
+- Dynamic word definition and modification
+
+### Our Enhanced J1 Assembler
+- Static compilation model
+- Macro-based word expansion
+- Compile-time only processing
+- No runtime dictionary overhead
+- All words resolved at assembly time
+- Aggressive optimization opportunities
+- Direct hardware control
+
+### Key Benefits of Our Approach
+1. **Performance**
+   - No runtime dictionary lookups
+   - Smaller code size
+   - No interpretation overhead
+   - Direct machine code generation
+
+2. **Optimization**
+   - Constant folding at assembly time
+   - Macro inlining
+   - Dead code elimination
+   - Stack effect analysis
+
+3. **Development Experience**
+   - Familiar Forth syntax
+   - Clear stack effect documentation
+   - Rich development tools
+   - Detailed error messages
+
+This hybrid approach gives us the readability and expressiveness of Forth while maintaining the efficiency and control of assembly language.
