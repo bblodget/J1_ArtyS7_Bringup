@@ -141,11 +141,7 @@ class J1Assembler(Transformer):
         if self.debug:
             print(f"Processing instruction item: {item}")
 
-        # Handle lists of instructions (for expanded negative numbers)
-        if isinstance(item, list):
-            return item
-
-        # Handle single instructions as before
+        # Handle single instructions
         item_type, value = item
         token = item[2] if len(item) > 2 else None
 
@@ -156,7 +152,7 @@ class J1Assembler(Transformer):
                 print(f"Processing instruction: {item_type} {value}")
 
         if item_type == "literal":
-            return ("byte_code", INST_TYPES["imm"] | value)
+            return ("byte_code", value)
         elif item_type == "label":
             return item  # Pass through labels unchanged
         elif item_type == "jump":
@@ -212,24 +208,26 @@ class J1Assembler(Transformer):
         return ("label", str(items[0]))
 
     def number(self, items):
+        """Convert number tokens to their machine code representation."""
         token = items[0]
         if token.type == "HEX":
             value = int(str(token)[2:], 16)
-            return ("literal", 0x8000 | (value & 0x7FFF))
+            # For hex literals, allow full 16-bit range but ensure high bit is set
+            return ("literal", value | 0x8000)
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
-            if value < -0x8000 or value > 0x7FFF:
+            if value < 0:
                 raise ValueError(
                     f"{self.current_file}:{token.line}:{token.column}: "
-                    f"Number {value} out of range (-32768 to 32767)"
+                    f"Negative numbers must be constructed manually using: "
+                    f"#ABS 1- INVERT"
                 )
-            if value < 0:
-                # Return sequence of instructions for negative numbers
-                return [
-                    ("literal", 0x8000 | abs(value)),  # Push absolute value
-                    ("byte_code", 0x6017),  # 1-
-                    ("byte_code", 0x6006),  # INVERT
-                ]
+            # For decimal literals, ensure value fits in 15 bits
+            if value > 0x7FFF:
+                raise ValueError(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"Decimal number {value} out of range (0 to 32767)"
+                )
             return ("literal", 0x8000 | value)
         else:
             raise ValueError(f"Unknown number format: {token}")

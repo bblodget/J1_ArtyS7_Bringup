@@ -51,6 +51,12 @@ def arith_ret_test_files():
     return source, expected
 
 
+@pytest.fixture
+def comparison_test_files(request):
+    """Load the comparison test assembly and hex files."""
+    return load_test_files("comparison_test")
+
+
 def test_number_literals(assembler):
     # Test hex and decimal number handling
     hex_result = assembler.transform(assembler.parse("#$2A"))
@@ -204,6 +210,17 @@ def test_arith_test_program(assembler, arith_test_files):
 
 def test_arith_ret_test_program(assembler, arith_ret_test_files):
     source, expected = arith_ret_test_files
+    result = assembler.transform(assembler.parse(source))
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
+
+
+def test_comparison_test_program(assembler, comparison_test_files):
+    """Test that comparison operations generate the correct machine code."""
+    source, expected = comparison_test_files
     result = assembler.transform(assembler.parse(source))
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
