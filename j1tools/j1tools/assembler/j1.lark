@@ -51,7 +51,7 @@ N_TO_IO: "N->io[T]"
 IO_READ: "IORD"
 DINT: "fDINT"
 EINT: "fEINT"
-RET: "RET"
+RET_MOD.2: "RET"
 STACK_D: /d[+-][012]/
 STACK_R: /r[+-][012]/
 
@@ -93,7 +93,7 @@ modifier: T_TO_N
         | IO_READ
         | DINT
         | EINT
-        | RET
+        | RET_MOD
         | STACK_D
         | STACK_R
 
@@ -118,10 +118,17 @@ SWAP: "SWAP"
 OVER: "OVER"
 NIP: "NIP"
 NOOP: "NOOP"
+RET_WORD: "RET"      // Add standalone RET word
 // Return Stack Operations
 TO_R: ">R"
 R_FROM: "R>"
 R_FETCH: "R@"
+// Stack depth operations
+GET_DEPTH: "DEPTH"
+GET_RDEPTH: "RDEPTH"
+// System Operations
+DISABLE_INT: "DINT"
+ENABLE_INT: "EINT"
 
 // Stack operation rules
 stack_words: DUP
@@ -130,10 +137,17 @@ stack_words: DUP
           | OVER
           | NIP
           | NOOP
+          | RET_WORD        // Add RET to stack_words
           // Return Stack Operations
           | TO_R
           | R_FROM
           | R_FETCH
+          | GET_DEPTH
+          | GET_RDEPTH
+          | DISABLE_INT
+          | ENABLE_INT
+
+
 
 // High-Level Arithmetic/Logic words
 //ADD: "ADD" | "+"
@@ -157,7 +171,15 @@ EQUALS_OP: "="
 LESS_OP: "<"
 ULESS_OP: "U<"
 
-// Update arith_words rule to include comparison operators
+// Memory/IO Operations
+FETCH: "@"
+STORE: "!"
+IO_FETCH: "IO@"
+IO_STORE: "IO!"
+
+
+// Update arith_words rule to include new operations
 arith_words: (ADD | SUBTRACT | AND | OR | XOR | INVERT | INCREMENT | DECREMENT | DOUBLE | HALF 
-            | EQUALS_OP | LESS_OP | ULESS_OP) RET_SUFFIX?
+            | EQUALS_OP | LESS_OP | ULESS_OP 
+            | FETCH | STORE | IO_FETCH | IO_STORE) RET_SUFFIX?
 

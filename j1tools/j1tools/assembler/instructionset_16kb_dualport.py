@@ -81,6 +81,7 @@ HIGH_LEVEL_WORDS = {
     "SWAP": INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->N"],
     "OVER": INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
     "NIP": INST_TYPES["alu"] | ALU_OPS["T"] | D_EFFECTS["d-1"],
+    "NOOP": INST_TYPES["alu"] | ALU_OPS["T"],
     # Arithmetic/Logic
     "ADD": INST_TYPES["alu"] | ALU_OPS["T+N"] | D_EFFECTS["d-1"],
     "+": INST_TYPES["alu"] | ALU_OPS["T+N"] | D_EFFECTS["d-1"],
@@ -150,26 +151,80 @@ HIGH_LEVEL_WORDS = {
     | ALU_OPS[">>"]
     | STACK_EFFECTS["RET"]
     | R_EFFECTS["r-1"],
-
     # Comparison operations
     "=": INST_TYPES["alu"] | ALU_OPS["N==T"] | D_EFFECTS["d-1"],
     "<": INST_TYPES["alu"] | ALU_OPS["N<T"] | D_EFFECTS["d-1"],
     "U<": INST_TYPES["alu"] | ALU_OPS["Nu<T"] | D_EFFECTS["d-1"],
-
     # Comparison operations with RET
     "=+RET": INST_TYPES["alu"]
-        | ALU_OPS["N==T"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["N==T"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "<+RET": INST_TYPES["alu"]
-        | ALU_OPS["N<T"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["N<T"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "U<+RET": INST_TYPES["alu"]
-        | ALU_OPS["Nu<T"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["Nu<T"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
+    # Memory/IO operations
+    "@": INST_TYPES["alu"] | ALU_OPS["mem[T]"] | STACK_EFFECTS["T->N"],
+    "!": INST_TYPES["alu"] | ALU_OPS["T"] | STACK_EFFECTS["N->[T]"] | D_EFFECTS["d-2"],
+    "IO@": INST_TYPES["alu"] | ALU_OPS["io[T]"] | STACK_EFFECTS["IORD"],
+    "IO!": INST_TYPES["alu"]
+    | ALU_OPS["T"]
+    | STACK_EFFECTS["N->io[T]"]
+    | D_EFFECTS["d-2"],
+    # System operations
+    "DINT": INST_TYPES["alu"] | ALU_OPS["T"] | STACK_EFFECTS["fDINT"],
+    "EINT": INST_TYPES["alu"] | ALU_OPS["T"] | STACK_EFFECTS["fEINT"],
+    "DEPTH": INST_TYPES["alu"]
+    | ALU_OPS["status"]
+    | STACK_EFFECTS["T->N"]
+    | D_EFFECTS["d+1"],
+    "RDEPTH": INST_TYPES["alu"]
+    | ALU_OPS["rstatus"]
+    | STACK_EFFECTS["T->N"]
+    | D_EFFECTS["d+1"],
+    # Add RET versions
+    "@+RET": INST_TYPES["alu"]
+    | ALU_OPS["mem[T]"]
+    | STACK_EFFECTS["T->N"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "!+RET": INST_TYPES["alu"]
+    | ALU_OPS["T"]
+    | STACK_EFFECTS["N->[T]"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-2"]
+    | R_EFFECTS["r-1"],
+    "IO@+RET": INST_TYPES["alu"]
+    | ALU_OPS["io[T]"]
+    | STACK_EFFECTS["IORD"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "IO!+RET": INST_TYPES["alu"]
+    | ALU_OPS["T"]
+    | STACK_EFFECTS["N->io[T]"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-2"]
+    | R_EFFECTS["r-1"],
+    # Add standalone RET
+    "RET": INST_TYPES["alu"] | ALU_OPS["T"] | STACK_EFFECTS["RET"] | R_EFFECTS["r-1"],
+    # Return stack operations
+    ">R": INST_TYPES["alu"]
+    | ALU_OPS["T"]
+    | STACK_EFFECTS["T->R"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r+1"],
+    "R>": INST_TYPES["alu"]
+    | ALU_OPS["rT"]
+    | STACK_EFFECTS["T->N"]
+    | D_EFFECTS["d+1"]
+    | R_EFFECTS["r-1"],
+    "R@": INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
 }
