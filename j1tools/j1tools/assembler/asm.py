@@ -136,8 +136,18 @@ class J1Assembler(Transformer):
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
-        item_type, value = items[0]
-        token = items[0][2] if len(items[0]) > 2 else None
+        item = items[0]
+
+        if self.debug:
+            print(f"Processing instruction item: {item}")
+
+        # Handle lists of instructions (for expanded negative numbers)
+        if isinstance(item, list):
+            return item
+
+        # Handle single instructions as before
+        item_type, value = item
+        token = item[2] if len(item) > 2 else None
 
         if self.debug:
             if item_type == "literal" or item_type == "byte_code":
@@ -148,11 +158,11 @@ class J1Assembler(Transformer):
         if item_type == "literal":
             return ("byte_code", INST_TYPES["imm"] | value)
         elif item_type == "label":
-            return items[0]  # Pass through labels unchanged
+            return item  # Pass through labels unchanged
         elif item_type == "jump":
-            return items[0]  # Pass through jump instructions
+            return item  # Pass through jump instructions
         elif item_type == "byte_code":
-            return items[0]  # Already final form
+            return item  # Already final form
 
         if token:
             raise ValueError(
@@ -205,21 +215,24 @@ class J1Assembler(Transformer):
         token = items[0]
         if token.type == "HEX":
             value = int(str(token)[2:], 16)
+            return ("literal", 0x8000 | (value & 0x7FFF))
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
-            # Check range for signed numbers
             if value < -0x8000 or value > 0x7FFF:
                 raise ValueError(
                     f"{self.current_file}:{token.line}:{token.column}: "
                     f"Number {value} out of range (-32768 to 32767)"
                 )
-            # Handle negative numbers using two's complement for 16 bits
             if value < 0:
-                value = (abs(value) ^ 0xFFFF) + 1  # Two's complement
+                # Return sequence of instructions for negative numbers
+                return [
+                    ("literal", 0x8000 | abs(value)),  # Push absolute value
+                    ("byte_code", 0x6017),  # 1-
+                    ("byte_code", 0x6006),  # INVERT
+                ]
+            return ("literal", 0x8000 | value)
         else:
             raise ValueError(f"Unknown number format: {token}")
-
-        return ("literal", value & 0xFFFF)  # Mask to 16 bits
 
     def stack_words(self, items):
         stack_codes = {
