@@ -65,7 +65,7 @@
     - [x] Logic operations (AND, OR, XOR, INVERT)
     - [x] Add +RET optimization support for arithmetic/logic words
   - [x] Comparison operations (=, <, U<)
-    - [ ] Add +RET optimization support for comparison operations
+    - [x] Add +RET optimization support for comparison operations
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support

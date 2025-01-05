@@ -1,5 +1,20 @@
 # Development Log
 
+## 2025-01-05
+
+- Added test coverage for comparison operations with RET:
+  - Created comparison_ret_test.asm test file
+  - Added test cases for =+RET, <+RET, and U<+RET operations
+  - Verified correct machine code generation:
+    - =+RET: `0x678F` (N==T [T->N,d-1,r-1])
+    - <+RET: `0x688F` (N<T [T->N,d-1,r-1])
+    - U<+RET: `0x6F8F` (Nu<T [T->N,d-1,r-1])
+  - Added test to test_assembler.py test suite
+  - Confirmed proper stack effects (d-1,r-1)
+  - Verified correct operation for both true (-1) and false (0) cases
+  - Tested signed vs unsigned comparisons
+  - Validated proper handling of negative numbers
+
 ## 2025-01-04
 
 - Added support for arithmetic/logic operations with RET:
