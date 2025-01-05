@@ -30,7 +30,7 @@ macro: less_than ( n1 n2 -- flag ) <+RET ;
 #### 2. Constant Folding
 For operations that can be computed at assembly time, the assembler needs built-in knowledge of how to emulate these operations:
 
-mark_code
+```
 ; These operations require assembler support for emulation
 foldable: +    ( n1 n2 -- sum )   ADD+RET ;  ; Assembler must know how to add
 foldable: -    ( n1 n2 -- diff )  -+RET ;    ; Assembler must know how to subtract
@@ -40,7 +40,7 @@ foldable: and  ( n1 n2 -- n3 )    AND+RET ;  ; Assembler must know how to AND
 main:
     #5 #3 +   ; Assembler can fold this to #8
     #7 #2 -   ; Assembler can fold this to #5
-mark_code
+```
 
 The assembler must:
 1. Maintain a simulation stack during assembly
