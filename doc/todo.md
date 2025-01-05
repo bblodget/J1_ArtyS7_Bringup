@@ -150,3 +150,65 @@
 - Use test4 files as starting point
 - Will eventually integrate into j1tools package
 - Consider disassembler development after assembler is working
+
+## New Feature Proposals
+
+### Forth-like Syntax Support
+- [ ] Add Forth-style function definitions (`: name ... ;`)
+- [ ] Support stack effect comments `( ... -- ... )`
+- [ ] Add optimization directives
+  - [ ] `macro:` for simple substitutions
+  - [ ] `foldable:` for compile-time computation
+  - [ ] `inline:` for forced inlining
+- [ ] Implement stack effect validation
+- [ ] Add compatibility mode for traditional syntax
+
+### Macro System Implementation
+- [ ] Core Cleanup
+  - [ ] Remove high-level words from core assembler
+  - [ ] Update grammar for core instructions
+  - [ ] Simplify assembler core
+- [ ] Macro Processing
+  - [ ] Add `include` directive support
+  - [ ] Implement macro definition parsing
+  - [ ] Create macro expansion system
+  - [ ] Add cycle detection for includes
+- [ ] Optimization Features
+  - [ ] Add constant folding support
+  - [ ] Implement simulation stack
+  - [ ] Add inline expansion
+  - [ ] Support compile-time optimization
+
+### Memory Sections Support
+- [ ] Add basic section support
+  - [ ] `.code` section
+  - [ ] `.data` section
+  - [ ] `.rodata` section
+  - [ ] `.bss` section
+- [ ] Implement section attributes
+  - [ ] READONLY
+  - [ ] RW (read-write)
+  - [ ] NOLOAD
+- [ ] Add memory configuration
+  - [ ] Memory region definitions
+  - [ ] Section placement controls
+  - [ ] Initialization support
+- [ ] Generate memory maps
+  - [ ] Section usage statistics
+  - [ ] Symbol locations
+  - [ ] Memory layout visualization
+
+### Development Tools
+- [ ] Enhanced Debug Output
+  - [ ] `--preprocess` for macro expansion
+  - [ ] `--dump-ir` for internal representation
+  - [ ] Stack effect verification
+  - [ ] Cross-reference generation
+- [ ] Memory Analysis
+  - [ ] Section usage reports
+  - [ ] Memory map generation
+  - [ ] Symbol cross-references
+- [ ] Optimization Reports
+  - [ ] Constant folding results
+  - [ ] Inlining decisions
+  - [ ] Stack effect analysis
