@@ -207,9 +207,19 @@ class J1Assembler(Transformer):
             value = int(str(token)[2:], 16)
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
+            # Check range for signed numbers
+            if value < -0x8000 or value > 0x7FFF:
+                raise ValueError(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"Number {value} out of range (-32768 to 32767)"
+                )
+            # Handle negative numbers using two's complement for 16 bits
+            if value < 0:
+                value = (abs(value) ^ 0xFFFF) + 1  # Two's complement
         else:
             raise ValueError(f"Unknown number format: {token}")
-        return ("literal", value)
+
+        return ("literal", value & 0xFFFF)  # Mask to 16 bits
 
     def stack_words(self, items):
         stack_codes = {

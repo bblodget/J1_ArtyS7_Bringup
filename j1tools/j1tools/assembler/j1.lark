@@ -8,7 +8,7 @@ COMMENT: ";" /[^\n]*/
 
 // Define what a number looks like - treat entire number as one token
 HEX: /#\$[0-9a-fA-F]+/
-DECIMAL: /#[0-9]+/
+DECIMAL: /#-?[0-9]+/
 
 // Define what an identifier looks like (for labels)
 IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
@@ -152,6 +152,12 @@ HALF: "2/"
 // Add RET_SUFFIX definition
 RET_SUFFIX: "+RET"
 
-// Update arith_words rule to include optional RET_SUFFIX
-arith_words: (ADD | SUBTRACT | AND | OR | XOR | INVERT | INCREMENT | DECREMENT | DOUBLE | HALF) RET_SUFFIX?
+// Comparison operators
+EQUALS_OP: "="
+LESS_OP: "<"
+ULESS_OP: "U<"
+
+// Update arith_words rule to include comparison operators
+arith_words: (ADD | SUBTRACT | AND | OR | XOR | INVERT | INCREMENT | DECREMENT | DOUBLE | HALF 
+            | EQUALS_OP | LESS_OP | ULESS_OP) RET_SUFFIX?
 

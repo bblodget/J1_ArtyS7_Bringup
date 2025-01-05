@@ -96,58 +96,80 @@ HIGH_LEVEL_WORDS = {
     "2/": INST_TYPES["alu"] | ALU_OPS[">>"],
     # Arithmetic/Logic with RET
     "ADD+RET": INST_TYPES["alu"]
-        | ALU_OPS["T+N"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["T+N"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "++RET": INST_TYPES["alu"]
-        | ALU_OPS["T+N"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["T+N"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "SUBTRACT+RET": INST_TYPES["alu"]
-        | ALU_OPS["N-T"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["N-T"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "-+RET": INST_TYPES["alu"]
-        | ALU_OPS["N-T"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["N-T"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "AND+RET": INST_TYPES["alu"]
-        | ALU_OPS["T&N"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["T&N"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "OR+RET": INST_TYPES["alu"]
-        | ALU_OPS["T|N"]
-        | STACK_EFFECTS["RET"]
-        | D_EFFECTS["d-1"]
-        | R_EFFECTS["r-1"],
+    | ALU_OPS["T|N"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
     "XOR+RET": INST_TYPES["alu"]
-        | ALU_OPS["T^N"]
+    | ALU_OPS["T^N"]
+    | STACK_EFFECTS["RET"]
+    | D_EFFECTS["d-1"]
+    | R_EFFECTS["r-1"],
+    "INVERT+RET": INST_TYPES["alu"]
+    | ALU_OPS["~T"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "1++RET": INST_TYPES["alu"]
+    | ALU_OPS["T+1"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "1-+RET": INST_TYPES["alu"]
+    | ALU_OPS["T-1"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "2*+RET": INST_TYPES["alu"]
+    | ALU_OPS["<<"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+    "2/+RET": INST_TYPES["alu"]
+    | ALU_OPS[">>"]
+    | STACK_EFFECTS["RET"]
+    | R_EFFECTS["r-1"],
+
+    # Comparison operations
+    "=": INST_TYPES["alu"] | ALU_OPS["N==T"] | D_EFFECTS["d-1"],
+    "<": INST_TYPES["alu"] | ALU_OPS["N<T"] | D_EFFECTS["d-1"],
+    "U<": INST_TYPES["alu"] | ALU_OPS["Nu<T"] | D_EFFECTS["d-1"],
+
+    # Comparison operations with RET
+    "=+RET": INST_TYPES["alu"]
+        | ALU_OPS["N==T"]
         | STACK_EFFECTS["RET"]
         | D_EFFECTS["d-1"]
         | R_EFFECTS["r-1"],
-    "INVERT+RET": INST_TYPES["alu"]
-        | ALU_OPS["~T"]
+    "<+RET": INST_TYPES["alu"]
+        | ALU_OPS["N<T"]
         | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
         | R_EFFECTS["r-1"],
-    "1++RET": INST_TYPES["alu"]
-        | ALU_OPS["T+1"]
+    "U<+RET": INST_TYPES["alu"]
+        | ALU_OPS["Nu<T"]
         | STACK_EFFECTS["RET"]
+        | D_EFFECTS["d-1"]
         | R_EFFECTS["r-1"],
-    "1-+RET": INST_TYPES["alu"]
-        | ALU_OPS["T-1"]
-        | STACK_EFFECTS["RET"]
-        | R_EFFECTS["r-1"],
-    "2*+RET": INST_TYPES["alu"]
-        | ALU_OPS["<<"]
-        | STACK_EFFECTS["RET"]
-        | R_EFFECTS["r-1"],
-    "2/+RET": INST_TYPES["alu"]
-        | ALU_OPS[">>"]
-        | STACK_EFFECTS["RET"]
-        | R_EFFECTS["r-1"],                    
 }
