@@ -40,6 +40,20 @@
   - Documented integration with return stack for automatic context management
   - Provided example usage in Forth with clean parameter handling
 
+- Added support for comparison operations:
+  - Implemented =, <, and U< comparison operators
+  - Added proper instruction encodings:
+    - = (N==T): `0x6703` (N==T [d-1])
+    - < (N<T): `0x6803` (N<T [d-1])
+    - U< (Nu<T): `0x6F03` (Nu<T [d-1])
+  - Still TODO: add +RET variants for subroutine returns:
+    - =+RET: `0x678F` (N==T [T->N,d-1,r-1])
+    - <+RET: `0x688F` (N<T [T->N,d-1,r-1])
+    - U<+RET: `0x6F8F` (Nu<T [T->N,d-1,r-1])
+  - Created comparison_test.asm to verify operations
+  - Added test suite coverage for comparison operations
+  - Documented proper handling of signed comparisons with negative numbers
+
 ## 2025-01-03
 
 - Resolved issues with ALU operation parsing:

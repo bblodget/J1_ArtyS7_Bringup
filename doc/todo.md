@@ -64,8 +64,8 @@
     - [x] Arithmetic operations (ADD(+), SUBTRACT(-), 1+, 1-, 2*, 2/, etc.)
     - [x] Logic operations (AND, OR, XOR, INVERT)
     - [x] Add +RET optimization support for arithmetic/logic words
-  - [ ] Comparison operations (=, <, U<)
-    - [ ] Add +RET optimization support for Comparison operations
+  - [x] Comparison operations (=, <, U<)
+    - [ ] Add +RET optimization support for comparison operations
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support
@@ -93,6 +93,14 @@
   - [ ] Add error message documentation
 
 ## Assembly Optimizations
+- [ ] Add native negative number support
+  - [ ] Update grammar to accept negative decimal literals (#-5)
+  - [ ] Generate multiple instructions for negative numbers
+    - #-5 should generate: #5 1- INVERT
+  - [ ] Add tests for negative number handling
+  - [ ] Document negative number optimization
+  - [ ] Consider optimization for common negative values
+
 - [ ] Add Forth-like syntax support
   - [ ] Support `: name` as alternative to `name:`
   - [ ] Parse stack effect comments `( ... )`
