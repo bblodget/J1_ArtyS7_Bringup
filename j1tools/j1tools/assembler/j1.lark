@@ -164,7 +164,7 @@ DOUBLE: "2*"
 HALF: "2/"
 
 // Add RET_SUFFIX definition
-RET_SUFFIX: "+RET"
+RET_SUFFIX.3: "+RET"
 
 // Comparison operators
 EQUALS_OP: "="
