@@ -66,8 +66,8 @@
     - [x] Add +RET optimization support for arithmetic/logic words
   - [x] Comparison operations (=, <, U<)
     - [x] Add +RET optimization support for comparison operations
-  - [ ] Memory/IO operations (@, !, IO@, IO!)
-  - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
+  - [x] Memory/IO operations (@, !, IO@, IO!)
+  - [x] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support
   - [x] Identify compatible operations
   - [x] Implement suffix parsing
