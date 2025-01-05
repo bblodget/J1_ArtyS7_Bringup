@@ -1,0 +1,163 @@
+// Ignore whitespace
+%import common.WS
+%ignore WS
+
+// Define what a comment looks like and ignore it
+COMMENT: ";" /[^\n]*/
+%ignore COMMENT
+
+// Define what a number looks like - treat entire number as one token
+HEX: /#\$[0-9a-fA-F]+/
+DECIMAL: /#-?[0-9]+/
+
+// Define what an identifier looks like (for labels)
+IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
+
+// Add COLON token definition
+COLON: ":"
+
+// Add PLUS token definition
+PLUS: "+"
+
+// Add MINUS token definition
+MINUS: "-"
+
+// ALU Operations
+T: "T"
+N: "N"
+// The .2 specifies a higher precedence rule
+// This makes T_PLUS_N match before T PLUS N
+// And N_MINUS_T match before N MINUS T
+T_PLUS_N.2: T PLUS N // "T+N"
+N_MINUS_T.2: N MINUS T // "N-T"
+T_AND_N: "T&N"
+T_OR_N: "T|N"
+T_XOR_N: "T^N"
+NOT_T: "~T"
+EQUALS: "=="
+LESS: "<"
+ULESS: "u<"
+LSHIFT: "<<"
+RSHIFT: ">>"
+ARSHIFT: ">>>"
+INC: "T+1"
+DEC: "T-1"
+
+// Stack and Memory Modifiers
+T_TO_N: "T->N"
+T_TO_R: "T->R"
+N_TO_MEM: "N->[T]"
+N_TO_IO: "N->io[T]"
+IO_READ: "IORD"
+DINT: "fDINT"
+EINT: "fEINT"
+RET: "RET"
+STACK_D: /d[+-][012]/
+STACK_R: /r[+-][012]/
+
+// Bracket syntax for modifiers
+LBRACKET: "["
+RBRACKET: "]"
+COMMA: ","
+
+// Define the structure of our program (rules)
+?start: program
+program: statement*
+statement: (label | instruction)
+//statement: label instruction  // Label with instruction
+//        | label              // Just a label
+//        | instruction        // Just an instruction
+
+// Label rules
+labelref: IDENT
+label: IDENT COLON
+
+// Number rule
+number: (HEX | DECIMAL)
+
+// Instruction rules
+instruction: number
+         | alu_op
+         | jump_op
+         | stack_words
+         | arith_words
+
+// ALU instruction rules
+alu_op: (T_PLUS_N | N_MINUS_T | T_AND_N | T_OR_N | T_XOR_N | NOT_T | T | N) modifiers?
+
+// Modifier rules
+modifier: T_TO_N
+        | T_TO_R
+        | N_TO_MEM
+        | N_TO_IO
+        | IO_READ
+        | DINT
+        | EINT
+        | RET
+        | STACK_D
+        | STACK_R
+
+modifier_list: modifier ("," modifier)*
+
+modifiers: LBRACKET modifier_list RBRACKET
+
+// Jump Instructions
+JMP: "JMP"      // 0000 base
+ZJMP: "ZJMP"    // 2000 base
+CALL: "CALL"    // 4000 base    
+
+// Jump instruction rules
+jump_op: JMP labelref
+       | ZJMP labelref
+       | CALL labelref
+
+// Stack Operation Words
+DUP: "DUP"
+DROP: "DROP"
+SWAP: "SWAP"
+OVER: "OVER"
+NIP: "NIP"
+NOOP: "NOOP"
+// Return Stack Operations
+TO_R: ">R"
+R_FROM: "R>"
+R_FETCH: "R@"
+
+// Stack operation rules
+stack_words: DUP
+          | DROP
+          | SWAP
+          | OVER
+          | NIP
+          | NOOP
+          // Return Stack Operations
+          | TO_R
+          | R_FROM
+          | R_FETCH
+
+// High-Level Arithmetic/Logic words
+//ADD: "ADD" | "+"
+//SUBTRACT: "SUBTRACT" | "-"
+ADD: "ADD" | PLUS
+SUBTRACT: "SUBTRACT" | MINUS
+AND: "AND"
+OR: "OR"
+XOR: "XOR"
+INVERT: "INVERT"
+INCREMENT: "1+"
+DECREMENT: "1-"
+DOUBLE: "2*"
+HALF: "2/"
+
+// Add RET_SUFFIX definition
+RET_SUFFIX: "+RET"
+
+// Comparison operators
+EQUALS_OP: "="
+LESS_OP: "<"
+ULESS_OP: "U<"
+
+// Update arith_words rule to include comparison operators
+arith_words: (ADD | SUBTRACT | AND | OR | XOR | INVERT | INCREMENT | DECREMENT | DOUBLE | HALF 
+            | EQUALS_OP | LESS_OP | ULESS_OP) RET_SUFFIX?
+
