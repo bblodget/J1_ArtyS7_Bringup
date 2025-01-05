@@ -44,6 +44,6 @@ test_ult_true:
     U<+RET   ; Should leave -1 (true)
     
 test_ult_false:
+    #5 1- INVERT    ; -5 or $FFFB (large unsigned)
     #10
-    #5
     U<+RET   ; Should leave 0 (false)
