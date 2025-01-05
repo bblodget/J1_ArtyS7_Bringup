@@ -53,7 +53,7 @@ Supported instructions:
 - Basic operations: NOP, DUP, DROP
 - Stack operations: OVER, SWAP
 - I/O operations: IO@, IO!
-- Immediate values: LIT #value
+- Immediate values: #dec_value or #$hex_value
 - Control flow: JMP, CALL, RET, 0BRANCH
 - Labels for jump targets
 
@@ -62,7 +62,7 @@ Example assembly:
 start:          ; Program start
     NOP         ; Do nothing
     DUP         ; Duplicate top of stack
-    LIT #1234   ; Push value
+    #$1234      ; Push hex value
     IO@         ; Read from IO
 loop:
     JMP loop    ; Infinite loop
