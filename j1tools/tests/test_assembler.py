@@ -156,15 +156,15 @@ def test_duplicate_label(assembler):
 @pytest.mark.parametrize(
     "source,expected",
     [
-        ("DUP", 0x6001),  # T    [d+1]
-        ("DROP", 0x6103),  # N    [d-1]
-        ("SWAP", 0x6110),  # N    [T->N]
-        ("OVER", 0x6111),  # N    [T->N,d+1]
-        ("NIP", 0x6003),  # T    [d-1]
-        ("NOOP", 0x6000),  # T    []
-        (">R", 0x6127),  # N    [T->R,r+1,d-1]
-        ("R>", 0x6B1D),  # rT   [T->N,r-1,d+1]
-        ("R@", 0x6B11),  # rT   [T->N,d+1]
+        ("DUP", 0x6011),  # T    [T->N,d+1]         # Was 0x6001
+        ("DROP", 0x6103),  # N    [d-1]              # Unchanged
+        ("SWAP", 0x6110),  # N    [T->N]             # Unchanged
+        ("OVER", 0x6111),  # N    [T->N,d+1]         # Unchanged
+        ("NIP", 0x6003),  # T    [d-1]              # Unchanged
+        ("NOOP", 0x6000),  # T    []                 # Unchanged
+        (">R", 0x6027),  # T    [T->R,r+1,d-1]     # Was 0x6127
+        ("R>", 0x6B1D),  # rT   [T->N,r-1,d+1]     # Unchanged
+        ("R@", 0x6B11),  # rT   [T->N,d+1]         # Unchanged
     ],
 )
 def test_stack_words(assembler, source, expected):

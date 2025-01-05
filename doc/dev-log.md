@@ -2,6 +2,23 @@
 
 ## 2025-01-05
 
+- Added support for Memory/IO operations:
+  - Implemented @ (fetch) operation: `mem[T] [T->N]`
+  - Implemented ! (store) operation: `T [N->[T],d-2]`
+  - Implemented IO@ operation: `io[T] [IORD]`
+  - Implemented IO! operation: `T [N->io[T],d-2]`
+  - Added +RET variants for all memory/IO operations:
+    - @+RET: `mem[T] [T->N,RET,r-1]`
+    - !+RET: `T [N->[T],RET,d-2,r-1]`
+    - IO@+RET: `io[T] [IORD,RET,r-1]`
+    - IO!+RET: `T [N->io[T],RET,d-2,r-1]`
+
+- Added support for System operations:
+  - Implemented DINT (Disable Interrupts): `T [fDINT]`
+  - Implemented EINT (Enable Interrupts): `T [fEINT]`
+  - Implemented DEPTH (Data Stack Depth): `status [T->N,d+1]`
+  - Implemented RDEPTH (Return Stack Depth): `rstatus [T->N,d+1]`
+
 - Added test coverage for comparison operations with RET:
   - Created comparison_ret_test.asm test file
   - Added test cases for =+RET, <+RET, and U<+RET operations
