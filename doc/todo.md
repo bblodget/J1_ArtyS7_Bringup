@@ -93,25 +93,28 @@
   - [ ] Add error message documentation
 
 ## Assembly Optimizations
-- [ ] Add native negative number support
-  - [ ] Update grammar to accept negative decimal literals (#-5)
-  - [ ] Generate multiple instructions for negative numbers
-    - #-5 should generate: #5 1- INVERT
-  - [ ] Add tests for negative number handling
-  - [ ] Document negative number optimization
-  - [ ] Consider optimization for common negative values
-
-- [ ] Add Forth-like syntax support
-  - [ ] Support `: name` as alternative to `name:`
-  - [ ] Parse stack effect comments `( ... )`
-  - [ ] Handle trailing semicolons
-  - [ ] Add tests for Forth syntax
-
-- [ ] Implement INLINE directive
-  - [ ] Add INLINE to grammar
-  - [ ] Copy subroutine code at assembly time
-  - [ ] Skip RET when inlining
-  - [ ] Add tests for INLINE directive
+- [ ] Implement low-level constant folding
+  - [ ] Identify foldable ALU operations
+    - [ ] Core operations (T, N, T+N, T&N, etc.)
+    - [ ] Stack operations (T->N, T->R, R->T)
+    - [ ] Stack depth tracking (d+1, d-1, r+1, r-1)
+  - [ ] Add simulation stack to assembler
+    - [ ] Track constant values
+    - [ ] Track stack depths
+    - [ ] Handle R stack operations
+  - [ ] Implement ALU operation emulation
+    - [ ] Basic arithmetic (T+N, etc.)
+    - [ ] Logical operations (T&N, T|N, T^N, ~T)
+    - [ ] Shifts (N<<T, N>>T, Nu>>T)
+  - [ ] Add tests for constant folding
+    - [ ] Basic ALU operations
+    - [ ] Stack manipulation
+    - [ ] Complex macros
+    - [ ] Error conditions
+  - [ ] Document foldable operations
+    - [ ] List supported ALU operations
+    - [ ] Explain stack effects
+    - [ ] Provide optimization examples
 
 - [ ] Add macro support
   - [ ] Add `macro:` directive to grammar
@@ -119,16 +122,11 @@
   - [ ] Add tests for macro expansion
   - [ ] Document macro limitations
 
-- [ ] Implement constant folding
-  - [ ] Add simulation stack to assembler
-  - [ ] Add built-in operation emulation
-    - [ ] Basic arithmetic (+, -, *, /)
-    - [ ] Logical operations (and, or, xor)
-    - [ ] Comparisons (=, <, U<)
-  - [ ] Track constant values during assembly
-  - [ ] Replace operations with constants when possible
-  - [ ] Add tests for constant folding
-  - [ ] Document foldable operations
+- [ ] Implement INLINE directive
+  - [ ] Add INLINE to grammar
+  - [ ] Copy subroutine code at assembly time
+  - [ ] Skip RET when inlining
+  - [ ] Add tests for INLINE directive
 
 - [ ] Add optimization documentation
   - [ ] Document macro usage

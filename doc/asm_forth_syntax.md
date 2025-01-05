@@ -27,28 +27,7 @@ macro: equals ( n1 n2 -- flag ) =+RET ;
 macro: less_than ( n1 n2 -- flag ) <+RET ;
 ```
 
-#### 2. Constant Folding
-For operations that can be computed at assembly time, the assembler needs built-in knowledge of how to emulate these operations:
-
-```
-; These operations require assembler support for emulation
-foldable: +    ( n1 n2 -- sum )   ADD+RET ;  ; Assembler must know how to add
-foldable: -    ( n1 n2 -- diff )  -+RET ;    ; Assembler must know how to subtract
-foldable: and  ( n1 n2 -- n3 )    AND+RET ;  ; Assembler must know how to AND
-
-; Example of constant folding
-main:
-    #5 #3 +   ; Assembler can fold this to #8
-    #7 #2 -   ; Assembler can fold this to #5
-```
-
-The assembler must:
-1. Maintain a simulation stack during assembly
-2. Know how to emulate each foldable operation
-3. Replace operations with constants when inputs are known
-4. Fall back to normal code generation when values aren't constant
-
-#### 3. Inline Operations
+#### 2. Inline Operations
 There are two proposed ways to inline code:
 
 a. Using the INLINE directive:
@@ -154,3 +133,80 @@ While our enhanced J1 assembler uses Forth-like syntax and concepts, it remains 
    - Detailed error messages
 
 This hybrid approach gives us the readability and expressiveness of Forth while maintaining the efficiency and control of assembly language.
+
+## Constant Folding
+
+The assembler performs constant folding on low-level operations after macro expansion. This means any high-level word that expands to foldable operations will automatically benefit from constant folding.
+
+### Foldable Core Operations
+
+The following core ALU operations support constant folding:
+
+```forth
+; Core ALU Operations
+T       ( n -- n )      ; Pass T
+N       ( n -- n )      ; Pass N
+T+N     ( n1 n2 -- sum) ; Add T and N
+T&N     ( n1 n2 -- n3 ) ; Bitwise AND
+T|N     ( n1 n2 -- n3 ) ; Bitwise OR
+T^N     ( n1 n2 -- n3 ) ; Bitwise XOR
+~T      ( n -- n' )     ; Bitwise NOT
+N<<T    ( n1 n2 -- n3 ) ; Shift left
+N>>T    ( n1 n2 -- n3 ) ; Shift right (arithmetic)
+Nu>>T   ( n1 n2 -- n3 ) ; Shift right (logical)
+```
+
+### Stack Operations
+Stack operations that affect constant propagation:
+```forth
+T->N    ; Duplicates a constant
+T->R    ; Moves constant to R stack
+R->T    ; Retrieves constant from R stack
+d+1     ; Increases stack depth
+d-1     ; Decreases stack depth
+r+1     ; Increases R stack depth
+r-1     ; Decreases R stack depth
+```
+
+### Example of Constant Folding
+
+A high-level macro:
+```forth
+macro: triple ( n -- n*3 ) DUP DUP + + ;
+
+main:
+    #5 triple     ; Will be constant-folded
+```
+
+Expands to low-level operations:
+```forth
+main:
+    #5           ; Stack: [5]
+    T[T->N,d+1]  ; Stack: [5,5]     (DUP)
+    T[T->N,d+1]  ; Stack: [5,5,5]   (DUP)
+    T+N[d-1]     ; Stack: [5,10]    (+)
+    T+N[d-1]     ; Stack: [15]      (+)
+```
+
+After constant folding:
+```forth
+main:
+    #15          ; Folded result
+```
+
+### Benefits of Low-Level Folding
+
+1. **Automatic Optimization**
+   - Any macro or high-level word automatically benefits
+   - No need to mark words as foldable
+   - Works with user-defined macros
+
+2. **Predictable**
+   - Clear which operations can be folded
+   - Easy to understand optimization rules
+   - Consistent results
+
+3. **Maintainable**
+   - Single point of implementation
+   - No special cases for high-level words
+   - Easier to test and verify
