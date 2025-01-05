@@ -5,8 +5,8 @@ This document describes the fundamental ALU operations and modifier syntax for d
 ## Number Format
 Numbers can be specified in decimal or hexadecimal:
 ```
-LIT #42       ; Decimal number
-LIT #$2A      ; Hexadecimal number (same as 42)
+#42       ; Decimal number
+#$2A      ; Hexadecimal number (same as 42)
 ```
 The `#` prefix indicates an immediate value, and `$` prefix indicates hexadecimal format.
 

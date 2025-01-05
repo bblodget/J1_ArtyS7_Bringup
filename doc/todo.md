@@ -65,6 +65,7 @@
     - [x] Logic operations (AND, OR, XOR, INVERT)
     - [x] Add +RET optimization support for arithmetic/logic words
   - [ ] Comparison operations (=, <, U<)
+    - [ ] Add +RET optimization support for Comparison operations
   - [ ] Memory/IO operations (@, !, IO@, IO!)
   - [ ] System operations (DINT, EINT, DEPTH, RDEPTH)
 - [ ] Add +RET optimization support
@@ -90,6 +91,42 @@
   - [ ] Document stack effects
   - [ ] Document machine code mappings
   - [ ] Add error message documentation
+
+## Assembly Optimizations
+- [ ] Add Forth-like syntax support
+  - [ ] Support `: name` as alternative to `name:`
+  - [ ] Parse stack effect comments `( ... )`
+  - [ ] Handle trailing semicolons
+  - [ ] Add tests for Forth syntax
+
+- [ ] Implement INLINE directive
+  - [ ] Add INLINE to grammar
+  - [ ] Copy subroutine code at assembly time
+  - [ ] Skip RET when inlining
+  - [ ] Add tests for INLINE directive
+
+- [ ] Add macro support
+  - [ ] Add `macro:` directive to grammar
+  - [ ] Implement macro expansion
+  - [ ] Add tests for macro expansion
+  - [ ] Document macro limitations
+
+- [ ] Implement constant folding
+  - [ ] Add simulation stack to assembler
+  - [ ] Add built-in operation emulation
+    - [ ] Basic arithmetic (+, -, *, /)
+    - [ ] Logical operations (and, or, xor)
+    - [ ] Comparisons (=, <, U<)
+  - [ ] Track constant values during assembly
+  - [ ] Replace operations with constants when possible
+  - [ ] Add tests for constant folding
+  - [ ] Document foldable operations
+
+- [ ] Add optimization documentation
+  - [ ] Document macro usage
+  - [ ] Document INLINE directive
+  - [ ] Document constant folding
+  - [ ] Add optimization examples
 
 ## Hardware Enhancements
 - [ ] Parameter Register File
