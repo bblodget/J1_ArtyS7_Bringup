@@ -210,3 +210,97 @@ main:
    - Single point of implementation
    - No special cases for high-level words
    - Easier to test and verify
+
+## Parse Tree Optimization
+
+The assembler performs optimizations by analyzing the parse tree directly, taking advantage of the J1's explicit instruction encoding to identify optimization opportunities.
+
+### Constant Folding via Parse Tree
+
+Instead of simulating a stack, we can track constants through the parse tree:
+
+```forth
+; Original code
+#5           ; Literal node: value=5
+T[T->N,d+1]  ; ALU node: op=T, transfer=T->N, effect=d+1
+T+N[d-1]     ; ALU node: op=T+N, effect=d-1
+
+; Parse tree shows:
+1. Literal(5) creates constant in T
+2. T->N copies constant to N, d+1 shows stack growth
+3. T+N with known T(5) and N(5) can be folded
+```
+
+Benefits of parse tree analysis:
+1. Directly matches J1 instruction semantics
+2. No need for stack simulation
+3. Easier to verify correctness
+4. More efficient implementation
+
+### Instruction Merging
+
+The parse tree also reveals opportunities to merge instructions:
+
+```forth
+; Common patterns that can be merged
+T+N          ; ALU node: op=T+N
+RET          ; Return node
+; Becomes:
+T+N+RET      ; Single merged instruction
+
+; Comparison followed by return
+=            ; ALU node: op=T=N
+RET          ; Return node
+; Becomes:
+=+RET        ; Single comparison with return
+```
+
+### Mergeable Instructions
+
+1. **ALU with Return**
+```forth
+T+N RET    -> T+N+RET    ; Add and return
+T&N RET    -> T&N+RET    ; AND and return
+T|N RET    -> T|N+RET    ; OR and return
+T^N RET    -> T^N+RET    ; XOR and return
+~T RET     -> ~T+RET     ; Invert and return
+```
+
+2. **Stack Operations with Return**
+```forth
+T[T->N] RET    -> T[T->N]+RET    ; DUP and return
+T[d-1] RET     -> T[d-1]+RET     ; DROP and return
+N[d-1] RET     -> N[d-1]+RET     ; NIP and return
+```
+
+3. **Comparisons with Return**
+```forth
+T=N RET    -> T=N+RET    ; Equal and return
+T<N RET    -> T<N+RET    ; Less than and return
+TU<N RET   -> TU<N+RET   ; Unsigned less and return
+```
+
+### Implementation Strategy
+
+1. **Parse Tree Analysis**
+   - Walk tree in execution order
+   - Track constant values in stack positions
+   - Identify mergeable instruction patterns
+   - Verify merge legality (stack effects, etc.)
+
+2. **Optimization Passes**
+   - Constant folding pass
+   - Instruction merge pass
+   - Multiple passes may be needed for complex optimizations
+
+3. **Code Generation**
+   - Generate optimal merged instructions
+   - Replace folded operations with literals
+   - Preserve source line information
+
+4. **Verification**
+   - Stack effect validation
+   - Instruction encoding validation
+   - Semantic equivalence checking
+
+This approach provides a solid foundation for optimization while maintaining the simplicity and reliability of the assembler.
