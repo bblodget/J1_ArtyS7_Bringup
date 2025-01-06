@@ -11,6 +11,7 @@ from .instructionset_16kb_dualport import (
     D_EFFECTS,
     R_EFFECTS,
     INST_TYPES,
+    JUMP_OPS,
 )
 
 
@@ -136,14 +137,9 @@ class J1Assembler(Transformer):
 
     def jump_op(self, items):
         """Handle jump operations with their labels."""
-        jump_codes = {
-            "JMP": 0x0000,
-            "ZJMP": 0x2000,
-            "CALL": 0x4000,
-        }
         op = str(items[0])
         label_type, label = items[1]  # Should be ("label", label_name)
-        if op not in jump_codes:
+        if op not in JUMP_OPS:
             raise ValueError(
                 f"{self.current_file}:{items[0].line}:{items[0].column}: "
                 f"Unknown jump operation: {op}"
@@ -153,10 +149,7 @@ class J1Assembler(Transformer):
                 f"{self.current_file}:{items[0].line}:{items[0].column}: "
                 f"Expected label reference, got {label_type}"
             )
-        return (
-            "jump",
-            (jump_codes[op], label, items[0]),
-        )  # Include token for error reporting
+        return ( "jump", (JUMP_OPS[op], label, items[0]) )  # Include token for error reporting
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
@@ -170,14 +163,12 @@ class J1Assembler(Transformer):
         token = item[2] if len(item) > 2 else None
 
         if self.debug:
-            if item_type == "literal" or item_type == "byte_code":
+            if item_type == "byte_code":
                 print(f"Processing instruction: {item_type} {hex(value)}")
             else:
                 print(f"Processing instruction: {item_type} {value}")
 
-        if item_type == "literal":
-            return ("byte_code", value)
-        elif item_type == "label":
+        if item_type == "label":
             return item  # Pass through labels unchanged
         elif item_type == "jump":
             return item  # Pass through jump instructions
@@ -270,8 +261,16 @@ class J1Assembler(Transformer):
         token = items[0]
         if token.type == "HEX":
             value = int(str(token)[2:], 16)
-            # For hex literals, allow full 16-bit range but ensure high bit is set
-            return ("literal", value | 0x8000)
+            # For hex literals, allow full 15-bit range
+            if value > 0x7FFF:
+                raise ValueError(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"Hex number {value} out of range (0 to $7FFF)"
+                    f"Negative numbers must be constructed manually using: "
+                    f"#ABS 1- INVERT"
+                )
+            # Set the high bit to make a literal
+            return ("byte_code", value | 0x8000)
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
             if value < 0:
@@ -280,13 +279,7 @@ class J1Assembler(Transformer):
                     f"Negative numbers must be constructed manually using: "
                     f"#ABS 1- INVERT"
                 )
-            # For decimal literals, ensure value fits in 15 bits
-            if value > 0x7FFF:
-                raise ValueError(
-                    f"{self.current_file}:{token.line}:{token.column}: "
-                    f"Decimal number {value} out of range (0 to 32767)"
-                )
-            return ("literal", 0x8000 | value)
+            return ("byte_code", 0x8000 | value)
         else:
             raise ValueError(f"Unknown number format: {token}")
 

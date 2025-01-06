@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 @pytest.fixture
-def assembler():
-    return J1Assembler()
+def assembler(j1debug):
+    return J1Assembler(debug=j1debug)
 
 
 @pytest.mark.parametrize(
@@ -147,40 +147,39 @@ def test_combined_modifiers(assembler, source, expected):
 
 @pytest.fixture
 def add_subroutine_files():
-    base_path = (
-        Path(__file__).parent.parent.parent / "firmware/test_add_subroutine"
-    )
-    with open(base_path / "test_add_subroutine.asm", "r") as f:
+    base_path = Path(__file__).parent.parent.parent / "firmware/test_add_subroutine"
+    filename = "test_add_subroutine.asm"
+    with open(base_path / filename, "r") as f:
         source = f.read()
     with open(base_path / "test_add_subroutine.hex", "r") as f:
         expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return source, expected
+    return filename, source, expected
 
 
 def test_add_subroutine_program(assembler, add_subroutine_files):
-    source, expected = add_subroutine_files
-    result = assembler.transform(assembler.parse(source))
+    filename, source, expected = add_subroutine_files
+    result = assembler.transform(assembler.parse(source, filename))
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
 
+
 @pytest.fixture
 def basic_ops_files():
-    base_path = (
-        Path(__file__).parent.parent.parent / "firmware/test_basic_ops"
-    )
-    with open(base_path / "test_basic_ops.asm", "r") as f:
+    base_path = Path(__file__).parent.parent.parent / "firmware/test_basic_ops"
+    filename = "test_basic_ops.asm"
+    with open(base_path / filename, "r") as f:
         source = f.read()
     with open(base_path / "test_basic_ops.hex", "r") as f:
         expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return source, expected
+    return filename, source, expected
 
 
 def test_basic_ops_program(assembler, basic_ops_files):
-    source, expected = basic_ops_files
-    result = assembler.transform(assembler.parse(source))
+    filename, source, expected = basic_ops_files
+    result = assembler.transform(assembler.parse(source, filename))
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
         for i, (exp, act) in enumerate(zip(expected, result))

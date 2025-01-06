@@ -66,7 +66,14 @@ R_EFFECTS = {
 INST_TYPES = {
     "imm": 0x8000,  # Immediate value
     "alu": 0x6000,  # ALU operation
-    "ubranch": 0x0000,  # Unconditional branch
-    "0branch": 0x2000,  # Conditional branch
-    "scall": 0x4000,  # Subroutine call
+    "ubranch": 0x0000,  # Unconditional branch (JMP)
+    "0branch": 0x2000,  # Conditional branch (ZJMP)
+    "scall": 0x4000,  # Subroutine call (CALL)
+}
+
+# Jump operation mapping to instruction types
+JUMP_OPS = {
+    "JMP": INST_TYPES["ubranch"],  # 0x0000
+    "ZJMP": INST_TYPES["0branch"],  # 0x2000
+    "CALL": INST_TYPES["scall"],  # 0x4000
 }
