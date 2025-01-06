@@ -3,8 +3,7 @@
 ; Uses subroutine calls and return
 ; Uses the stack and return stack
 start:                   ; Note the colon after label
-    #$2A                 ; Push hex 2A (decimal 42)
-    #10                  ; Push decimal 10
+    #$2A #10             ; Push hex 2A (decimal 42) and decimal 10
     CALL add_nums        ; Call our addition subroutine
     N[d-1]               ; DROP the result
     JMP wait_forever     ; Jump to end of program
