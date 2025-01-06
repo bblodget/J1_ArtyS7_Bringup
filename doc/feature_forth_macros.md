@@ -142,6 +142,7 @@ j1asm -o program.hex source.asm
 ```
 
 Example symbol file (program.sym):
+Note: address is the word address, not byte address
 ```
 0000 main
 0001 square

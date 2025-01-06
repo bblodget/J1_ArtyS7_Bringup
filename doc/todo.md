@@ -216,7 +216,7 @@
 - [x] Add Click Library for CLI
 - [ ] Basic Output Options
   - [x] Add `-o, --output FILE` option
-  - [ ] Add `--symbols` for symbol file (.sym) generation
+  - [x] Add `--symbols` for symbol file (.sym) generation
   - [ ] Add `--listing` for listing file (.lst) generation
 
 - [ ] Include Path Options

@@ -25,6 +25,16 @@
     - added fimrware/test_* to test_assembler.py
     - Went through asm.py with debugger and cleaned up code
 
+    - Added --symbols option for symbol file generation:
+        - Added --symbols flag to Click CLI interface
+        - Implemented .sym file generation alongside output
+        - Symbol files contain sorted address-to-label mappings
+            - Note: address is the word address, not byte address
+        - Format: "ADDR LABEL" (e.g., "0000 main")
+        - Uses same base name as output file with .sym extension
+        - Added logging for symbol file generation
+        - Documented symbol file format in feature_forth_macros.md
+
 ## 2025-01-05
 
 ### feature/forth-macros Branch
