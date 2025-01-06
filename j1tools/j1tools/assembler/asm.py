@@ -369,6 +369,14 @@ class J1Assembler(Transformer):
 
             # Write each instruction with its source
             for addr, code in enumerate(instructions):
+                # First check if there's a label at this address
+                label = next(
+                    (name for name, a in self.labels.items() if a == addr), None
+                )
+                if label:
+                    f.write(f"{addr:04x}                    {label}:\n")
+
+                # Then write the instruction
                 line = f"{addr:04x}     {code:04x}"
 
                 # Add source information if available
@@ -378,13 +386,6 @@ class J1Assembler(Transformer):
                     line += f"          ; Line {line_num}: {source}"
 
                 f.write(line + "\n")
-
-                # Add label if present (on its own line)
-                label = next(
-                    (name for name, a in self.labels.items() if a == addr), None
-                )
-                if label:
-                    f.write(f"                    {label}:\n")
 
 
 @click.command()
