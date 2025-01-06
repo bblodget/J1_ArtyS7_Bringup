@@ -212,10 +212,10 @@
   - [ ] Stack effect analysis
 
 ### j1asm Command-Line Interface
-- [ ] Update debug logging to use logging library
-- [ ] Add Click Library for CLI
+- [x] Update debug logging to use logging library
+- [x] Add Click Library for CLI
 - [ ] Basic Output Options
-  - [ ] Add `-o, --output FILE` option
+  - [x] Add `-o, --output FILE` option
   - [ ] Add `--symbols` for symbol file (.sym) generation
   - [ ] Add `--listing` for listing file (.lst) generation
 
@@ -230,7 +230,7 @@
   - [ ] Add `--no-inline` option
 
 - [ ] Debug Options
-  - [ ] Add `-d, --debug` support
+  - [x] Add `-d, --debug` support
   - [ ] Add `--preprocess, -E` for preprocessed assembly output
   - [ ] Add `--dump-ir` for intermediate representation output
 

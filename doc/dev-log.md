@@ -3,6 +3,25 @@
 ## 2025-01-06
 
 - Working on `feature/forth-macros` branch.
+    - Added Click library for CLI improvements:
+        - Replaced argparse with Click for better CLI handling
+        - Added `-o, --output` option for output file specification
+        - Added `-d, --debug` flag for debug output
+        - Set default output to aout.hex
+        - Improved error handling with Click's error reporting
+        - Updated setup.py to include Click dependency
+
+    - Improved logging system:
+        - Switched to Python's standard logging module
+        - Removed redundant debug checks
+        - Added proper logging configuration in conftest.py
+        - Ensured consistent logging between CLI and tests
+        - Added -J flag for debug output in pytest
+        - Fixed logging configuration for test suite
+        - Added force=True to prevent logging conflicts
+        - Improved debug message formatting
+        - Added comprehensive debug output for assembly process
+
     - added fimrware/test_* to test_assembler.py
     - Went through asm.py with debugger and cleaned up code
 
