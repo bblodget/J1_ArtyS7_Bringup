@@ -15,6 +15,7 @@ from .instructionset_16kb_dualport import (
     JUMP_OPS,
 )
 import click
+from typing import List, Tuple, Dict
 
 
 class J1Assembler(Transformer):
@@ -24,6 +25,9 @@ class J1Assembler(Transformer):
         self.current_address = 0
         self.debug = debug
         self.current_file = "<unknown>"
+        # Add source line tracking
+        self.source_lines = []
+        self.instruction_sources: Dict[int, Tuple[int, str]] = {}
 
         # Setup logging
         self.logger = logging.getLogger("j1asm")
@@ -46,6 +50,8 @@ class J1Assembler(Transformer):
     def parse(self, source, filename="<unknown>"):
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
+        # Store source lines for listing generation
+        self.source_lines = source.splitlines()
         tree = self.parser.parse(source)
         self.logger.debug("\n=== Tokens ===")
 
@@ -79,11 +85,27 @@ class J1Assembler(Transformer):
                         f"Adding label {label[1]} at address {self.current_address}"
                     )
                     self.labels[label[1]] = self.current_address
+                # Store source line info for the instruction
+                type_, value = instruction
+                if isinstance(value, tuple) and len(value) == 2:  # Has token
+                    _, token = value
+                    self.instruction_sources[self.current_address] = (
+                        token.line,
+                        self.source_lines[token.line - 1].strip(),
+                    )
                 instructions.append(instruction)
                 self.current_address += 1
             elif isinstance(stmt, tuple):
                 # Handle standalone instruction
                 if stmt[0] != "label":  # Skip standalone labels
+                    # Store source line info
+                    type_, value = stmt
+                    if isinstance(value, tuple) and len(value) == 2:  # Has token
+                        _, token = value
+                        self.instruction_sources[self.current_address] = (
+                            token.line,
+                            self.source_lines[token.line - 1].strip(),
+                        )
                     instructions.append(stmt)
                     self.current_address += 1
             else:
@@ -106,9 +128,21 @@ class J1Assembler(Transformer):
                         f"{self.current_file}:{token.line}:{token.column}: "
                         f"Undefined label: {label}"
                     )
-                resolved.append(jump_type | self.labels[label])
+                machine_code = jump_type | self.labels[label]
+                resolved.append(machine_code)
+                # Store source line info
+                self.instruction_sources[current_addr] = (
+                    token.line,
+                    self.source_lines[token.line - 1].strip(),
+                )
             elif type_ == "byte_code":
-                resolved.append(value)
+                machine_code, token = value
+                resolved.append(machine_code)
+                # Store source line info
+                self.instruction_sources[current_addr] = (
+                    token.line,
+                    self.source_lines[token.line - 1].strip(),
+                )
             else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
             current_addr += 1
@@ -251,25 +285,22 @@ class J1Assembler(Transformer):
         token = items[0]
         if token.type == "HEX":
             value = int(str(token)[2:], 16)
-            # For hex literals, allow full 15-bit range
             if value > 0x7FFF:
                 raise ValueError(
                     f"{self.current_file}:{token.line}:{token.column}: "
                     f"Hex number {value} out of range (0 to $7FFF)"
-                    f"Negative numbers must be constructed manually using: "
-                    f"#ABS 1- INVERT"
                 )
-            # Set the high bit to make a literal
-            return ("byte_code", value | 0x8000)
+            machine_code = value | 0x8000
+            return ("byte_code", (machine_code, token))
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
             if value < 0:
                 raise ValueError(
                     f"{self.current_file}:{token.line}:{token.column}: "
-                    f"Negative numbers must be constructed manually using: "
-                    f"#ABS 1- INVERT"
+                    f"Negative numbers must be constructed manually"
                 )
-            return ("byte_code", 0x8000 | value)
+            machine_code = 0x8000 | value
+            return ("byte_code", (machine_code, token))
         else:
             raise ValueError(f"Unknown number format: {token}")
 
@@ -310,7 +341,8 @@ class J1Assembler(Transformer):
         # Add modifiers
         result |= modifiers
 
-        return ("byte_code", INST_TYPES["alu"] | result)
+        result = INST_TYPES["alu"] | result
+        return ("byte_code", (result, token))
 
     def data_stack_delta(self, items):
         """Convert data stack delta rule into its token."""
@@ -328,6 +360,32 @@ class J1Assembler(Transformer):
         """Convert stack effect rule into its token."""
         return items[0]
 
+    def generate_listing(self, instructions: List[int], output_file: str):
+        """Generate listing file showing address, machine code, and source."""
+        with open(output_file, "w") as f:
+            # Write header
+            f.write("Address  Machine Code  Source\n")
+            f.write("-" * 50 + "\n")
+
+            # Write each instruction with its source
+            for addr, code in enumerate(instructions):
+                line = f"{addr:04x}     {code:04x}"
+
+                # Add source information if available
+                source_info = self.instruction_sources.get(addr, (None, ""))
+                line_num, source = source_info
+                if line_num is not None:
+                    line += f"          ; Line {line_num}: {source}"
+
+                f.write(line + "\n")
+
+                # Add label if present (on its own line)
+                label = next(
+                    (name for name, a in self.labels.items() if a == addr), None
+                )
+                if label:
+                    f.write(f"                    {label}:\n")
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
@@ -336,7 +394,8 @@ class J1Assembler(Transformer):
 )
 @click.option("-d", "--debug", is_flag=True, help="Enable debug output")
 @click.option("--symbols", is_flag=True, help="Generate symbol file (.sym)")
-def main(input, output, debug, symbols):
+@click.option("--listing", is_flag=True, help="Generate listing file (.lst)")
+def main(input, output, debug, symbols, listing):
     """J1 Forth CPU Assembler"""
     try:
         # Configure logging
@@ -379,6 +438,12 @@ def main(input, output, debug, symbols):
                     for symbol, addr in sorted_symbols:
                         print(f"{addr:04x} {symbol}", file=f)
                 logger.info(f"Generated symbol file: {sym_file}")
+
+            # Generate listing file if requested
+            if listing:
+                lst_file = Path(output).with_suffix(".lst")
+                assembler.generate_listing(instructions, lst_file)
+                logger.info(f"Generated listing file: {lst_file}")
 
         except lark.exceptions.UnexpectedInput as e:
             # Format Lark's parsing errors to match our style
