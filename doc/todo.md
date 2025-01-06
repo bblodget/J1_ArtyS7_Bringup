@@ -41,10 +41,10 @@
 ## Integration
 - [x] Merge working code into j1tools package
 - [x] Update package structure
-- [x] Add command line interface improvements
+- [ ] Add command line interface improvements
   - [x] Add verbose output option
-  - [x] Add listing file output
-  - [x] Add symbol table output
+  - [ ] Add listing file output
+  - [ ] Add symbol table output
 - [x] Add proper error messages with line numbers
 - [x] Add debug output option
 
@@ -210,3 +210,34 @@
   - [ ] Constant folding results
   - [ ] Inlining decisions
   - [ ] Stack effect analysis
+
+### j1asm Command-Line Interface
+- [ ] Basic Output Options
+  - [ ] Add `-o, --output FILE` option
+  - [ ] Add `--symbols` for symbol file (.sym) generation
+  - [ ] Add `--listing` for listing file (.lst) generation
+
+- [ ] Include Path Options
+  - [ ] Add `-I, --include DIR` support
+  - [ ] Implement include path search order
+  - [ ] Add system-wide macro library path support
+
+- [ ] Optimization Controls
+  - [ ] Add `--opt-level N` (0-3) support
+  - [ ] Add `--no-fold` option
+  - [ ] Add `--no-inline` option
+
+- [ ] Debug Options
+  - [ ] Add `-d, --debug` support
+  - [ ] Add `--preprocess, -E` for preprocessed assembly output
+  - [ ] Add `--dump-ir` for intermediate representation output
+
+- [ ] Future Enhancements
+  - [ ] Add `--trace-macros` for macro expansion tracking
+  - [ ] Add `--macro-path` for macro library path override
+  - [ ] Add `--format=hex|bin|mif` output format selection
+  - [ ] Add `--annotate` for source comment annotation
+  - [ ] Add `--map` for memory map generation
+  - [ ] Add `--stack-check` for stack effect verification
+  - [ ] Add `--word-usage` for word usage statistics
+  - [ ] Add `--cross-reference` for cross-reference generation

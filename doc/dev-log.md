@@ -1,5 +1,11 @@
 # Development Log
 
+## 2025-01-06
+
+- Working on `feature/forth-macros` branch.
+    - added fimrware/test_* to test_assembler.py
+    - Went through asm.py with debugger and cleaned up code
+
 ## 2025-01-05
 
 ### feature/forth-macros Branch
