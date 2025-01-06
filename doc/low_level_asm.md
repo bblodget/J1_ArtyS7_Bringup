@@ -26,14 +26,17 @@ Note: Addresses are word addresses (not byte addresses). Each word is 16 bits, s
 ```
 T                    ; 6000 - Copy top of stack
 N                    ; 6100 - Copy next on stack (NOS)
+3OS                  ; 1800 - Third item on stack
 ```
 
 ### Arithmetic Operations
 ```
 T+N                  ; 6200 - Add
-T-N                  ; 6C00 - Subtract
-1+                   ; 6160 - Increment
-1-                   ; 6170 - Decrement
+N-T                  ; 6C00 - Subtract
+T+1                  ; 1600 - Increment
+T-1                  ; 1700 - Decrement
+L-UM*                ; 1400 - Unsigned multiply (low)
+H-UM*                ; 1500 - Unsigned multiply (high)
 ```
 
 ### Logic Operations
@@ -46,9 +49,19 @@ T^N                  ; 6500 - Bitwise XOR
 
 ### Shift Operations
 ```
-N<<T                 ; 6A00 - Left shift
-N>>T                 ; 6900 - Right shift (logical)
-N>>>T                ; 6900 - Right shift (arithmetic)
+T2*                  ; 0A00 - Left shift by 1
+T2/                  ; 0900 - Right shift by 1
+NlshiftT             ; 1000 - N left shift by T
+NrshiftT             ; 1100 - N right shift by T (logical)
+NarshiftT            ; 1200 - N right shift by T (arithmetic)
+```
+
+### Memory and I/O Operations
+```
+mem[T]               ; 1900 - Memory read
+io[T]                ; 0D00 - I/O read port
+status               ; 0E00 - Get data stack depth
+rstatus              ; 1300 - Get return stack depth
 ```
 
 ### Comparison Operations

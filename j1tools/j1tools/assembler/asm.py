@@ -11,7 +11,6 @@ from .instructionset_16kb_dualport import (
     D_EFFECTS,
     R_EFFECTS,
     INST_TYPES,
-    HIGH_LEVEL_WORDS,
 )
 
 
@@ -47,47 +46,52 @@ class J1Assembler(Transformer):
         return tree
 
     def program(self, statements):
-        # First pass: collect labels
+        """Process all statements and resolve labels."""
+        if self.debug:
+            print("\nProgram statements:", statements)
+
+        # First pass: collect labels and instructions
         self.current_address = 0
         instructions = []
 
-        # if self.debug:
-        #    print("\n=== Parse Tree ===")
-        #    for i, stmt in enumerate(statements):
-        #        print(f"Statement {i}: type={type(stmt)}, value={stmt}")
-
         for stmt in statements:
-            if isinstance(stmt, tuple):
-                if stmt[0] == "label":
+            if self.debug:
+                print(
+                    f"\nProcessing statement at address {self.current_address}:", stmt
+                )
+
+            if isinstance(stmt, list):
+                # Handle label + instruction pair
+                label, instruction = stmt
+                if label[0] == "label":
+                    if label[1] in self.labels:
+                        raise ValueError(f"Duplicate label: {label[1]}")
                     if self.debug:
-                        print(f"\nProcessing label at {self.current_address}")
-                        print(f"Label: {stmt}")
-                    if stmt[1] in self.labels:
-                        token = stmt[2] if len(stmt) > 2 else None
-                        if token:
-                            raise ValueError(
-                                f"{self.current_file}:{token.line}:{token.column}: "
-                                f"Duplicate label: {stmt[1]}"
-                            )
-                        else:
-                            raise ValueError(f"Duplicate label: {stmt[1]}")
-                    self.labels[stmt[1]] = self.current_address
-                else:
-                    # if self.debug:
-                    #    print(f"\nProcessing instruction at {self.current_address}")
-                    #    print(f"Instruction: {stmt}")
-                    #    print(f"Current instructions: {instructions}")
-                    self.current_address += 1
+                        print(
+                            f"Adding label {label[1]} at address {self.current_address}"
+                        )
+                    self.labels[label[1]] = self.current_address
+                instructions.append(instruction)
+                self.current_address += 1
+            elif isinstance(stmt, tuple):
+                # Handle standalone instruction
+                if stmt[0] != "label":  # Skip standalone labels
                     instructions.append(stmt)
+                    self.current_address += 1
+            else:
+                raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
-        # if self.debug:
-        #    print("\n=== Second Pass ===")
-        #    print(f"Labels collected: {self.labels}")
-        #    print(f"Instructions to resolve: {instructions}")
+        if self.debug:
+            print("\nCollected labels:", self.labels)
+            print("Instructions:", instructions)
 
-        # Second pass: resolve labels and convert to final bytecode
+        # Second pass: resolve labels
         resolved = []
+        current_addr = 0
         for inst in instructions:
+            if self.debug:
+                print(f"Processing instruction at {current_addr}: {inst}")
+
             type_, value = inst
             if type_ == "jump":
                 jump_type, label, token = value
@@ -101,14 +105,34 @@ class J1Assembler(Transformer):
                 resolved.append(value)
             else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
+            current_addr += 1
 
         return resolved
 
     def statement(self, items):
         """
-        Handles the 'statement' rule by returning the transformed child.
+        Handles the 'statement' rule by processing both labels and instructions.
+        A statement can be:
+        - Just an instruction (1 item)
+        - Label + instruction (2 items)
         """
-        return items[0]
+        if self.debug:
+            print("\nStatement items:", items)
+
+        if len(items) == 1:
+            # Just an instruction
+            return items[0]
+        elif len(items) == 2:
+            # Label + instruction pair
+            label, instruction = items
+            if label[0] != "label":
+                raise ValueError(f"Expected label, got {label[0]}")
+            if self.debug:
+                print(f"Pairing label {label[1]} with instruction")
+            # Return both as a list so program() can process them together
+            return [label, instruction]
+        else:
+            raise ValueError(f"Unexpected statement format: {items}")
 
     def jump_op(self, items):
         """Handle jump operations with their labels."""
@@ -171,23 +195,42 @@ class J1Assembler(Transformer):
         """Convert modifiers into their machine code representation with type."""
         token = items[0]
         mod = str(token)
+        if self.debug:
+            print(f"\nModifier: processing '{mod}'")
+
         if mod in STACK_EFFECTS:
-            return ("modifier", STACK_EFFECTS[mod])
+            result = ("modifier", STACK_EFFECTS[mod])
         elif mod in D_EFFECTS:
-            return ("modifier", D_EFFECTS[mod])
+            result = ("modifier", D_EFFECTS[mod])
         elif mod in R_EFFECTS:
-            return ("modifier", R_EFFECTS[mod])
+            result = ("modifier", R_EFFECTS[mod])
         else:
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
                 f"Unknown modifier: {mod}"
             )
 
+        if self.debug:
+            print(f"Modifier result: {result}")
+        return result
+
     def modifier_list(self, items):
         """Combines all modifiers into a single integer using bitwise OR."""
+        if self.debug:
+            print("\nModifier list items:", items)
+
         result = 0
         for item in items:
-            if isinstance(item, tuple) and item[0] == "modifier":
+            if self.debug:
+                print(f"Processing modifier item: {item}")
+
+            if isinstance(item, Token) and item.type == "COMMA":
+                if self.debug:
+                    print("Skipping comma token")
+                continue
+            elif isinstance(item, tuple) and item[0] == "modifier":
+                if self.debug:
+                    print(f"Adding modifier value: {item[1]:04x}")
                 result |= item[1]
             else:
                 token = item if isinstance(item, Token) else items[0]
@@ -195,16 +238,31 @@ class J1Assembler(Transformer):
                     f"{self.current_file}:{token.line}:{token.column}: "
                     f"Expected modifier, got {item}"
                 )
+
+        if self.debug:
+            print(f"Final modifier list result: ('modifier', {result:04x})")
         return ("modifier", result)
 
     def modifiers(self, items):
-        # 0:LBracket, 1:value, 2:RBracket
-        return items[1]
+        """Process the modifiers rule (handles brackets)."""
+        if self.debug:
+            print("\nModifiers: processing items:", items)
+        # items[0] is LBRACKET, items[1] is modifier_list, items[2] is RBRACKET
+        result = items[1]
+        if self.debug:
+            print(f"Modifiers result: {result}")
+        return result
 
     def labelref(self, items):
+        """Convert labelref rule into a tuple with the label name."""
+        if self.debug:
+            print("\nLabelref items:", items)
         return ("label", str(items[0]))
 
     def label(self, items):
+        """Convert label rule into a tuple with the label name."""
+        if self.debug:
+            print("\nLabel items:", items)
         return ("label", str(items[0]))
 
     def number(self, items):
@@ -232,63 +290,61 @@ class J1Assembler(Transformer):
         else:
             raise ValueError(f"Unknown number format: {token}")
 
-    def stack_words(self, items):
-        """Handle stack operation words."""
-        op = str(items[0])
-        if op in HIGH_LEVEL_WORDS:
-            return ("byte_code", HIGH_LEVEL_WORDS[op])
-        else:
-            raise ValueError(f"Unknown stack operation: {op}")
-
-    def arith_words(self, items):
-        """Convert high-level arithmetic words into their machine code representation."""
-        op = str(items[0])
-        has_ret = len(items) > 1 and str(items[1]) == "+RET"
-
-        # Construct the operation name with optional RET suffix
-        full_op = f"{op}+RET" if has_ret else op
-
-        if full_op not in HIGH_LEVEL_WORDS:
-            raise ValueError(f"Unknown arithmetic operation: {full_op}")
-
-        return ("byte_code", HIGH_LEVEL_WORDS[full_op])
+    def basic_alu(self, items):
+        """Convert basic_alu rule into its token."""
+        # items[0] is the Token for the ALU operation
+        return items[0]
 
     def alu_op(self, items):
-        """
-        Convert ALU operations into their machine code representation.
-        Handles both the ALU operation and any modifiers.
-        """
+        """Convert ALU operations into their machine code representation."""
         if self.debug:
             print(f"\nALU Operation:")
             print(f"Items: {items}")
-            print(f"Current address: {self.current_address}")
 
         # Extract operation and modifiers
-        token = items[0]  # Keep the token object for error reporting
-        base_op = str(token)
+        token = items[0]  # Now this will be a Token, not a Tree
+        base_op = token.value  # Use token.value to get the string
         modifiers = 0
 
-        # Process any modifiers after the operation
+        # Process modifiers if present
         if len(items) > 1:
             for item in items[1:]:
                 if isinstance(item, tuple) and item[0] == "modifier":
                     modifiers |= item[1]
                 else:
                     raise ValueError(
-                        f"{self.current_file}:{token.line}:{token.column}: Expected modifier, got {item}"
+                        f"{self.current_file}:{token.line}:{token.column}: "
+                        f"Expected modifier, got {item}"
                     )
 
         # Get the base ALU operation code
         if base_op not in ALU_OPS:
             raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: Unknown ALU operation '{base_op}'"
+                f"{self.current_file}:{token.line}:{token.column}: "
+                f"Unknown ALU operation '{base_op}'"
             )
         result = ALU_OPS[base_op]
 
-        # Add any modifiers
+        # Add modifiers
         result |= modifiers
 
         return ("byte_code", INST_TYPES["alu"] | result)
+
+    def data_stack_delta(self, items):
+        """Convert data stack delta rule into its token."""
+        return items[0]
+
+    def return_stack_delta(self, items):
+        """Convert return stack delta rule into its token."""
+        return items[0]
+
+    def stack_delta(self, items):
+        """Convert stack delta rule into its token."""
+        return items[0]
+
+    def stack_effect(self, items):
+        """Convert stack effect rule into its token."""
+        return items[0]
 
 
 def main():
