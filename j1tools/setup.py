@@ -6,6 +6,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "lark>=1.1.5",
+        "click>=8.0.0",
     ],
     extras_require={
         "dev": [

@@ -212,6 +212,8 @@
   - [ ] Stack effect analysis
 
 ### j1asm Command-Line Interface
+- [ ] Update debug logging to use logging library
+- [ ] Add Click Library for CLI
 - [ ] Basic Output Options
   - [ ] Add `-o, --output FILE` option
   - [ ] Add `--symbols` for symbol file (.sym) generation

@@ -13,6 +13,7 @@ from .instructionset_16kb_dualport import (
     INST_TYPES,
     JUMP_OPS,
 )
+import click
 
 
 class J1Assembler(Transformer):
@@ -149,7 +150,10 @@ class J1Assembler(Transformer):
                 f"{self.current_file}:{items[0].line}:{items[0].column}: "
                 f"Expected label reference, got {label_type}"
             )
-        return ( "jump", (JUMP_OPS[op], label, items[0]) )  # Include token for error reporting
+        return (
+            "jump",
+            (JUMP_OPS[op], label, items[0]),
+        )  # Include token for error reporting
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
@@ -340,32 +344,36 @@ class J1Assembler(Transformer):
         return items[0]
 
 
-def main():
-    parser = argparse.ArgumentParser(description="J1 Forth CPU Assembler")
-    parser.add_argument("input", help="Input assembly file")
-    parser.add_argument(
-        "-d", "--debug", action="store_true", help="Enable debug output"
-    )
-    args = parser.parse_args()
-
+@click.command()
+@click.argument("input", type=click.Path(exists=True))
+@click.option(
+    "-o", "--output", type=click.Path(), help="Output file (default: aout.hex)"
+)
+@click.option("-d", "--debug", is_flag=True, help="Enable debug output")
+def main(input, output, debug):
+    """J1 Forth CPU Assembler"""
     try:
+        # Set default output file if not specified
+        output = output or "aout.hex"
+
         # Read the input file
-        with open(args.input, "r") as f:
+        with open(input, "r") as f:
             source = f.read()
-            if args.debug:
-                print(f"Source code:\n{source}", file=sys.stderr)
+            if debug:
+                click.echo(f"Source code:\n{source}", err=True)
 
-        if args.debug:
-            print("Parsing source...", file=sys.stderr)
+        if debug:
+            click.echo("Parsing source...", err=True)
 
-        assembler = J1Assembler(debug=args.debug)
+        assembler = J1Assembler(debug=debug)
         try:
-            tree = assembler.parse(source, filename=args.input)
+            tree = assembler.parse(source, filename=input)
             instructions = assembler.transform(tree)
 
-            # Output hex format
-            for inst in instructions:
-                print(f"{inst:04x}")
+            # Write output to specified file
+            with open(output, "w") as f:
+                for inst in instructions:
+                    print(f"{inst:04x}", file=f)
 
         except lark.exceptions.UnexpectedInput as e:
             # Format Lark's parsing errors to match our style
@@ -386,21 +394,18 @@ def main():
             error_line = source_lines[real_line - 1]
             context = f"\n    {error_line}\n    {' ' * (e.column-1)}^"
 
-            print(
-                f"Error: {args.input}:{real_line}:{e.column}: {error_msg}",
-                file=sys.stderr,
-            )
-            if args.debug:
-                print(context, file=sys.stderr)
-            sys.exit(1)
+            click.echo(f"Error: {input}:{real_line}:{e.column}: {error_msg}", err=True)
+            if debug:
+                click.echo(context, err=True)
+            raise click.Abort()
 
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        if args.debug:
+        click.echo(f"Error: {e}", err=True)
+        if debug:
             import traceback
 
             traceback.print_exc()
-        sys.exit(1)
+        raise click.Abort()
 
 
 if __name__ == "__main__":
