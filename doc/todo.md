@@ -163,9 +163,9 @@
 
 ### Macro System Implementation
 - [ ] Core Cleanup
-  - [ ] Remove high-level words from core assembler
-  - [ ] Update grammar for core instructions
-  - [ ] Simplify assembler core
+  - [x] Remove high-level words from core assembler
+  - [x] Update grammar for core instructions
+  - [x] Simplify assembler core
 - [ ] Macro Processing
   - [ ] Add `include` directive support
   - [ ] Implement macro definition parsing

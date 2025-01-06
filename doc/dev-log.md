@@ -2,6 +2,59 @@
 
 ## 2025-01-05
 
+### feature/forth-macros Branch
+
+- Created new branch `feature/forth-macros`:
+  - Simplified core assembler to focus on fundamental J1 instructions
+  - Removed high-level word implementations from core assembler
+  - Fixed label handling and resolution system
+  - Added comprehensive test suite for core functionality
+  - Documented feature plan in `feature_forth_macros.md`
+
+- Fixed label handling in assembler:
+  - Properly track label addresses during first pass
+  - Correctly resolve jump targets in second pass
+  - Fixed issue with label-instruction pairing
+  - Added proper error handling for undefined/duplicate labels
+  - Verified with comprehensive test suite
+
+- Added test coverage for core assembler features:
+  - Basic ALU operations (T, N, T+N, etc.)
+  - Stack effect modifiers (T->N, T->R, etc.)
+  - Stack delta modifiers (d+1, d-1, r+1, r-1)
+  - Jump instructions with label resolution
+  - Number literals (decimal and hex)
+  - Error handling (invalid syntax, undefined labels)
+  - Combined modifiers (ALU + stack effects)
+  - All 39 tests passing successfully
+
+- Improved debug output:
+  - Added token display for better parsing visibility
+  - Added statement processing tracking
+  - Added label resolution debugging
+  - Improved error messages with line/column info
+  - Added instruction encoding display
+
+- Verified correct operation of core instructions:
+  - Label resolution for forward/backward jumps
+  - Stack effect combinations
+  - ALU operations with modifiers
+  - Memory and IO operations
+  - Return stack operations
+  - System operations (DINT, EINT)
+
+- Documented macro system design:
+  - Created feature specification in `feature_forth_macros.md`
+  - Defined implementation phases:
+    1. Core cleanup (completed)
+    2. Macro system implementation (next)
+    3. Optimization features (planned)
+  - Specified file structure and CLI enhancements
+  - Detailed testing strategy and migration path
+  - Added examples of macro usage and optimization
+
+### Main Branch
+
 - Added support for Memory/IO operations:
   - Implemented @ (fetch) operation: `mem[T] [T->N]`
   - Implemented ! (store) operation: `T [N->[T],d-2]`

@@ -1,5 +1,6 @@
 import pytest
 from j1tools.assembler.asm import J1Assembler
+from lark.exceptions import VisitError
 from pathlib import Path
 
 
