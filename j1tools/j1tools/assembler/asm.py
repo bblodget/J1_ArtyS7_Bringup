@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import sys
+import logging
 import argparse
 import lark
 from lark import Lark, Transformer, Tree, Token
@@ -24,6 +25,13 @@ class J1Assembler(Transformer):
         self.debug = debug
         self.current_file = "<unknown>"
 
+        # Setup logging
+        self.logger = logging.getLogger("j1asm")
+        if debug:
+            self.logger.setLevel(logging.DEBUG)
+        else:
+            self.logger.setLevel(logging.INFO)
+
         # Load the grammar
         grammar_path = Path(__file__).parent / "j1.lark"
         if not grammar_path.exists():
@@ -31,8 +39,7 @@ class J1Assembler(Transformer):
 
         try:
             self.parser = Lark.open(grammar_path, start="start")
-            if self.debug:
-                print(f"Loaded grammar from {grammar_path}", file=sys.stderr)
+            self.logger.debug(f"Loaded grammar from {grammar_path}")
         except Exception as e:
             raise Exception(f"Failed to load grammar: {e}")
 
@@ -40,27 +47,27 @@ class J1Assembler(Transformer):
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
         tree = self.parser.parse(source)
+        self.logger.debug("\n=== Tokens ===")
+
         if self.debug:
-            print("\n=== Tokens ===")
-            # Print all tokens in the tree
+            # Output all tokens in the tree
             for token in tree.scan_values(lambda v: isinstance(v, Token)):
-                print(f"Token: {token.type} = '{token.value}'")
+                self.logger.debug(f"Token: {token.type} = '{token.value}'")
+
         return tree
 
     def program(self, statements):
         """Process all statements and resolve labels."""
-        if self.debug:
-            print("\nProgram statements:", statements)
+        self.logger.debug(f"\nProgram statements: {statements}")
 
         # First pass: collect labels and instructions
         self.current_address = 0
         instructions = []
 
         for stmt in statements:
-            if self.debug:
-                print(
-                    f"\nProcessing statement at address {self.current_address}:", stmt
-                )
+            self.logger.debug(
+                f"\nProcessing statement at address {self.current_address}: {stmt}"
+            )
 
             if isinstance(stmt, list):
                 # Handle label + instruction pair
@@ -68,10 +75,9 @@ class J1Assembler(Transformer):
                 if label[0] == "label":
                     if label[1] in self.labels:
                         raise ValueError(f"Duplicate label: {label[1]}")
-                    if self.debug:
-                        print(
-                            f"Adding label {label[1]} at address {self.current_address}"
-                        )
+                    self.logger.debug(
+                        f"Adding label {label[1]} at address {self.current_address}"
+                    )
                     self.labels[label[1]] = self.current_address
                 instructions.append(instruction)
                 self.current_address += 1
@@ -83,16 +89,14 @@ class J1Assembler(Transformer):
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
-        if self.debug:
-            print("\nCollected labels:", self.labels)
-            print("Instructions:", instructions)
+        self.logger.debug(f"\nCollected labels: {self.labels}")
+        self.logger.debug(f"Instructions: {instructions}")
 
         # Second pass: resolve labels
         resolved = []
         current_addr = 0
         for inst in instructions:
-            if self.debug:
-                print(f"Processing instruction at {current_addr}: {inst}")
+            self.logger.debug(f"Processing instruction at {current_addr}: {inst}")
 
             type_, value = inst
             if type_ == "jump":
@@ -118,8 +122,7 @@ class J1Assembler(Transformer):
         - Just an instruction (1 item)
         - Label + instruction (2 items)
         """
-        if self.debug:
-            print("\nStatement items:", items)
+        self.logger.debug(f"\nStatement items: {items}")
 
         if len(items) == 1:
             # Just an instruction
@@ -129,8 +132,7 @@ class J1Assembler(Transformer):
             label, instruction = items
             if label[0] != "label":
                 raise ValueError(f"Expected label, got {label[0]}")
-            if self.debug:
-                print(f"Pairing label {label[1]} with instruction")
+            self.logger.debug(f"Pairing label {label[1]} with instruction")
             # Return both as a list so program() can process them together
             return [label, instruction]
         else:
@@ -159,18 +161,13 @@ class J1Assembler(Transformer):
         """Handles the 'instruction' rule."""
         item = items[0]
 
-        if self.debug:
-            print(f"Processing instruction item: {item}")
+        self.logger.debug(f"Processing instruction item: {item}")
 
         # Handle single instructions
         item_type, value = item
         token = item[2] if len(item) > 2 else None
 
-        if self.debug:
-            if item_type == "byte_code":
-                print(f"Processing instruction: {item_type} {hex(value)}")
-            else:
-                print(f"Processing instruction: {item_type} {value}")
+        self.logger.debug(f"Processing instruction: {item_type} {value}")
 
         if item_type == "label":
             return item  # Pass through labels unchanged
@@ -190,8 +187,7 @@ class J1Assembler(Transformer):
         """Convert modifiers into their machine code representation with type."""
         token = items[0]
         mod = str(token)
-        if self.debug:
-            print(f"\nModifier: processing '{mod}'")
+        self.logger.debug(f"\nModifier: processing '{mod}'")
 
         if mod in STACK_EFFECTS:
             result = ("modifier", STACK_EFFECTS[mod])
@@ -205,27 +201,22 @@ class J1Assembler(Transformer):
                 f"Unknown modifier: {mod}"
             )
 
-        if self.debug:
-            print(f"Modifier result: {result}")
+        self.logger.debug(f"Modifier result: {result}")
         return result
 
     def modifier_list(self, items):
         """Combines all modifiers into a single integer using bitwise OR."""
-        if self.debug:
-            print("\nModifier list items:", items)
+        self.logger.debug(f"\nModifier list items: {items}")
 
         result = 0
         for item in items:
-            if self.debug:
-                print(f"Processing modifier item: {item}")
+            self.logger.debug(f"Processing modifier item: {item}")
 
             if isinstance(item, Token) and item.type == "COMMA":
-                if self.debug:
-                    print("Skipping comma token")
+                self.logger.debug("Skipping comma token")
                 continue
             elif isinstance(item, tuple) and item[0] == "modifier":
-                if self.debug:
-                    print(f"Adding modifier value: {item[1]:04x}")
+                self.logger.debug(f"Adding modifier value: {item[1]:04x}")
                 result |= item[1]
             else:
                 token = item if isinstance(item, Token) else items[0]
@@ -234,30 +225,25 @@ class J1Assembler(Transformer):
                     f"Expected modifier, got {item}"
                 )
 
-        if self.debug:
-            print(f"Final modifier list result: ('modifier', {result:04x})")
+        self.logger.debug(f"Final modifier list result: ('modifier', {result:04x})")
         return ("modifier", result)
 
     def modifiers(self, items):
         """Process the modifiers rule (handles brackets)."""
-        if self.debug:
-            print("\nModifiers: processing items:", items)
+        self.logger.debug(f"\nModifiers: processing items: {items}")
         # items[0] is LBRACKET, items[1] is modifier_list, items[2] is RBRACKET
         result = items[1]
-        if self.debug:
-            print(f"Modifiers result: {result}")
+        self.logger.debug(f"Modifiers result: {result}")
         return result
 
     def labelref(self, items):
         """Convert labelref rule into a tuple with the label name."""
-        if self.debug:
-            print("\nLabelref items:", items)
+        self.logger.debug(f"\nLabelref items: {items}")
         return ("label", str(items[0]))
 
     def label(self, items):
         """Convert label rule into a tuple with the label name."""
-        if self.debug:
-            print("\nLabel items:", items)
+        self.logger.debug(f"\nLabel items: {items}")
         return ("label", str(items[0]))
 
     def number(self, items):
@@ -294,9 +280,8 @@ class J1Assembler(Transformer):
 
     def alu_op(self, items):
         """Convert ALU operations into their machine code representation."""
-        if self.debug:
-            print(f"\nALU Operation:")
-            print(f"Items: {items}")
+        self.logger.debug("\nALU Operation:")
+        self.logger.debug(f"Items: {items}")
 
         # Extract operation and modifiers
         token = items[0]  # Now this will be a Token, not a Tree
@@ -353,17 +338,23 @@ class J1Assembler(Transformer):
 def main(input, output, debug):
     """J1 Forth CPU Assembler"""
     try:
+        # Configure logging
+        logging.basicConfig(
+            level=logging.DEBUG if debug else logging.INFO,
+            format="%(levelname)s: %(message)s",
+            stream=sys.stderr,
+        )
+        logger = logging.getLogger("j1asm")
+
         # Set default output file if not specified
         output = output or "aout.hex"
 
         # Read the input file
         with open(input, "r") as f:
             source = f.read()
-            if debug:
-                click.echo(f"Source code:\n{source}", err=True)
+            logger.debug(f"Source code:\n{source}")
 
-        if debug:
-            click.echo("Parsing source...", err=True)
+        logger.debug("Parsing source...")
 
         assembler = J1Assembler(debug=debug)
         try:
@@ -374,15 +365,15 @@ def main(input, output, debug):
             with open(output, "w") as f:
                 for inst in instructions:
                     print(f"{inst:04x}", file=f)
+            logger.info(f"Successfully wrote output to {output}")
 
         except lark.exceptions.UnexpectedInput as e:
             # Format Lark's parsing errors to match our style
-            # Remove the redundant line/column info from the error message
             error_msg = str(e)
             if ", at line" in error_msg:
                 error_msg = error_msg.split(", at line")[0]
 
-            # Find the actual line with the error by counting non-empty, non-comment lines
+            # Find the actual line with the error
             real_line = 0
             source_lines = source.splitlines()
             for i, line in enumerate(source_lines[: e.line - 1], 1):
@@ -390,21 +381,20 @@ def main(input, output, debug):
                 if stripped and not stripped.startswith(";"):
                     real_line = i
 
-            # Get the actual error line for context display
             error_line = source_lines[real_line - 1]
             context = f"\n    {error_line}\n    {' ' * (e.column-1)}^"
 
-            click.echo(f"Error: {input}:{real_line}:{e.column}: {error_msg}", err=True)
+            logger.error(f"{input}:{real_line}:{e.column}: {error_msg}")
             if debug:
-                click.echo(context, err=True)
+                logger.debug(context)
             raise click.Abort()
 
     except Exception as e:
-        click.echo(f"Error: {e}", err=True)
+        logger.error(str(e))
         if debug:
             import traceback
 
-            traceback.print_exc()
+            logger.debug(traceback.format_exc())
         raise click.Abort()
 
 
