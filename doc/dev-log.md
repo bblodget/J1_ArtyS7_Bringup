@@ -35,6 +35,19 @@
         - Added logging for symbol file generation
         - Documented symbol file format in feature_forth_macros.md
 
+    - Added --listing option for assembly listing generation:
+        - Added --listing flag to Click CLI interface
+        - Implemented .lst file generation alongside output
+        - Listing files show address, machine code, and source
+        - Format includes:
+            - Labels on their own lines before instructions
+            - Machine code with original source line references
+            - Full source line including comments
+            - Support for multiple instructions per line
+        - Uses same base name as output file with .lst extension
+        - Added logging for listing file generation
+        - Improved source line tracking for better listings
+
 ## 2025-01-05
 
 ### feature/forth-macros Branch

@@ -217,7 +217,7 @@
 - [ ] Basic Output Options
   - [x] Add `-o, --output FILE` option
   - [x] Add `--symbols` for symbol file (.sym) generation
-  - [ ] Add `--listing` for listing file (.lst) generation
+  - [x] Add `--listing` for listing file (.lst) generation
 
 - [ ] Include Path Options
   - [ ] Add `-I, --include DIR` support
