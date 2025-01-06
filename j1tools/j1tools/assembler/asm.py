@@ -335,7 +335,8 @@ class J1Assembler(Transformer):
     "-o", "--output", type=click.Path(), help="Output file (default: aout.hex)"
 )
 @click.option("-d", "--debug", is_flag=True, help="Enable debug output")
-def main(input, output, debug):
+@click.option("--symbols", is_flag=True, help="Generate symbol file (.sym)")
+def main(input, output, debug, symbols):
     """J1 Forth CPU Assembler"""
     try:
         # Configure logging
@@ -366,6 +367,18 @@ def main(input, output, debug):
                 for inst in instructions:
                     print(f"{inst:04x}", file=f)
             logger.info(f"Successfully wrote output to {output}")
+
+            # Generate symbol file if requested
+            if symbols:
+                sym_file = Path(output).with_suffix(".sym")
+                with open(sym_file, "w") as f:
+                    # Sort symbols by address for readability
+                    sorted_symbols = sorted(
+                        assembler.labels.items(), key=lambda x: x[1]
+                    )
+                    for symbol, addr in sorted_symbols:
+                        print(f"{addr:04x} {symbol}", file=f)
+                logger.info(f"Generated symbol file: {sym_file}")
 
         except lark.exceptions.UnexpectedInput as e:
             # Format Lark's parsing errors to match our style
