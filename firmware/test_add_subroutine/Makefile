@@ -1,4 +1,4 @@
-PROGRAM = low_level_add_subroutine
+PROGRAM = test_add_subroutine
 
 .PHONY: compile clean
 
