@@ -1,5 +1,14 @@
 # Development Log
 
+## 2025-01-07
+
+- Refactored file generation in asm.py:
+    - Created generate_output() method to handle hex output generation
+    - Created generate_symbols() method to handle symbol file generation
+    - Moved file generation logic from main() into J1Assembler class
+    - Improved consistency across all file generation operations
+    - Made code more maintainable and testable
+
 ## 2025-01-06
 
 - Working on `feature/forth-macros` branch.
