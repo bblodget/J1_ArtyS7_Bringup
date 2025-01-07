@@ -409,7 +409,7 @@ class J1Assembler(Transformer):
                         raise ValueError(f"No line number found for label {label}")
 
                     f.write(
-                        f"{addr:04x}                Line {line_num}: {source}:\n"
+                        f"{addr:04x}                Line {line_num}: {source}\n"
                     )
 
                 source_info = self.instruction_sources.get(addr, (None, ""))
