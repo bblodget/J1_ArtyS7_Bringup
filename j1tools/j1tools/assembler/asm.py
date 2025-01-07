@@ -28,6 +28,7 @@ class J1Assembler(Transformer):
         # Add source line tracking
         self.source_lines = []
         self.instruction_sources: Dict[int, Tuple[int, str]] = {}
+        self.label_sources: Dict[int, Tuple[int, str]] = {}
 
         # Setup logging
         self.logger = logging.getLogger("j1asm")
@@ -64,69 +65,95 @@ class J1Assembler(Transformer):
 
     def program(self, statements):
         """Process all statements and resolve labels."""
-        self.logger.debug(f"\nProgram statements: {statements}")
 
-        # First pass: collect labels and instructions
+        # First pass: collect labels, instructions, and source info
         self.current_address = 0
         instructions = []
 
-        for stmt in statements:
-            self.logger.debug(
-                f"\nProcessing statement at address {self.current_address}: {stmt}"
-            )
-
+        for current_address, stmt in enumerate(statements):
+            self.logger.debug(f"Statement {current_address}: {stmt}")
             if isinstance(stmt, list):
-                # Handle label + instruction pair
-                label, instruction = stmt
-                # Process label and instruction
-                type_, value = label
-                if type_ == "label":
-                    label_name, token = value
-                    if label_name in self.labels:
-                        raise ValueError(f"Duplicate label: {label_name}")
-                    self.logger.debug(
-                        f"Adding label {label_name} at address {self.current_address}"
-                    )
-                    self.labels[label_name] = self.current_address
-                    self.instruction_sources[self.current_address] = (
-                        token.line,
-                        self.source_lines[token.line - 1].strip(),
-                    )
-                instructions.append(instruction)
-                self.current_address += 1
-            elif isinstance(stmt, tuple):
-                # Handle standalone instruction or label
-                type_, value = stmt
-                if type_ == "label":
-                    label_name, token = value
-                    if label_name in self.labels:
-                        raise ValueError(f"Duplicate label: {label_name}")
-                    self.labels[label_name] = self.current_address
-                    self.instruction_sources[self.current_address] = (
-                        token.line,
-                        self.source_lines[token.line - 1].strip(),
-                    )
-                else:
-                    instructions.append(stmt)
-                    self.current_address += 1
+                # Label + instruction pair
 
-                # Store source line info if available
-                if isinstance(value, tuple) and len(value) == 2:  # Has token
-                    _, token = value
-                    self.instruction_sources[self.current_address - 1] = (
-                        token.line,
-                        self.source_lines[token.line - 1].strip(),
-                    )
+                label, instruction = stmt
+                self.logger.debug(f"Label: {label}, Instruction: {instruction}")
+
+                # Parse label fields
+                label_type, label_value = label
+                label_name, label_token = label_value
+
+                if label_type != "label":
+                    raise ValueError(f"Expected label, got {label_type}")
+
+                # Parse instruction fields
+                instruction_type, instruction_value = instruction
+                if instruction_type == "byte_code":
+                    _, instruction_token = instruction_value
+                elif instruction_type == "jump":
+                    _, _, instruction_token = instruction_value
+                else:
+                    raise ValueError(f"Unexpected instruction type: {instruction_type}")
+
+                # Check for duplicate labels
+                if label_name in self.labels:
+                    raise ValueError(f"Duplicate label: {label_name}")
+
+                # Add label to labels dictionary
+                self.labels[label_name] = current_address
+
+                # Add instruction to instructions list
+                instructions.append(instruction)
+
+                # Store label source info
+                self.label_sources[current_address] = (
+                    label_token.line,
+                    label_token.column,
+                    self.source_lines[label_token.line - 1].strip(),
+                )
+
+                # Store instruction source info
+                self.instruction_sources[current_address] = (
+                    instruction_token.line,
+                    instruction_token.column,
+                    self.source_lines[instruction_token.line - 1].strip(),
+                )
+            elif isinstance(stmt, tuple):
+                # Single instruction
+                instruction = stmt
+
+                # Parse instruction fields
+                instruction_type, instruction_value = instruction
+                if instruction_type == "byte_code":
+                    _, instruction_token = instruction_value
+                elif instruction_type == "jump":
+                    _, _, instruction_token = instruction_value
+                else:
+                    raise ValueError(f"Unexpected instruction type: {instruction_type}")
+
+                # Add instruction to instructions list
+                instructions.append(instruction)
+
+                # Store instruction source info
+                self.instruction_sources[current_address] = (
+                    instruction_token.line,
+                    instruction_token.column,
+                    self.source_lines[instruction_token.line - 1].strip(),
+                )
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
         self.logger.debug(f"\nCollected labels: {self.labels}")
         self.logger.debug(f"Instructions: {instructions}")
+        self.logger.debug(f"Label sources: {self.label_sources}")
+        self.logger.debug(f"Instruction sources: {self.instruction_sources}")
 
-        # Second pass: resolve labels
+        if self.debug:
+            for inst in instructions:
+                self.logger.debug(f"Instruction: {inst}")
+
+        # Second pass: resolve jumplabels
         resolved = []
-        current_addr = 0
-        for inst in instructions:
+        for current_addr, inst in enumerate(instructions):
             self.logger.debug(f"Processing instruction at {current_addr}: {inst}")
 
             type_, value = inst
@@ -139,22 +166,11 @@ class J1Assembler(Transformer):
                     )
                 machine_code = jump_type | self.labels[label]
                 resolved.append(machine_code)
-                # Store source line info
-                self.instruction_sources[current_addr] = (
-                    token.line,
-                    self.source_lines[token.line - 1].strip(),
-                )
             elif type_ == "byte_code":
                 machine_code, token = value
                 resolved.append(machine_code)
-                # Store source line info
-                self.instruction_sources[current_addr] = (
-                    token.line,
-                    self.source_lines[token.line - 1].strip(),
-                )
             else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
-            current_addr += 1
 
         return resolved
 
@@ -384,16 +400,20 @@ class J1Assembler(Transformer):
                     (name for name, a in self.labels.items() if a == addr), None
                 )
 
-                source_info = self.instruction_sources.get(addr, (None, ""))
-                line_num, source = source_info
-
                 if label:
-                    if line_num is not None:
-                        f.write(
-                            f"{addr:04x}                Line {line_num}: {label}:\n"
-                        )
-                    else:
-                        f.write(f"{addr:04x}                {label}:\n")
+                    label_info = self.label_sources.get(addr, (None, ""))
+                    line_num, column, source = label_info
+
+                    if line_num is None:
+                        self.logger.error(f"No line number found for label {label}")
+                        raise ValueError(f"No line number found for label {label}")
+
+                    f.write(
+                        f"{addr:04x}                Line {line_num}: {source}:\n"
+                    )
+
+                source_info = self.instruction_sources.get(addr, (None, ""))
+                line_num, column, source = source_info
 
                 # Then write the instruction if it's not just a label
                 if addr in self.instruction_sources and not source.endswith(":"):
