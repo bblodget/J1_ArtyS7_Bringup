@@ -29,6 +29,9 @@ class J1Assembler(Transformer):
         self.source_lines = []
         self.instruction_sources: Dict[int, Tuple[int, str]] = {}
         self.label_sources: Dict[int, Tuple[int, str]] = {}
+        # Add instruction tracking
+        self.instructions: List[int] = []
+        self.is_assembled = False
 
         # Setup logging
         self.logger = logging.getLogger("j1asm")
@@ -172,6 +175,9 @@ class J1Assembler(Transformer):
             else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
 
+        # Store resolved instructions and mark as assembled
+        self.instructions = resolved
+        self.is_assembled = True
         return resolved
 
     def statement(self, items):
@@ -386,15 +392,18 @@ class J1Assembler(Transformer):
         """Convert stack effect rule into its token."""
         return items[0]
 
-    def generate_listing(self, instructions: List[int], output_file: str):
+    def generate_listing(self, output_file: str):
         """Generate listing file showing address, machine code, and source."""
+        if not self.is_assembled:
+            raise ValueError("Cannot generate listing before assembling")
+
         with open(output_file, "w") as f:
             # Write header
             f.write("Address  Machine Code  Source\n")
             f.write("-" * 50 + "\n")
 
             # Write each instruction with its source
-            for addr, code in enumerate(instructions):
+            for addr, code in enumerate(self.instructions):
                 # First check if there's a label at this address
                 label = next(
                     (name for name, a in self.labels.items() if a == addr), None
@@ -408,9 +417,7 @@ class J1Assembler(Transformer):
                         self.logger.error(f"No line number found for label {label}")
                         raise ValueError(f"No line number found for label {label}")
 
-                    f.write(
-                        f"{addr:04x}                Line {line_num}: {source}\n"
-                    )
+                    f.write(f"{addr:04x}                Line {line_num}: {source}\n")
 
                 source_info = self.instruction_sources.get(addr, (None, ""))
                 line_num, column, source = source_info
@@ -424,16 +431,22 @@ class J1Assembler(Transformer):
 
     def generate_symbols(self, output_file: str):
         """Generate symbol file showing addresses and their associated labels."""
+        if not self.is_assembled:
+            raise ValueError("Cannot generate symbols before assembling")
+
         with open(output_file, "w") as f:
             # Sort symbols by address for readability
             sorted_symbols = sorted(self.labels.items(), key=lambda x: x[1])
             for symbol, addr in sorted_symbols:
                 print(f"{addr:04x} {symbol}", file=f)
 
-    def generate_output(self, instructions: List[int], output_file: str):
+    def generate_output(self, output_file: str):
         """Generate output file containing machine code in hex format."""
+        if not self.is_assembled:
+            raise ValueError("Cannot generate output before assembling")
+
         with open(output_file, "w") as f:
-            for inst in instructions:
+            for inst in self.instructions:
                 print(f"{inst:04x}", file=f)
 
 
@@ -472,7 +485,7 @@ def main(input, output, debug, symbols, listing):
             instructions = assembler.transform(tree)
 
             # Write output to specified file
-            assembler.generate_output(instructions, output)
+            assembler.generate_output(output)
             logger.info(f"Successfully wrote output to {output}")
 
             # Generate symbol file if requested
@@ -484,7 +497,7 @@ def main(input, output, debug, symbols, listing):
             # Generate listing file if requested
             if listing:
                 lst_file = Path(output).with_suffix(".lst")
-                assembler.generate_listing(instructions, lst_file)
+                assembler.generate_listing(lst_file)
                 logger.info(f"Generated listing file: {lst_file}")
 
         except lark.exceptions.UnexpectedInput as e:
