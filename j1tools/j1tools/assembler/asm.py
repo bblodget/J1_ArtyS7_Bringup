@@ -387,6 +387,20 @@ class J1Assembler(Transformer):
 
                 f.write(line + "\n")
 
+    def generate_symbols(self, output_file: str):
+        """Generate symbol file showing addresses and their associated labels."""
+        with open(output_file, "w") as f:
+            # Sort symbols by address for readability
+            sorted_symbols = sorted(self.labels.items(), key=lambda x: x[1])
+            for symbol, addr in sorted_symbols:
+                print(f"{addr:04x} {symbol}", file=f)
+
+    def generate_output(self, instructions: List[int], output_file: str):
+        """Generate output file containing machine code in hex format."""
+        with open(output_file, "w") as f:
+            for inst in instructions:
+                print(f"{inst:04x}", file=f)
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
@@ -423,21 +437,13 @@ def main(input, output, debug, symbols, listing):
             instructions = assembler.transform(tree)
 
             # Write output to specified file
-            with open(output, "w") as f:
-                for inst in instructions:
-                    print(f"{inst:04x}", file=f)
+            assembler.generate_output(instructions, output)
             logger.info(f"Successfully wrote output to {output}")
 
             # Generate symbol file if requested
             if symbols:
                 sym_file = Path(output).with_suffix(".sym")
-                with open(sym_file, "w") as f:
-                    # Sort symbols by address for readability
-                    sorted_symbols = sorted(
-                        assembler.labels.items(), key=lambda x: x[1]
-                    )
-                    for symbol, addr in sorted_symbols:
-                        print(f"{addr:04x} {symbol}", file=f)
+                assembler.generate_symbols(sym_file)
                 logger.info(f"Generated symbol file: {sym_file}")
 
             # Generate listing file if requested
