@@ -78,17 +78,16 @@ class J1Assembler(Transformer):
             if isinstance(stmt, list):
                 # Handle label + instruction pair
                 label, instruction = stmt
-                if label[0] == "label":
-                    if label[1] in self.labels:
-                        raise ValueError(f"Duplicate label: {label[1]}")
+                # Process label and instruction
+                type_, value = label
+                if type_ == "label":
+                    label_name, token = value
+                    if label_name in self.labels:
+                        raise ValueError(f"Duplicate label: {label_name}")
                     self.logger.debug(
-                        f"Adding label {label[1]} at address {self.current_address}"
+                        f"Adding label {label_name} at address {self.current_address}"
                     )
-                    self.labels[label[1]] = self.current_address
-                # Store source line info for the instruction
-                type_, value = instruction
-                if isinstance(value, tuple) and len(value) == 2:  # Has token
-                    _, token = value
+                    self.labels[label_name] = self.current_address
                     self.instruction_sources[self.current_address] = (
                         token.line,
                         self.source_lines[token.line - 1].strip(),
@@ -96,18 +95,28 @@ class J1Assembler(Transformer):
                 instructions.append(instruction)
                 self.current_address += 1
             elif isinstance(stmt, tuple):
-                # Handle standalone instruction
-                if stmt[0] != "label":  # Skip standalone labels
-                    # Store source line info
-                    type_, value = stmt
-                    if isinstance(value, tuple) and len(value) == 2:  # Has token
-                        _, token = value
-                        self.instruction_sources[self.current_address] = (
-                            token.line,
-                            self.source_lines[token.line - 1].strip(),
-                        )
+                # Handle standalone instruction or label
+                type_, value = stmt
+                if type_ == "label":
+                    label_name, token = value
+                    if label_name in self.labels:
+                        raise ValueError(f"Duplicate label: {label_name}")
+                    self.labels[label_name] = self.current_address
+                    self.instruction_sources[self.current_address] = (
+                        token.line,
+                        self.source_lines[token.line - 1].strip(),
+                    )
+                else:
                     instructions.append(stmt)
                     self.current_address += 1
+
+                # Store source line info if available
+                if isinstance(value, tuple) and len(value) == 2:  # Has token
+                    _, token = value
+                    self.instruction_sources[self.current_address - 1] = (
+                        token.line,
+                        self.source_lines[token.line - 1].strip(),
+                    )
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
@@ -278,7 +287,8 @@ class J1Assembler(Transformer):
     def label(self, items):
         """Convert label rule into a tuple with the label name."""
         self.logger.debug(f"\nLabel items: {items}")
-        return ("label", str(items[0]))
+        token = items[0]  # This is the IDENT tocken
+        return ("label", (str(token), token))
 
     def number(self, items):
         """Convert number tokens to their machine code representation."""
@@ -373,19 +383,24 @@ class J1Assembler(Transformer):
                 label = next(
                     (name for name, a in self.labels.items() if a == addr), None
                 )
-                if label:
-                    f.write(f"{addr:04x}                    {label}:\n")
 
-                # Then write the instruction
-                line = f"{addr:04x}     {code:04x}"
-
-                # Add source information if available
                 source_info = self.instruction_sources.get(addr, (None, ""))
                 line_num, source = source_info
-                if line_num is not None:
-                    line += f"          ; Line {line_num}: {source}"
 
-                f.write(line + "\n")
+                if label:
+                    if line_num is not None:
+                        f.write(
+                            f"{addr:04x}                Line {line_num}: {label}:\n"
+                        )
+                    else:
+                        f.write(f"{addr:04x}                {label}:\n")
+
+                # Then write the instruction if it's not just a label
+                if addr in self.instruction_sources and not source.endswith(":"):
+                    line = f"{addr:04x}     {code:04x}"
+                    if line_num is not None:
+                        line += f"          Line {line_num}: {source}"
+                    f.write(line + "\n")
 
     def generate_symbols(self, output_file: str):
         """Generate symbol file showing addresses and their associated labels."""

@@ -3,7 +3,7 @@
 // Basic tokens
 %import common.WS
 %ignore WS
-COMMENT: ";" /[^\n]*/
+COMMENT: "//" /[^\n]*/
 %ignore COMMENT
 
 // Numbers and identifiers
