@@ -392,6 +392,23 @@ class J1Assembler(Transformer):
         """Convert stack effect rule into its token."""
         return items[0]
 
+    def generate_listing_line(
+        self, addr, code, line_num, column, source, is_label=False
+    ):
+        """Generate a single line for the listing file with explicit field spacing."""
+        addr_space = " " * 5  # Space after address
+        mcode_space = " " * 10  # Space after machine code
+        line_num_space = " " * 2  # Space after line number
+
+        # Format line and column number consistently for both labels and instructions
+        line_info = f"{line_num:2d}:{column:<3d}"
+
+        if is_label:
+            line = f"{addr:04x}{addr_space}----{mcode_space}{line_info}{line_num_space}{source}\n"
+        else:
+            line = f"{addr:04x}{addr_space}{code:04x}{mcode_space}{line_info}{line_num_space}{source}\n"
+        return line
+
     def generate_listing(self, output_file: str):
         """Generate listing file showing address, machine code, and source."""
         if not self.is_assembled:
@@ -399,7 +416,7 @@ class J1Assembler(Transformer):
 
         with open(output_file, "w") as f:
             # Write header
-            f.write("Address  Machine Code  #  Source\n")
+            f.write("Address  Machine Code  #:col  Source\n")
             f.write("-" * 50 + "\n")
 
             # Write each instruction with its source
@@ -412,22 +429,19 @@ class J1Assembler(Transformer):
                 if label:
                     label_info = self.label_sources.get(addr, (None, ""))
                     line_num, column, source = label_info
+                    label_code = "----"
 
-                    if line_num is None:
-                        self.logger.error(f"No line number found for label {label}")
-                        raise ValueError(f"No line number found for label {label}")
-
-                    f.write(f"{addr:04x}     ----          {line_num:2d}  {source}\n")
+                    line = self.generate_listing_line(
+                        addr, label_code, line_num, column, source, is_label=True
+                    )
+                    f.write(line)
 
                 source_info = self.instruction_sources.get(addr, (None, ""))
                 line_num, column, source = source_info
 
-                # Then write the instruction if it's not just a label
-                if addr in self.instruction_sources and not source.endswith(":"):
-                    line = f"{addr:04x}     {code:04x}"
-                    if line_num is not None:
-                        line += f"          {line_num:2d}  {source}"
-                    f.write(line + "\n")
+                # Then write the instruction
+                line = self.generate_listing_line( addr, code, line_num, column, source)
+                f.write(line)
 
     def generate_symbols(self, output_file: str):
         """Generate symbol file showing addresses and their associated labels."""
