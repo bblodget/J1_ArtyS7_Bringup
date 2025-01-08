@@ -16,6 +16,7 @@ from .instructionset_16kb_dualport import (
 )
 import click
 from typing import List, Tuple, Dict
+from .macro_processor import MacroProcessor
 
 
 class J1Assembler(Transformer):
@@ -39,6 +40,9 @@ class J1Assembler(Transformer):
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
+
+        # Initialize macro processor
+        self.macro_processor = MacroProcessor(debug=debug)
 
         # Load the grammar
         grammar_path = Path(__file__).parent / "j1.lark"
@@ -440,7 +444,7 @@ class J1Assembler(Transformer):
                 line_num, column, source = source_info
 
                 # Then write the instruction
-                line = self.generate_listing_line( addr, code, line_num, column, source)
+                line = self.generate_listing_line(addr, code, line_num, column, source)
                 f.write(line)
 
     def generate_symbols(self, output_file: str):
