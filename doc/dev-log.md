@@ -9,6 +9,16 @@
     - Improved consistency across all file generation operations
     - Made code more maintainable and testable
 
+- Enhanced listing file generation:
+    - Added line and column numbers to listing output
+    - Improved format consistency with explicit field spacing
+    - Made multi-instruction line positions more visible
+    - Added column information to help track instruction positions
+    - Format: "Address  Machine Code  #:col  Source"
+    - Example: "0000     802a          6:5    #$2A #10"
+    - Helps identify source code formatting issues
+    - Makes instruction positions in source clear
+
 ## 2025-01-06
 
 - Working on `feature/forth-macros` branch.
