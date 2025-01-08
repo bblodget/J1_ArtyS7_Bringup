@@ -54,8 +54,8 @@ class J1Assembler(Transformer):
     def parse(self, source, filename="<unknown>"):
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
-        # Store source lines for listing generation
-        self.source_lines = source.splitlines()
+        # Store source lines for listing generation, removing trailing whitespace
+        self.source_lines = [line.rstrip() for line in source.splitlines()]
         tree = self.parser.parse(source)
         self.logger.debug("\n=== Tokens ===")
 
@@ -111,14 +111,14 @@ class J1Assembler(Transformer):
                 self.label_sources[current_address] = (
                     label_token.line,
                     label_token.column,
-                    self.source_lines[label_token.line - 1].strip(),
+                    self.source_lines[label_token.line - 1],
                 )
 
                 # Store instruction source info
                 self.instruction_sources[current_address] = (
                     instruction_token.line,
                     instruction_token.column,
-                    self.source_lines[instruction_token.line - 1].strip(),
+                    self.source_lines[instruction_token.line - 1],
                 )
             elif isinstance(stmt, tuple):
                 # Single instruction
@@ -140,7 +140,7 @@ class J1Assembler(Transformer):
                 self.instruction_sources[current_address] = (
                     instruction_token.line,
                     instruction_token.column,
-                    self.source_lines[instruction_token.line - 1].strip(),
+                    self.source_lines[instruction_token.line - 1],
                 )
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
@@ -399,7 +399,7 @@ class J1Assembler(Transformer):
 
         with open(output_file, "w") as f:
             # Write header
-            f.write("Address  Machine Code  Source\n")
+            f.write("Address  Machine Code  #  Source\n")
             f.write("-" * 50 + "\n")
 
             # Write each instruction with its source
@@ -417,7 +417,7 @@ class J1Assembler(Transformer):
                         self.logger.error(f"No line number found for label {label}")
                         raise ValueError(f"No line number found for label {label}")
 
-                    f.write(f"{addr:04x}                Line {line_num}: {source}\n")
+                    f.write(f"{addr:04x}     ----          {line_num:2d}  {source}\n")
 
                 source_info = self.instruction_sources.get(addr, (None, ""))
                 line_num, column, source = source_info
@@ -426,7 +426,7 @@ class J1Assembler(Transformer):
                 if addr in self.instruction_sources and not source.endswith(":"):
                     line = f"{addr:04x}     {code:04x}"
                     if line_num is not None:
-                        line += f"          Line {line_num}: {source}"
+                        line += f"          {line_num:2d}  {source}"
                     f.write(line + "\n")
 
     def generate_symbols(self, output_file: str):
