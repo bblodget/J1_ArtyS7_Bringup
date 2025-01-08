@@ -58,6 +58,7 @@ class J1Assembler(Transformer):
     def parse(self, source, filename="<unknown>"):
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
+        self.macro_processor.set_current_file(filename)  # Add this line
         # Store source lines for listing generation, removing trailing whitespace
         self.source_lines = [line.rstrip() for line in source.splitlines()]
         tree = self.parser.parse(source)
