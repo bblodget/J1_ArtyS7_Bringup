@@ -9,10 +9,10 @@ start:                   // Note the colon after label
     JMP wait_forever     // Jump to end of program
 
 add_nums:                // Note the colon after label
-     T+N[d-1]            // Add top two stack items
-     T[T->R,r+1]         // Save result to return stack (push, don't overwrite)
-     T[r-1]              // Pop our saved value to T
-     T[RET,r-1]          // Return to caller
+    T+N[d-1]             // Add top two stack items
+    T[T->R,r+1]          // Save result to return stack (push, don't overwrite)
+    T[r-1]               // Pop our saved value to T
+    T[RET,r-1]           // Return to caller
 
 wait_forever:
     T[d+0]               // NOOP
