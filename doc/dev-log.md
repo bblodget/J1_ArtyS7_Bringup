@@ -1,5 +1,50 @@
 # Development Log
 
+## 2025-09-01
+
+- Fixed listing file generation for macros:
+    - Added source line tracking for macro expansions
+    - Updated instruction_sources tracking in program method
+    - Fixed source information for jump instructions
+    - Ensured proper line/column tracking for all instructions
+    - Verified correct listing output format:
+        - Address field (4 digits hex)
+        - Machine code field (4 digits hex or "----" for labels)
+        - Line:column information
+        - Original source lines with comments
+    - Tested with test_macros.asm:
+        - Confirmed proper macro expansion
+        - Verified source line correlation
+        - Validated label handling
+        - Checked jump resolution
+
+- Improved macro handling:
+    - Simplified macro body storage format
+    - Removed Tree structure complexity
+    - Maintained source line tracking through expansion
+    - Added better error messages for:
+        - Invalid macro structures
+        - Missing source information
+        - Malformed instructions
+    - Preserved original source context in listings
+
+- Test Coverage:
+    - Verified macro expansion with test_macros.asm
+    - Confirmed correct machine code generation:
+        - Stack operations
+        - ALU operations
+        - Jump instructions
+        - Label resolution
+    - Validated listing file format
+    - Checked symbol file generation
+    - Tested error handling scenarios
+
+- Next Steps:
+    1. Add more complex macro test cases
+    2. Consider adding macro parameter support
+    3. Implement nested macro expansion
+    4. Add optimization features
+
 ## 2025-01-08
 
 - Implemented basic macro expansion:

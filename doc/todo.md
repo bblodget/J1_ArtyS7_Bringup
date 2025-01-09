@@ -62,9 +62,9 @@
 
 ## Future Enhancements
 - [ ] Add high-level assembly support
-- [ ] Add macro support
-- [ ] Add symbol table for constants
-- [ ] Add listing file output
+- [x] Add macro support
+- [x] Add symbol table for constants
+- [x] Add listing file output
 - [ ] Add binary output format
 - [ ] Add disassembler support
 - [x] Add macro support
@@ -133,9 +133,9 @@
     - [ ] Explain stack effects
     - [ ] Provide optimization examples
 
-- [ ] Add macro support
-  - [ ] Add `macro:` directive to grammar
-  - [ ] Implement macro expansion
+- [x] Add macro support
+  - [x] Add `macro:` directive to grammar
+  - [x] Implement macro expansion
   - [ ] Add tests for macro expansion
   - [ ] Document macro limitations
 
@@ -172,7 +172,7 @@
 - [ ] Add Forth-style function definitions (`: name ... ;`)
 - [ ] Support stack effect comments `( ... -- ... )`
 - [ ] Add optimization directives
-  - [ ] `macro:` for simple substitutions
+  - [x] `macro:` for simple substitutions
   - [ ] `foldable:` for compile-time computation
   - [ ] `inline:` for forced inlining
 - [ ] Implement stack effect validation
@@ -230,7 +230,7 @@
 ### j1asm Command-Line Interface
 - [x] Update debug logging to use logging library
 - [x] Add Click Library for CLI
-- [ ] Basic Output Options
+- [x] Basic Output Options
   - [x] Add `-o, --output FILE` option
   - [x] Add `--symbols` for symbol file (.sym) generation
   - [x] Add `--listing` for listing file (.lst) generation
