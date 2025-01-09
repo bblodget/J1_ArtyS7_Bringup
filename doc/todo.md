@@ -18,6 +18,11 @@
 - [x] Add support for jumps (JMP, ZJMP, CALL)
 - [x] Add label resolution for jumps
 - [x] Add proper error handling with line numbers
+- [x] Add macro support
+  - [x] Add `macro:` directive to grammar
+  - [x] Implement macro expansion
+  - [x] Add tests for macro expansion
+  - [x] Document macro limitations
 
 ## Testing Infrastructure
 - [x] Create test cases for:
@@ -29,6 +34,10 @@
 - [x] Add test coverage reporting
 - [x] Update README with testing instructions
 - [X] Update firmware tests to use source *.asm and expected output *.hex
+- [x] Add test cases for:
+  - [x] Basic macro operations
+  - [x] Error conditions for macros
+  - [x] Edge cases in macro expansion
 
 ## Documentation
 - [x] Add comments explaining instruction encoding
@@ -37,6 +46,9 @@
 - [x] Update README.md with usage instructions
 - [x] Add development setup instructions
 - [x] Add testing documentation
+- [x] Add comments explaining macro expansion
+- [x] Document supported macro syntax
+- [x] Add examples in test files
 
 ## Integration
 - [x] Merge working code into j1tools package
@@ -55,6 +67,11 @@
 - [ ] Add listing file output
 - [ ] Add binary output format
 - [ ] Add disassembler support
+- [x] Add macro support
+  - [x] Add `macro:` directive to grammar
+  - [x] Implement macro expansion
+  - [x] Add tests for macro expansion
+  - [x] Document macro limitations
 
 ## High-Level Assembly Support
 - [x] Implement basic high-level words
@@ -162,15 +179,14 @@
 - [ ] Add compatibility mode for traditional syntax
 
 ### Macro System Implementation
-- [ ] Core Cleanup
+- [x] Core Cleanup
   - [x] Remove high-level words from core assembler
   - [x] Update grammar for core instructions
   - [x] Simplify assembler core
-- [ ] Macro Processing
-  - [ ] Add `include` directive support
-  - [ ] Implement macro definition parsing
-  - [ ] Create macro expansion system
-  - [ ] Add cycle detection for includes
+- [x] Macro Processing
+  - [x] Implement macro definition parsing
+  - [x] Create macro expansion system
+  - [x] Add cycle detection for includes
 - [ ] Optimization Features
   - [ ] Add constant folding support
   - [ ] Implement simulation stack

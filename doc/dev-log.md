@@ -1,5 +1,44 @@
 # Development Log
 
+## 2025-01-08
+
+- Implemented basic macro expansion:
+    - Added macro definition and expansion in macro_processor.py
+    - Macros are stored with their body instructions as Trees
+    - Expansion returns raw instructions without re-parsing
+    - Added error checking for:
+        - Labels inside macros
+        - Nested macro definitions
+        - Recursive macro calls
+        - Invalid instruction formats
+    - Verified correct expansion with test_macros.asm
+    - Confirmed correct hex output generation
+
+- Fixed macro handling in assembler:
+    - Updated macro_call method to use expand_macro directly
+    - Removed string conversion and re-parsing of macro bodies
+    - Integrated with existing instruction processing
+    - Maintained source line tracking structure
+
+- Known Issues:
+    - --listing option not working:
+        - instruction_sources not being populated for macro expansions
+        - Need to track original source line for macro calls
+        - Error: "not enough values to unpack (expected 3, got 2)"
+    - Next steps:
+        1. Debug instruction_sources population in program method
+        2. Add source tracking for macro expansions
+        3. Ensure macro calls preserve line/column information
+        4. Update generate_listing to handle macro-expanded code
+
+- Test Coverage:
+    - Added test_macros.asm for basic macro testing
+    - Verified against test_add_subroutine.asm equivalent
+    - Confirmed correct machine code generation:
+        - Stack operations working
+        - Proper instruction expansion
+        - Label resolution functioning
+
 ## 2025-01-07
 
 - Refactored file generation in asm.py:
