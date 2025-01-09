@@ -259,3 +259,10 @@
   - [ ] Add `--stack-check` for stack effect verification
   - [ ] Add `--word-usage` for word usage statistics
   - [ ] Add `--cross-reference` for cross-reference generation
+
+## Licensing
+- [ ] Add the swapforth license to the 3rd party licenses file
+- [ ] Create a LICENSE file in the root of the project
+- [ ] Add copyright notice to the top of each source file
+
+
