@@ -105,6 +105,11 @@ class J1Assembler(Transformer):
 
                 elif item_type == "macro_def":
                     continue  # Skip macro definitions
+                elif item_type == "jump":
+                    instructions.append(stmt)
+                    # No source info for jump instructions
+                    # We sill add it in the second pass
+                    continue
                 else:
                     # Store instruction with source information
                     if (
@@ -117,6 +122,11 @@ class J1Assembler(Transformer):
                             token.line,
                             token.column,
                             self.source_lines[token.line - 1],
+                        )
+                    else:
+                        raise ValueError(
+                            f"{self.current_file}:{token.line}:{token.column}: "
+                            f"Invalid instruction format: {stmt}"
                         )
                     instructions.append(stmt)
             elif isinstance(stmt, list):
@@ -134,6 +144,11 @@ class J1Assembler(Transformer):
                                 token.line,
                                 token.column,
                                 self.source_lines[token.line - 1],
+                            )
+                        else:
+                            raise ValueError(
+                                f"{self.current_file}:{token.line}:{token.column}: "
+                                f"Invalid instruction format: {stmt}"
                             )
                     instructions.append(macro_inst)
             else:
