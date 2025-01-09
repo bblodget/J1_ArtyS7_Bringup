@@ -82,7 +82,7 @@ R_MINUS_2: "r-2"
 // Program structure
 ?start: program
 program: statement*
-statement: label? (instruction | CODE | BYTE | macro_def)
+statement: label | instruction | CODE | BYTE | macro_def
 label: IDENT COLON
 
 // Numbers and references
@@ -92,7 +92,8 @@ labelref: IDENT
 // Instructions
 instruction: number            // Literal
           | jump_op           // Jump instructions
-          | alu_op           // ALU operations
+          | alu_op            // ALU operations
+          | macro_call        // Macro invocation
 
 // Jump operations
 jump_op: (JMP | ZJMP | CALL) labelref
@@ -159,5 +160,8 @@ BYTE: "BYTE"
 // Add new rules for macros
 macro_def: MACRO IDENT STACK_COMMENT? macro_body SEMICOLON
 macro_body: instruction+
+
+// Add macro call rule
+macro_call: IDENT
 
 

@@ -5,7 +5,7 @@ Handles macro definitions, expansion, and validation.
 
 import logging
 from typing import Dict, List, Set, Optional, Any, Tuple
-from lark import Token
+from lark import Token, Tree
 
 
 class MacroProcessor:
@@ -122,12 +122,36 @@ class MacroProcessor:
             # Return the expanded instructions
             expanded = []
             for inst in macro["body"]:
-                if isinstance(inst, tuple):
-                    expanded.append(inst)
+                if isinstance(inst, Tree):
+                    # Process each instruction in the macro_body Tree
+                    for child in inst.children:
+                        if isinstance(child, tuple):
+                            if child[0] == "label":
+                                raise ValueError(
+                                    f"{self.current_file}:{token.line}:{token.column}: "
+                                    f"Labels are not allowed inside macros: {name}"
+                                )
+                            elif child[0] == "macro_def":
+                                raise ValueError(
+                                    f"{self.current_file}:{token.line}:{token.column}: "
+                                    f"Macros are not allowed inside macros: {name}"
+                                )
+                            elif child[0] == "macro_call":
+                                raise ValueError(
+                                    f"{self.current_file}:{token.line}:{token.column}: "
+                                    f"Macros are not allowed inside macros: {name}"
+                                )
+                            else:
+                                expanded.append(child)
+                        else:
+                            raise ValueError(
+                                f"{self.current_file}:{token.line}:{token.column}: "
+                                f"Invalid instruction inside macro: {child}"
+                            )
                 else:
                     raise ValueError(
                         f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Nested macro expansion not supported yet: {inst}"
+                        f"Invalid macro body structure: {inst}"
                     )
 
             self.logger.debug(f"Expanded {name} to: {expanded}")

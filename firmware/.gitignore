@@ -1,2 +1,5 @@
 aout.*
+*.lst
+*.sym
+
 

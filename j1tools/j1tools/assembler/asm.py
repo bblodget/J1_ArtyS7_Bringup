@@ -73,91 +73,48 @@ class J1Assembler(Transformer):
 
     def program(self, statements):
         """Process all statements and resolve labels."""
-
-        # First pass: collect labels, instructions, and source info
         self.current_address = 0
         instructions = []
 
-        for current_address, stmt in enumerate(statements):
-            self.logger.debug(f"Statement {current_address}: {stmt}")
-            if isinstance(stmt, list):
-                # Label + instruction pair
+        # First pass: collect labels and flatten instructions
+        for stmt in statements:
+            self.logger.debug(f"Statement: {stmt}")
 
-                label, instruction = stmt
-                self.logger.debug(f"Label: {label}, Instruction: {instruction}")
+            if isinstance(stmt, tuple):
+                item_type, value = stmt
 
-                # Parse label fields
-                label_type, label_value = label
-                label_name, label_token = label_value
+                if item_type == "label":
+                    # Store label with current address
+                    label_name, label_token = value
 
-                if label_type != "label":
-                    raise ValueError(f"Expected label, got {label_type}")
+                    # Check if label is already defined
+                    if label_name in self.labels:
+                        raise ValueError(
+                            f"{self.current_file}:{label_token.line}:{label_token.column}: "
+                            f"Duplicate label: {label_name}"
+                        )
 
-                # Parse instruction fields
-                instruction_type, instruction_value = instruction
-                if instruction_type == "byte_code":
-                    _, instruction_token = instruction_value
-                elif instruction_type == "jump":
-                    _, _, instruction_token = instruction_value
+                    # Record label information
+                    self.labels[label_name] = len(instructions)
+                    self.label_sources[len(instructions)] = (
+                        label_token.line,
+                        label_token.column,
+                        self.source_lines[label_token.line - 1],
+                    )
+                    continue  # Skip to next statement
+
+                elif item_type == "macro_def":
+                    continue  # Skip macro definitions
                 else:
-                    raise ValueError(f"Unexpected instruction type: {instruction_type}")
-
-                # Check for duplicate labels
-                if label_name in self.labels:
-                    raise ValueError(f"Duplicate label: {label_name}")
-
-                # Add label to labels dictionary
-                self.labels[label_name] = current_address
-
-                # Add instruction to instructions list
-                instructions.append(instruction)
-
-                # Store label source info
-                self.label_sources[current_address] = (
-                    label_token.line,
-                    label_token.column,
-                    self.source_lines[label_token.line - 1],
-                )
-
-                # Store instruction source info
-                self.instruction_sources[current_address] = (
-                    instruction_token.line,
-                    instruction_token.column,
-                    self.source_lines[instruction_token.line - 1],
-                )
-            elif isinstance(stmt, tuple):
-                # Single instruction
-                instruction = stmt
-
-                # Parse instruction fields
-                instruction_type, instruction_value = instruction
-                if instruction_type == "byte_code":
-                    _, instruction_token = instruction_value
-                elif instruction_type == "jump":
-                    _, _, instruction_token = instruction_value
-                else:
-                    raise ValueError(f"Unexpected instruction type: {instruction_type}")
-
-                # Add instruction to instructions list
-                instructions.append(instruction)
-
-                # Store instruction source info
-                self.instruction_sources[current_address] = (
-                    instruction_token.line,
-                    instruction_token.column,
-                    self.source_lines[instruction_token.line - 1],
-                )
+                    instructions.append(stmt)
+            elif isinstance(stmt, list):
+                # Handle macro expansions
+                instructions.extend(stmt)
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
         self.logger.debug(f"\nCollected labels: {self.labels}")
         self.logger.debug(f"Instructions: {instructions}")
-        self.logger.debug(f"Label sources: {self.label_sources}")
-        self.logger.debug(f"Instruction sources: {self.instruction_sources}")
-
-        if self.debug:
-            for inst in instructions:
-                self.logger.debug(f"Instruction: {inst}")
 
         # Second pass: resolve jumplabels
         resolved = []
@@ -233,9 +190,13 @@ class J1Assembler(Transformer):
 
         self.logger.debug(f"Processing instruction item: {item}")
 
+        # Handle case where we get a list of instructions (from macro expansion)
+        if isinstance(item, list):
+            return item  # Pass through list of instructions unchanged
+
         # Handle single instructions
         item_type, value = item
-        token = item[2] if len(item) > 2 else None
+        token = value[1] if isinstance(value, tuple) else None
 
         self.logger.debug(f"Processing instruction: {item_type} {value}")
 
@@ -245,6 +206,14 @@ class J1Assembler(Transformer):
             return item  # Pass through jump instructions
         elif item_type == "byte_code":
             return item  # Already final form
+        elif item_type == "macro_call":
+            macro_name = value[0]
+            if not self.macro_processor.is_macro(macro_name):
+                raise ValueError(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"Unknown macro: {macro_name}"
+                )
+            return item  # Pass through macro calls
 
         if token:
             raise ValueError(
@@ -336,6 +305,13 @@ class J1Assembler(Transformer):
                     f"{self.current_file}:{token.line}:{token.column}: "
                     f"Negative numbers must be constructed manually"
                 )
+                # TODO: Generate instructions for negative number
+                # abs_value = abs(value)
+                # return [
+                #    ("byte_code", (0x8000 | abs_value, token)),  # Push absolute value
+                #    ("byte_code", (24577, token)),               # T 1-
+                #    ("byte_code", (24584, token)),               # INVERT
+                # ]
             machine_code = 0x8000 | value
             return ("byte_code", (machine_code, token))
         else:
@@ -467,6 +443,27 @@ class J1Assembler(Transformer):
         with open(output_file, "w") as f:
             for inst in self.instructions:
                 print(f"{inst:04x}", file=f)
+
+    def macro_def(self, items):
+        """Handle macro definitions by delegating to macro processor."""
+        self.logger.debug(f"Processing macro definition: {items}")
+        macro_token = items[0]  # MACRO token
+        name_token = items[1]  # IDENT token
+        macro_name = str(name_token)
+
+        # Process the macro definition
+        self.macro_processor.process_macro_def(items)
+
+        # Return a tuple that matches our other instruction patterns
+        return ("macro_def", (macro_name, name_token))
+
+    def macro_call(self, items):
+        """Handle macro invocations."""
+        token = items[0]
+        macro_name = str(token)
+
+        # Get expanded instructions directly
+        return self.macro_processor.expand_macro(macro_name, token)
 
 
 @click.command()
