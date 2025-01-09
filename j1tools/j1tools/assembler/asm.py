@@ -106,10 +106,36 @@ class J1Assembler(Transformer):
                 elif item_type == "macro_def":
                     continue  # Skip macro definitions
                 else:
+                    # Store instruction with source information
+                    if (
+                        isinstance(value, tuple)
+                        and len(value) > 1
+                        and isinstance(value[1], Token)
+                    ):
+                        token = value[1]
+                        self.instruction_sources[len(instructions)] = (
+                            token.line,
+                            token.column,
+                            self.source_lines[token.line - 1],
+                        )
                     instructions.append(stmt)
             elif isinstance(stmt, list):
                 # Handle macro expansions
-                instructions.extend(stmt)
+                for macro_inst in stmt:
+                    if isinstance(macro_inst, tuple) and len(macro_inst) > 1:
+                        _, value = macro_inst
+                        if (
+                            isinstance(value, tuple)
+                            and len(value) > 1
+                            and isinstance(value[1], Token)
+                        ):
+                            token = value[1]
+                            self.instruction_sources[len(instructions)] = (
+                                token.line,
+                                token.column,
+                                self.source_lines[token.line - 1],
+                            )
+                    instructions.append(macro_inst)
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
@@ -131,9 +157,16 @@ class J1Assembler(Transformer):
                     )
                 machine_code = jump_type | self.labels[label]
                 resolved.append(machine_code)
+                # Add source information for jump instruction
+                self.instruction_sources[len(resolved) - 1] = (
+                    token.line,
+                    token.column,
+                    self.source_lines[token.line - 1],
+                )
             elif type_ == "byte_code":
                 machine_code, token = value
                 resolved.append(machine_code)
+                # Source information for byte_code was already added in first pass
             else:
                 raise ValueError(f"Unexpected instruction type: {type_}")
 
@@ -418,11 +451,19 @@ class J1Assembler(Transformer):
                     f.write(line)
 
                 source_info = self.instruction_sources.get(addr, (None, ""))
-                line_num, column, source = source_info
+                if len(source_info) == 3:
+                    line_num, column, source = source_info
 
-                # Then write the instruction
-                line = self.generate_listing_line(addr, code, line_num, column, source)
-                f.write(line)
+                    # Then write the instruction
+                    line = self.generate_listing_line(
+                        addr, code, line_num, column, source
+                    )
+                    f.write(line)
+                else:
+                    raise ValueError(
+                        f"No source info for address {addr} {code}\n"
+                        f"source_info: {source_info}"
+                    )
 
     def generate_symbols(self, output_file: str):
         """Generate symbol file showing addresses and their associated labels."""
