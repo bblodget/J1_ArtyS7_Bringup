@@ -86,7 +86,19 @@ class MacroProcessor:
             body_start = 3
 
         # Collect macro body instructions (everything before the semicolon)
-        body = items[body_start:-1]  # -1 to skip the semicolon
+        raw_body = items[body_start:-1]  # -1 to skip the semicolon
+
+        # Extract the actual instructions from the Tree structure
+        body = []
+        tree_body = raw_body[0]
+        if isinstance(tree_body, Tree):
+            body.extend(child for child in tree_body.children if isinstance(child, tuple))
+        else:
+            # unexpected body type
+            raise ValueError(
+                f"{self.current_file}:{items[1].line}:{items[1].column}: "
+                f"Unexpected macro body structure: {tree_body}"
+            )
 
         # Define the macro
         self.define_macro(name, body, stack_effect, items[1])
@@ -119,39 +131,31 @@ class MacroProcessor:
             macro = self.macros[name]
             self.logger.debug(f"Expanding macro {name}: {macro}")
 
-            # Return the expanded instructions
+            # Validate each instruction in the body
             expanded = []
             for inst in macro["body"]:
-                if isinstance(inst, Tree):
-                    # Process each instruction in the macro_body Tree
-                    for child in inst.children:
-                        if isinstance(child, tuple):
-                            if child[0] == "label":
-                                raise ValueError(
-                                    f"{self.current_file}:{token.line}:{token.column}: "
-                                    f"Labels are not allowed inside macros: {name}"
-                                )
-                            elif child[0] == "macro_def":
-                                raise ValueError(
-                                    f"{self.current_file}:{token.line}:{token.column}: "
-                                    f"Macros are not allowed inside macros: {name}"
-                                )
-                            elif child[0] == "macro_call":
-                                raise ValueError(
-                                    f"{self.current_file}:{token.line}:{token.column}: "
-                                    f"Macros are not allowed inside macros: {name}"
-                                )
-                            else:
-                                expanded.append(child)
-                        else:
-                            raise ValueError(
-                                f"{self.current_file}:{token.line}:{token.column}: "
-                                f"Invalid instruction inside macro: {child}"
-                            )
+                if isinstance(inst, tuple):
+                    if inst[0] == "label":
+                        raise ValueError(
+                            f"{self.current_file}:{token.line}:{token.column}: "
+                            f"Labels are not allowed inside macros: {name}"
+                        )
+                    elif inst[0] == "macro_def":
+                        raise ValueError(
+                            f"{self.current_file}:{token.line}:{token.column}: "
+                            f"Macros are not allowed inside macros: {name}"
+                        )
+                    elif inst[0] == "macro_call":
+                        raise ValueError(
+                            f"{self.current_file}:{token.line}:{token.column}: "
+                            f"Macros are not allowed inside macros: {name}"
+                        )
+                    else:
+                        expanded.append(inst)
                 else:
                     raise ValueError(
                         f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Invalid macro body structure: {inst}"
+                        f"Invalid instruction inside macro: {inst}"
                     )
 
             self.logger.debug(f"Expanded {name} to: {expanded}")
