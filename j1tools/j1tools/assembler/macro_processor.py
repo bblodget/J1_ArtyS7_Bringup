@@ -6,6 +6,29 @@ Handles macro definitions, expansion, and validation.
 import logging
 from typing import Dict, List, Set, Optional, Any, Tuple
 from lark import Token, Tree
+from dataclasses import dataclass
+
+
+@dataclass
+class MacroDefinition:
+    """Represents a macro definition with its attributes."""
+
+    stack_effect: Optional[str]  # Optional stack effect comment
+    body: List[Any]  # List of instructions that make up the macro
+    defined_at: str  # Location where macro was defined (file:line)
+
+
+@dataclass
+class InstructionData:
+    """Represents the data portion of an instruction."""
+
+    value: int  # The bytecode/value
+    token: Token  # The original token
+    macro_name: Optional[str] = None  # Name of macro if from macro expansion
+    # Future fields can be added here without breaking existing code
+    # opt_name: Optional[str] = None
+    # stack_effect: Optional[str] = None
+    # etc.
 
 
 class MacroProcessor:
@@ -13,7 +36,7 @@ class MacroProcessor:
         # Dictionary to store macro definitions
         # Key: macro name
         # Value: Dict containing 'stack_effect', 'body', and 'defined_at'
-        self.macros: Dict[str, Dict[str, Any]] = {}
+        self.macros: Dict[str, MacroDefinition] = {}
 
         # Set to track macros being expanded (prevents infinite recursion)
         self.expanding: Set[str] = set()
@@ -56,11 +79,11 @@ class MacroProcessor:
             )
 
         self.logger.debug(f"Defining macro {name} with body: {body}")
-        self.macros[name] = {
-            "stack_effect": stack_effect,
-            "body": body,
-            "defined_at": f"{self.current_file}:{token.line if token else 'unknown'}",
-        }
+        self.macros[name] = MacroDefinition(
+            stack_effect=stack_effect,
+            body=body,
+            defined_at=f"{self.current_file}:{token.line if token else 'unknown'}",
+        )
 
     def process_macro_def(self, items: List[Any]) -> None:
         """
@@ -92,7 +115,9 @@ class MacroProcessor:
         body = []
         tree_body = raw_body[0]
         if isinstance(tree_body, Tree):
-            body.extend(child for child in tree_body.children if isinstance(child, tuple))
+            body.extend(
+                child for child in tree_body.children if isinstance(child, tuple)
+            )
         else:
             # unexpected body type
             raise ValueError(
@@ -133,25 +158,31 @@ class MacroProcessor:
 
             # Validate each instruction in the body
             expanded = []
-            for inst in macro["body"]:
+            for inst in macro.body:
                 if isinstance(inst, tuple):
                     if inst[0] == "label":
                         raise ValueError(
                             f"{self.current_file}:{token.line}:{token.column}: "
                             f"Labels are not allowed inside macros: {name}"
                         )
-                    elif inst[0] == "macro_def":
-                        raise ValueError(
-                            f"{self.current_file}:{token.line}:{token.column}: "
-                            f"Macros are not allowed inside macros: {name}"
-                        )
-                    elif inst[0] == "macro_call":
+                    elif inst[0] == "macro_def" or inst[0] == "macro_call":
                         raise ValueError(
                             f"{self.current_file}:{token.line}:{token.column}: "
                             f"Macros are not allowed inside macros: {name}"
                         )
                     else:
-                        expanded.append(inst)
+                        inst_type, value = inst
+                        if isinstance(value, InstructionData):
+                            # Create new InstructionData with macro name
+                            new_data = InstructionData(
+                                value=value.value, token=value.token, macro_name=name
+                            )
+                            expanded.append((inst_type, new_data))
+                        else:
+                            raise ValueError(
+                                f"{self.current_file}:{token.line}:{token.column}: "
+                                f"Expected InstructionData, got {type(value)}"
+                            )
                 else:
                     raise ValueError(
                         f"{self.current_file}:{token.line}:{token.column}: "
