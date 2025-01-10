@@ -471,6 +471,15 @@ class J1Assembler(Transformer):
 
             # Write each instruction with its source
             for addr, code in enumerate(self.instructions):
+                # First check if there's a label at this address
+                if addr in self.label_sources:
+                    label_info = self.label_sources[addr]
+                    label_line = self.generate_listing_line(
+                        addr, 0, label_info, is_label=True
+                    )
+                    f.write(label_line)
+
+                # Then write the instruction
                 if addr in self.instruction_sources:
                     source_info = self.instruction_sources[addr]
                     line = self.generate_listing_line(addr, code, source_info)
