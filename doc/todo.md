@@ -12,6 +12,7 @@
   - [x] Macro expansion and cycle detection
   - [x] Basic test coverage
   - [x] Documentation
+  - [x] Add a macro column to the listing file
 
 - [x] Command Line Interface
   - [x] Click library integration
@@ -26,7 +27,9 @@
 ## Current Development Focus
 
 ### Macro System
-- [ ] Add a macro column to the listing file
+- [ ] Test with macros with no comments.  See if adds macro name to comments.
+- [ ] Test with single line macros.
+
 
 ### High-Level Assembly Support
 - [ ] Control Structures

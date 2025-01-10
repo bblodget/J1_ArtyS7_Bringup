@@ -1,6 +1,31 @@
 # Development Log
 
-## 2025-09-01
+## 2025-01-10
+
+- Enhanced macro processing in the assembler:
+    - Fixed issues with macro expansion and instruction handling.
+    - Ensured proper source line tracking for macro-expanded instructions.
+    - Improved error handling and logging for macro-related errors.
+    - Added label information back to the listing file output.
+    - Verified correct listing output format with labels and macro annotations.
+
+- Updated the `generate_listing` method:
+    - Included label information in the listing file.
+    - Ensured labels are displayed with "----" in the machine code column.
+    - Added macro name annotations in the source comments for expanded instructions.
+
+- Test Coverage:
+    - Verified macro expansion and label handling with `test_macros.asm`.
+    - Confirmed correct machine code generation and listing file output.
+    - Ensured no crashes or errors during the assembly process.
+
+- Next Steps:
+    1. Add more complex macro test cases.
+    2. Consider adding macro parameter support.
+    3. Implement nested macro expansion.
+    4. Add optimization features.
+
+## 2025-01-09
 
 - Fixed listing file generation for macros:
     - Added source line tracking for macro expansions
