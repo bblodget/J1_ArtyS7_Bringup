@@ -394,34 +394,57 @@ class J1Assembler(Transformer):
         return items[0]
 
     def generate_listing_line(
-        self,
-        addr: int,
-        code: int,
-        metadata: InstructionMetadata,
+        self, addr: int, code: int, metadata: InstructionMetadata
     ) -> str:
         """Generate a single line for the listing file with explicit field spacing."""
-        addr_space = " " * 5
-        mcode_space = " " * 10
-        line_num_space = " " * 2
+        # Define spacing constants
+        addr_space = " " * 5  # After address
+        mcode_space = " " * 10  # After machine code
+        line_num_space = " " * 2  # After line:col
+        source_space = " " * 4  # Before source code
+        comment_space = " " * 2  # Before comment
+        indent = " " * 2  # Indentation for code under labels
 
-        line_info = f"{metadata.line:2d}:{metadata.column:<3d}"
-        source_line = metadata.source_line
+        # Split source line into code and comment
+        source = metadata.source_line.strip()
+        code_part = source
+        comment_part = ""
 
-        # Add macro/optimization information to comments
+        if "//" in source:
+            code_part, comment_part = source.split("//", 1)
+            code_part = code_part.rstrip()
+            comment_part = comment_part.strip()
+
+        # Add macro annotation to comment if from macro
         if metadata.macro_name:
-            if "//" in source_line:
-                pre_comment, comment = source_line.split("//", 1)
-                source_line = (
-                    f"{pre_comment}// (macro: {metadata.macro_name}) {comment.lstrip()}"
-                )
+            macro_note = f"(macro: {metadata.macro_name})"
+            if comment_part:
+                comment_part = f"{macro_note} {comment_part}"
             else:
-                source_line = f"{source_line} // (macro: {metadata.macro_name})"
+                comment_part = macro_note
 
+        # Format line:col with fixed width (assuming max line number is 999)
+        line_col = f"{metadata.line:3d}:{metadata.column:<3d}"
+
+        # Add indentation to code_part if it's not a label
+        if metadata.type != InstructionType.LABEL:
+            code_part = f"{indent}{code_part}"
+
+        # Format the line with explicit spacing
         if metadata.type == InstructionType.LABEL:
-            line = f"{addr:04x}{addr_space}----{mcode_space}{line_info}{line_num_space}{source_line}\n"
+            return (
+                f"{addr:04x}{addr_space}----{mcode_space}"
+                f"{line_col}{line_num_space}"
+                f"{code_part:<30}{indent}"  # Add indent before comment for labels
+                f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
+            )
         else:
-            line = f"{addr:04x}{addr_space}{code:04x}{mcode_space}{line_info}{line_num_space}{source_line}\n"
-        return line
+            return (
+                f"{addr:04x}{addr_space}{code:04x}{mcode_space}"
+                f"{line_col}{line_num_space}"
+                f"{code_part:<32}"  # Increased width to account for indent
+                f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
+            )
 
     def generate_listing(self, output_file: str) -> None:
         """Generate listing file showing address, machine code, and source."""
