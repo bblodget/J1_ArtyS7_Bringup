@@ -177,20 +177,17 @@ class J1Assembler(Transformer):
         label_token = items[1]  # Label token
         label_name = str(label_token)  # Just use the label name directly
 
-        if op not in JUMP_OPS:
-            raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: "
-                f"Unknown jump operation: {op}"
-            )
+        # Create instruction text by combining op and label
+        instr_text = f"{op} {label_name}"
 
-        # Create jump instruction metadata
         return InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
             value=JUMP_OPS[op],  # Base jump opcode
             token=token,
             filename=self.current_file,
             source_lines=self.source_lines,
-            label_name=label_name,  # Now just the label name string
+            label_name=label_name,
+            instr_text=instr_text,  # Add instruction text
         )
 
     def instruction(self, items):
@@ -271,12 +268,27 @@ class J1Assembler(Transformer):
         return ("modifier", result)
 
     def modifiers(self, items):
-        """Process the modifiers rule (handles brackets)."""
+        """Process modifiers within square brackets."""
         self.logger.debug(f"\nModifiers: processing items: {items}")
-        # items[0] is LBRACKET, items[1] is modifier_list, items[2] is RBRACKET
-        result = items[1]
-        self.logger.debug(f"Modifiers result: {result}")
-        return result
+
+        # Skip brackets
+        modifier_items = items[1:-1]  # Skip '[' and ']'
+
+        # Process all modifiers and combine their values
+        total_value = 0
+        modifier_texts = []
+
+        for item in modifier_items:
+            if isinstance(item, tuple) and item[0] == "modifier":
+                total_value |= item[1]
+                # Get the original text for this modifier
+                for name, value in {**STACK_EFFECTS, **D_EFFECTS, **R_EFFECTS}.items():
+                    if value == item[1]:
+                        modifier_texts.append(name)
+                        break
+
+        self.logger.debug(f"Modifiers result: ('modifier', {total_value})")
+        return ("modifier", total_value, modifier_texts)  # Return both value and text
 
     def labelref(self, items):
         """Convert labelref rule into a string."""
@@ -288,6 +300,9 @@ class J1Assembler(Transformer):
         token = items[0]  # This is the IDENT token
         label_name = str(token)
 
+        # Create instruction text with colon
+        instr_text = f"{label_name}:"
+
         return InstructionMetadata.from_token(
             inst_type=InstructionType.LABEL,
             value=0,  # Labels don't have a value
@@ -295,6 +310,7 @@ class J1Assembler(Transformer):
             filename=self.current_file,
             source_lines=self.source_lines,
             label_name=label_name,
+            instr_text=instr_text,  # Add instruction text
         )
 
     def number(self, items):
@@ -314,6 +330,7 @@ class J1Assembler(Transformer):
                 token=token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
+                instr_text=str(token),  # Use token string directly
             )
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
@@ -336,6 +353,7 @@ class J1Assembler(Transformer):
                 token=token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
+                instr_text=str(token),  # Use token string directly
             )
         else:
             raise ValueError(f"Unknown number format: {token}")
@@ -349,18 +367,23 @@ class J1Assembler(Transformer):
         """Convert ALU operations into their machine code representation."""
         token = items[0]
         base_op = token.value
-        modifiers = 0
+        modifier_value = 0
+        modifier_texts = []
 
         # Process modifiers if present
         if len(items) > 1:
             for item in items[1:]:
                 if isinstance(item, tuple) and item[0] == "modifier":
-                    modifiers |= item[1]
-                else:
-                    raise ValueError(
-                        f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Expected modifier, got {item}"
-                    )
+                    # Check if we have the text representation
+                    if len(item) > 2:
+                        modifier_texts.extend(item[2])
+                    modifier_value |= item[1]
+
+        # Create instruction text
+        if modifier_texts:
+            instr_text = f"{base_op}[{','.join(modifier_texts)}]"
+        else:
+            instr_text = base_op
 
         # Get the base ALU operation code
         if base_op not in ALU_OPS:
@@ -368,13 +391,17 @@ class J1Assembler(Transformer):
                 f"{self.current_file}:{token.line}:{token.column}: "
                 f"Unknown ALU operation '{base_op}'"
             )
-        result = ALU_OPS[base_op] | modifiers | INST_TYPES["alu"]
+
+        # Combine all parts of the instruction
+        result = ALU_OPS[base_op] | modifier_value | INST_TYPES["alu"]
+
         return InstructionMetadata.from_token(
             inst_type=InstructionType.BYTE_CODE,
             value=result,
             token=token,
             filename=self.current_file,
             source_lines=self.source_lines,
+            instr_text=instr_text,
         )
 
     def data_stack_delta(self, items):
@@ -405,14 +432,10 @@ class J1Assembler(Transformer):
         comment_space = " " * 2  # Before comment
         indent = " " * 2  # Indentation for code under labels
 
-        # Split source line into code and comment
-        source = metadata.source_line.strip()
-        code_part = source
+        # Get comment from original source line
         comment_part = ""
-
-        if "//" in source:
-            code_part, comment_part = source.split("//", 1)
-            code_part = code_part.rstrip()
+        if "//" in metadata.source_line:
+            _, comment_part = metadata.source_line.split("//", 1)
             comment_part = comment_part.strip()
 
         # Add macro annotation to comment if from macro
@@ -423,10 +446,11 @@ class J1Assembler(Transformer):
             else:
                 comment_part = macro_note
 
-        # Format line:col with fixed width (assuming max line number is 999)
+        # Format line:col with fixed width
         line_col = f"{metadata.line:3d}:{metadata.column:<3d}"
 
-        # Add indentation to code_part if it's not a label
+        # Use instr_text for the instruction display
+        code_part = metadata.instr_text
         if metadata.type != InstructionType.LABEL:
             code_part = f"{indent}{code_part}"
 
@@ -435,14 +459,14 @@ class J1Assembler(Transformer):
             return (
                 f"{addr:04x}{addr_space}----{mcode_space}"
                 f"{line_col}{line_num_space}"
-                f"{code_part:<30}{indent}"  # Add indent before comment for labels
+                f"{code_part:<30}{indent}"
                 f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
             )
         else:
             return (
                 f"{addr:04x}{addr_space}{code:04x}{mcode_space}"
                 f"{line_col}{line_num_space}"
-                f"{code_part:<32}"  # Increased width to account for indent
+                f"{code_part:<32}"
                 f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
             )
 
@@ -500,6 +524,16 @@ class J1Assembler(Transformer):
         # Process the macro definition
         self.macro_processor.process_macro_def(items)
 
+        # Create instruction text for the macro definition
+        # Include stack effect comment if present
+        stack_effect = ""
+        for item in items:
+            if isinstance(item, Token) and item.type == "STACK_COMMENT":
+                stack_effect = f" {str(item)}"
+                break
+
+        instr_text = f"macro: {macro_name}{stack_effect}"
+
         # Return InstructionMetadata instead of tuple
         return InstructionMetadata.from_token(
             inst_type=InstructionType.MACRO_DEF,
@@ -507,6 +541,7 @@ class J1Assembler(Transformer):
             token=name_token,
             filename=self.current_file,
             source_lines=self.source_lines,
+            instr_text=instr_text,  # Add formatted instruction text
             macro_name=macro_name,
         )
 

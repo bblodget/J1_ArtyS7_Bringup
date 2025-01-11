@@ -122,57 +122,37 @@ class MacroProcessor:
         self.define_macro(name, body, stack_effect, name_token)
 
     def expand_macro(self, name: str, token: Token) -> List[InstructionMetadata]:
-        """
-        Expand a macro invocation into its constituent instructions.
-
-        Args:
-            name: Name of the macro to expand
-            token: Token for error reporting
-
-        Returns:
-            List of expanded instructions as InstructionMetadata objects
-        """
+        """Expand a macro into its constituent instructions."""
         if name not in self.macros:
-            raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: "
-                f"Undefined macro: {name}"
-            )
+            raise ValueError(f"Unknown macro: {name}")
 
         if name in self.expanding:
-            raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: "
-                f"Recursive macro expansion detected: {name}"
-            )
+            raise ValueError(f"Recursive macro expansion detected: {name}")
 
         self.expanding.add(name)
-        try:
-            macro = self.macros[name]
-            self.logger.debug(f"Expanding macro {name}: {macro}")
+        macro = self.macros[name]
 
-            # Validate each instruction in the body
-            expanded = []
-            for inst in macro.body:
-                if isinstance(inst, InstructionMetadata):
-                    # Create new metadata with macro name
-                    new_metadata = InstructionMetadata(
-                        type=inst.type,
-                        value=inst.value,
-                        token=inst.token,
-                        filename=inst.filename,
-                        line=inst.line,
-                        column=inst.column,
-                        source_line=inst.source_line,
-                        macro_name=name,
-                    )
-                    expanded.append(new_metadata)
-                else:
-                    raise ValueError(f"Expected InstructionMetadata, got {type(inst)}")
+        # Create new instructions based on the macro's body
+        expanded = []
+        for instr in macro.body:
+            # Create a new instruction with updated metadata
+            new_instr = InstructionMetadata(
+                type=instr.type,
+                value=instr.value,
+                token=token,
+                filename=instr.filename,
+                line=token.line,
+                column=token.column,
+                source_line=instr.source_line,
+                instr_text=instr.instr_text,
+                macro_name=name,
+                opt_name=None,
+                label_name=None,
+            )
+            expanded.append(new_instr)
 
-            self.logger.debug(f"Expanded {name} to: {expanded}")
-            return expanded
-
-        finally:
-            self.expanding.remove(name)
+        self.expanding.remove(name)
+        return expanded
 
     def is_macro(self, name: str) -> bool:
         """Check if a name refers to a defined macro."""
