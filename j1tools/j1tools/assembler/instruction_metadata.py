@@ -1,0 +1,53 @@
+"""
+Instruction metadata definitions for J1 assembler.
+"""
+
+from dataclasses import dataclass
+from enum import Enum, auto
+from typing import Optional, List
+from lark import Token
+
+class InstructionType(Enum):
+    """Types of instructions in the J1 assembly."""
+    BYTE_CODE = auto()
+    LABEL = auto()
+    JUMP = auto()
+    MACRO_DEF = auto()
+    MACRO_CALL = auto()
+    ALU = auto()
+
+@dataclass
+class InstructionMetadata:
+    """Represents metadata about an instruction including its value and source information."""
+    type: InstructionType       # Type of instruction
+    value: int                  # The bytecode/value
+    token: Token               # The original token
+    filename: str              # Source file
+    line: int                  # Line number
+    column: int                # Column number
+    source_line: str           # Complete source line
+    
+    # Optional metadata
+    macro_name: Optional[str] = None  # Name of macro if from macro expansion
+    opt_name: Optional[str] = None    # Name of optimization if applied
+    label_name: Optional[str] = None  # Name of label (for LABEL type)
+    
+    @classmethod
+    def from_token(cls, 
+                  inst_type: InstructionType,
+                  value: int, 
+                  token: Token, 
+                  filename: str, 
+                  source_lines: List[str],
+                  **kwargs) -> 'InstructionMetadata':
+        """Factory method to create metadata from a token."""
+        return cls(
+            type=inst_type,
+            value=value,
+            token=token,
+            filename=filename,
+            line=token.line,
+            column=token.column,
+            source_line=source_lines[token.line - 1],
+            **kwargs
+        )

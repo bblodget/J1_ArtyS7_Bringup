@@ -16,41 +16,28 @@ from .instructionset_16kb_dualport import (
 )
 import click
 from typing import List, Tuple, Dict, Optional
-from .macro_processor import MacroProcessor, InstructionData
-from dataclasses import dataclass
-
-
-@dataclass
-class InstructionSource:
-    filename: str
-    line: int
-    column: int
-    source_line: str
-    macro_name: Optional[str] = None
-    opt_name: Optional[str] = None
+from .instruction_metadata import InstructionMetadata, InstructionType
+from .macro_processor import MacroProcessor
 
 
 class J1Assembler(Transformer):
     def __init__(self, debug=False):
         super().__init__()
-        self.labels = {}
+        self.labels = {}  # label_name -> address
         self.current_address = 0
         self.debug = debug
         self.current_file = "<unknown>"
-        # Add source line tracking
         self.source_lines = []
 
-        # Add source line tracking
-        # Dict to store source information for each instruction
+        # Dict to store metadata for instructions
         # Key: bytecode word address
-        # Value: InstructionSource object
-        self.instruction_sources: Dict[int, InstructionSource] = {}
-        self.label_sources: Dict[int, InstructionSource] = {}
+        # Value: InstructionMetadata object
+        self.instruction_metadata: Dict[int, InstructionMetadata] = {}
 
-        # Add instruction tracking
-        # List to store the assembled instructions (bytecode words)
-        self.instructions: List[int] = []
-        self.is_assembled = False
+        # Dict to store metadata for labels
+        # Key: bytecode word address
+        # Value: InstructionMetadata object (of type LABEL)
+        self.label_metadata: Dict[int, InstructionMetadata] = {}
 
         # Setup logging
         self.logger = logging.getLogger("j1asm")
@@ -98,115 +85,67 @@ class J1Assembler(Transformer):
         for stmt in statements:
             self.logger.debug(f"Statement: {stmt}")
 
-            if isinstance(stmt, tuple):
-                item_type, value = stmt
-
-                if item_type == "label":
-                    # Store label with current address
-                    label_name, label_token = value
-
+            if isinstance(stmt, InstructionMetadata):
+                if stmt.type == InstructionType.LABEL:
                     # Check if label is already defined
-                    if label_name in self.labels:
+                    if stmt.label_name in self.labels:
                         raise ValueError(
-                            f"{self.current_file}:{label_token.line}:{label_token.column}: "
-                            f"Duplicate label: {label_name}"
+                            f"{self.current_file}:{stmt.line}:{stmt.column}: "
+                            f"Duplicate label: {stmt.label_name}"
                         )
-
-                    # Record label information
-                    self.labels[label_name] = len(instructions)
-                    self.label_sources[len(instructions)] = InstructionSource(
-                        filename=self.current_file,
-                        line=label_token.line,
-                        column=label_token.column,
-                        source_line=self.source_lines[label_token.line - 1],
-                    )
+                    # Record label information in both dictionaries
+                    addr = len(instructions)
+                    self.labels[stmt.label_name] = addr
+                    self.label_metadata[addr] = stmt
                     continue  # Skip to next statement
 
-                elif item_type == "macro_def":
+                elif stmt.type == InstructionType.MACRO_DEF:
                     continue  # Skip macro definitions
-                elif item_type == "jump":
-                    instructions.append(stmt)
-                    # No source info for jump instructions
-                    # We sill add it in the second pass
-                    continue
-                elif item_type == "byte_code":
-                    # Now value should always be InstructionData
-                    if not isinstance(value, InstructionData):
-                        raise ValueError(f"Expected InstructionData, got {type(value)}")
 
-                    token = value.token
-                    self.instruction_sources[len(instructions)] = InstructionSource(
-                        filename=self.current_file,
-                        line=token.line,
-                        column=token.column,
-                        source_line=self.source_lines[token.line - 1],
-                        macro_name=value.macro_name,
-                    )
+                else:
+                    # Regular instruction
+                    addr = len(instructions)
+                    self.instruction_metadata[addr] = stmt
                     instructions.append(stmt)
 
             elif isinstance(stmt, list):
-                # Handle macro expansions - each item in the list is a complete instruction
+                # Handle macro expansions - each item in the list should be InstructionMetadata
                 for macro_inst in stmt:
-                    if isinstance(macro_inst, tuple):
-                        inst_type, value = macro_inst
-                        if inst_type == "byte_code" and isinstance(
-                            value, InstructionData
-                        ):
-                            token = value.token
-                            self.instruction_sources[len(instructions)] = (
-                                InstructionSource(
-                                    filename=self.current_file,
-                                    line=token.line,
-                                    column=token.column,
-                                    source_line=self.source_lines[token.line - 1],
-                                    macro_name=value.macro_name,
-                                )
-                            )
-                            instructions.append(macro_inst)
-                        else:
-                            raise ValueError(
-                                f"{self.current_file}:{token.line}:{token.column}: "
-                                f"Invalid macro instruction format: {macro_inst}"
-                            )
-                    else:
+                    if not isinstance(macro_inst, InstructionMetadata):
                         raise ValueError(
-                            f"{self.current_file}: Invalid macro instruction type: {type(macro_inst)}"
+                            f"{self.current_file}: Expected InstructionMetadata in macro expansion, got {type(macro_inst)}"
                         )
+                    self.instruction_metadata[len(instructions)] = macro_inst
+                    instructions.append(macro_inst)
+
             else:
                 raise ValueError(f"Unexpected statement type: {type(stmt)}")
 
         self.logger.debug(f"\nCollected labels: {self.labels}")
         self.logger.debug(f"Instructions: {instructions}")
 
-        # Second pass: resolve jumplabels
-        resolved = []
-        for current_addr, inst in enumerate(instructions):
-            self.logger.debug(f"Processing instruction at {current_addr}: {inst}")
+        # Second pass: resolve labels and generate final bytecode
+        self.instructions = []
+        for inst in instructions:
+            if not isinstance(inst, InstructionMetadata):
+                raise ValueError(f"Expected InstructionMetadata, got {type(inst)}")
 
-            type_, value = inst
-            if type_ == "jump":
-                jump_type, label, token = value
-                if label not in self.labels:
+            if inst.type == InstructionType.JUMP:
+                # Resolve label reference
+                if not inst.label_name:
+                    raise ValueError(f"Jump instruction missing label name")
+                if inst.label_name not in self.labels:
                     raise ValueError(
-                        f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Undefined label: {label}"
+                        f"{self.current_file}:{inst.line}:{inst.column}: "
+                        f"Undefined label: {inst.label_name}"
                     )
-                machine_code = jump_type | self.labels[label]
-                # Create InstructionData for jumps too
-                resolved.append(machine_code)
-                self.instruction_sources[len(resolved) - 1] = InstructionSource(
-                    filename=self.current_file,
-                    line=token.line,
-                    column=token.column,
-                    source_line=self.source_lines[token.line - 1],
-                )
-            elif type_ == "byte_code":
-                resolved.append(value.value)
+                target = self.labels[inst.label_name]
+                self.instructions.append(inst.value | target)
+            else:
+                self.instructions.append(inst.value)
 
-        # Store resolved instructions and mark as assembled
-        self.instructions = resolved
         self.is_assembled = True
-        return resolved
+        return self.instructions
 
     def statement(self, items):
         """
@@ -233,22 +172,26 @@ class J1Assembler(Transformer):
 
     def jump_op(self, items):
         """Handle jump operations with their labels."""
-        op = str(items[0])
-        label_type, label = items[1]  # Should be ("label", label_name)
+        token = items[0]  # JMP token
+        op = str(token)
+        label_token = items[1]  # Label token
+        label_name = str(label_token)  # Just use the label name directly
+
         if op not in JUMP_OPS:
             raise ValueError(
-                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"{self.current_file}:{token.line}:{token.column}: "
                 f"Unknown jump operation: {op}"
             )
-        if label_type != "label":
-            raise ValueError(
-                f"{self.current_file}:{items[0].line}:{items[0].column}: "
-                f"Expected label reference, got {label_type}"
-            )
-        return (
-            "jump",
-            (JUMP_OPS[op], label, items[0]),
-        )  # Include token for error reporting
+
+        # Create jump instruction metadata
+        return InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS[op],  # Base jump opcode
+            token=token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=label_name,  # Now just the label name string
+        )
 
     def instruction(self, items):
         """Handles the 'instruction' rule."""
@@ -260,33 +203,27 @@ class J1Assembler(Transformer):
         if isinstance(item, list):
             return item  # Pass through list of instructions unchanged
 
-        # Handle single instructions
-        item_type, value = item
-        token = value[1] if isinstance(value, tuple) else None
+        # Handle InstructionMetadata directly
+        if isinstance(item, InstructionMetadata):
+            return item
 
-        self.logger.debug(f"Processing instruction: {item_type} {value}")
+        # For backwards compatibility or special cases (like labels)
+        if isinstance(item, tuple):
+            item_type, value = item
+            if item_type == "label":
+                return item  # Pass through labels unchanged
+            if item_type == "jump":
+                return item  # Pass through jump instructions
+            if item_type == "macro_call":
+                macro_name = value[0]
+                if not self.macro_processor.is_macro(macro_name):
+                    raise ValueError(
+                        f"{self.current_file}:{token.line}:{token.column}: "
+                        f"Unknown macro: {macro_name}"
+                    )
+                return self.macro_processor.expand_macro(macro_name, value[1])
 
-        if item_type == "label":
-            return item  # Pass through labels unchanged
-        elif item_type == "jump":
-            return item  # Pass through jump instructions
-        elif item_type == "byte_code":
-            return item  # Already final form
-        elif item_type == "macro_call":
-            macro_name = value[0]
-            if not self.macro_processor.is_macro(macro_name):
-                raise ValueError(
-                    f"{self.current_file}:{token.line}:{token.column}: "
-                    f"Unknown macro: {macro_name}"
-                )
-            return item  # Pass through macro calls
-
-        if token:
-            raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: "
-                f"Invalid instruction type: {item_type}"
-            )
-        raise ValueError(f"Invalid instruction type: {item_type}")
+        raise ValueError(f"Unexpected instruction format: {type(item)}")
 
     def modifier(self, items):
         """Convert modifiers into their machine code representation with type."""
@@ -342,15 +279,23 @@ class J1Assembler(Transformer):
         return result
 
     def labelref(self, items):
-        """Convert labelref rule into a tuple with the label name."""
-        self.logger.debug(f"\nLabelref items: {items}")
-        return ("label", str(items[0]))
+        """Convert labelref rule into a string."""
+        return str(items[0])  # Just return the label name as a string
 
     def label(self, items):
-        """Convert label rule into a tuple with the label name."""
+        """Convert label rule into InstructionMetadata."""
         self.logger.debug(f"\nLabel items: {items}")
-        token = items[0]  # This is the IDENT tocken
-        return ("label", (str(token), token))
+        token = items[0]  # This is the IDENT token
+        label_name = str(token)
+
+        return InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,  # Labels don't have a value
+            token=token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=label_name,
+        )
 
     def number(self, items):
         """Convert number tokens to their machine code representation."""
@@ -363,7 +308,13 @@ class J1Assembler(Transformer):
                     f"Hex number {value} out of range (0 to $7FFF)"
                 )
             machine_code = value | 0x8000
-            return ("byte_code", InstructionData(value=machine_code, token=token))
+            return InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=machine_code,
+                token=token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+            )
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
             if value < 0:
@@ -379,7 +330,13 @@ class J1Assembler(Transformer):
                 #    ("byte_code", (24584, token)),               # INVERT
                 # ]
             machine_code = 0x8000 | value
-            return ("byte_code", InstructionData(value=machine_code, token=token))
+            return InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=machine_code,
+                token=token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+            )
         else:
             raise ValueError(f"Unknown number format: {token}")
 
@@ -412,7 +369,13 @@ class J1Assembler(Transformer):
                 f"Unknown ALU operation '{base_op}'"
             )
         result = ALU_OPS[base_op] | modifiers | INST_TYPES["alu"]
-        return ("byte_code", InstructionData(value=result, token=token))
+        return InstructionMetadata.from_token(
+            inst_type=InstructionType.BYTE_CODE,
+            value=result,
+            token=token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+        )
 
     def data_stack_delta(self, items):
         """Convert data stack delta rule into its token."""
@@ -434,26 +397,27 @@ class J1Assembler(Transformer):
         self,
         addr: int,
         code: int,
-        source_info: InstructionSource,
-        is_label: bool = False,
+        metadata: InstructionMetadata,
     ) -> str:
         """Generate a single line for the listing file with explicit field spacing."""
         addr_space = " " * 5
         mcode_space = " " * 10
         line_num_space = " " * 2
 
-        line_info = f"{source_info.line:2d}:{source_info.column:<3d}"
-        source_line = source_info.source_line
+        line_info = f"{metadata.line:2d}:{metadata.column:<3d}"
+        source_line = metadata.source_line
 
         # Add macro/optimization information to comments
-        if source_info.macro_name:
+        if metadata.macro_name:
             if "//" in source_line:
                 pre_comment, comment = source_line.split("//", 1)
-                source_line = f"{pre_comment}// (macro: {source_info.macro_name}) {comment.lstrip()}"
+                source_line = (
+                    f"{pre_comment}// (macro: {metadata.macro_name}) {comment.lstrip()}"
+                )
             else:
-                source_line = f"{source_line} // (macro: {source_info.macro_name})"
+                source_line = f"{source_line} // (macro: {metadata.macro_name})"
 
-        if is_label:
+        if metadata.type == InstructionType.LABEL:
             line = f"{addr:04x}{addr_space}----{mcode_space}{line_info}{line_num_space}{source_line}\n"
         else:
             line = f"{addr:04x}{addr_space}{code:04x}{mcode_space}{line_info}{line_num_space}{source_line}\n"
@@ -472,17 +436,15 @@ class J1Assembler(Transformer):
             # Write each instruction with its source
             for addr, code in enumerate(self.instructions):
                 # First check if there's a label at this address
-                if addr in self.label_sources:
-                    label_info = self.label_sources[addr]
-                    label_line = self.generate_listing_line(
-                        addr, 0, label_info, is_label=True
-                    )
-                    f.write(label_line)
+                if addr in self.label_metadata:
+                    label_info = self.label_metadata[addr]
+                    line = self.generate_listing_line(addr, 0, label_info)
+                    f.write(line)
 
                 # Then write the instruction
-                if addr in self.instruction_sources:
-                    source_info = self.instruction_sources[addr]
-                    line = self.generate_listing_line(addr, code, source_info)
+                if addr in self.instruction_metadata:
+                    inst_info = self.instruction_metadata[addr]
+                    line = self.generate_listing_line(addr, code, inst_info)
                     f.write(line)
 
     def generate_symbols(self, output_file: str):

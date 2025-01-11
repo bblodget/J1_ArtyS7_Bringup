@@ -7,6 +7,7 @@ import logging
 from typing import Dict, List, Set, Optional, Any, Tuple
 from lark import Token, Tree
 from dataclasses import dataclass
+from .instruction_metadata import InstructionMetadata, InstructionType
 
 
 @dataclass
@@ -14,28 +15,15 @@ class MacroDefinition:
     """Represents a macro definition with its attributes."""
 
     stack_effect: Optional[str]  # Optional stack effect comment
-    body: List[Any]  # List of instructions that make up the macro
+    body: List[InstructionMetadata]  # List of instructions that make up the macro
     defined_at: str  # Location where macro was defined (file:line)
-
-
-@dataclass
-class InstructionData:
-    """Represents the data portion of an instruction."""
-
-    value: int  # The bytecode/value
-    token: Token  # The original token
-    macro_name: Optional[str] = None  # Name of macro if from macro expansion
-    # Future fields can be added here without breaking existing code
-    # opt_name: Optional[str] = None
-    # stack_effect: Optional[str] = None
-    # etc.
 
 
 class MacroProcessor:
     def __init__(self, debug: bool = False):
         # Dictionary to store macro definitions
         # Key: macro name
-        # Value: Dict containing 'stack_effect', 'body', and 'defined_at'
+        # Value: MacroDefinition object
         self.macros: Dict[str, MacroDefinition] = {}
 
         # Set to track macros being expanded (prevents infinite recursion)
@@ -58,7 +46,7 @@ class MacroProcessor:
     def define_macro(
         self,
         name: str,
-        body: List[Any],
+        body: List[InstructionMetadata],
         stack_effect: Optional[str] = None,
         token: Optional[Token] = None,
     ) -> None:
@@ -95,7 +83,8 @@ class MacroProcessor:
         self.logger.debug(f"Processing macro definition: {items}")
 
         # Extract macro name (items[1] is the IDENT token)
-        name = str(items[1])
+        name_token = items[1]
+        name = str(name_token)
 
         # Extract stack effect comment if present
         stack_effect = None
@@ -115,20 +104,24 @@ class MacroProcessor:
         body = []
         tree_body = raw_body[0]
         if isinstance(tree_body, Tree):
-            body.extend(
-                child for child in tree_body.children if isinstance(child, tuple)
-            )
+            for child in tree_body.children:
+                if isinstance(child, InstructionMetadata):
+                    body.append(child)
+                else:
+                    raise ValueError(
+                        f"{self.current_file}:{name_token.line}:{name_token.column}: "
+                        f"Expected InstructionMetadata in macro body, got {type(child)}"
+                    )
         else:
-            # unexpected body type
             raise ValueError(
-                f"{self.current_file}:{items[1].line}:{items[1].column}: "
+                f"{self.current_file}:{name_token.line}:{name_token.column}: "
                 f"Unexpected macro body structure: {tree_body}"
             )
 
         # Define the macro
-        self.define_macro(name, body, stack_effect, items[1])
+        self.define_macro(name, body, stack_effect, name_token)
 
-    def expand_macro(self, name: str, token: Token) -> List[Any]:
+    def expand_macro(self, name: str, token: Token) -> List[InstructionMetadata]:
         """
         Expand a macro invocation into its constituent instructions.
 
@@ -137,7 +130,7 @@ class MacroProcessor:
             token: Token for error reporting
 
         Returns:
-            List of expanded instructions
+            List of expanded instructions as InstructionMetadata objects
         """
         if name not in self.macros:
             raise ValueError(
@@ -159,35 +152,21 @@ class MacroProcessor:
             # Validate each instruction in the body
             expanded = []
             for inst in macro.body:
-                if isinstance(inst, tuple):
-                    if inst[0] == "label":
-                        raise ValueError(
-                            f"{self.current_file}:{token.line}:{token.column}: "
-                            f"Labels are not allowed inside macros: {name}"
-                        )
-                    elif inst[0] == "macro_def" or inst[0] == "macro_call":
-                        raise ValueError(
-                            f"{self.current_file}:{token.line}:{token.column}: "
-                            f"Macros are not allowed inside macros: {name}"
-                        )
-                    else:
-                        inst_type, value = inst
-                        if isinstance(value, InstructionData):
-                            # Create new InstructionData with macro name
-                            new_data = InstructionData(
-                                value=value.value, token=value.token, macro_name=name
-                            )
-                            expanded.append((inst_type, new_data))
-                        else:
-                            raise ValueError(
-                                f"{self.current_file}:{token.line}:{token.column}: "
-                                f"Expected InstructionData, got {type(value)}"
-                            )
-                else:
-                    raise ValueError(
-                        f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Invalid instruction inside macro: {inst}"
+                if isinstance(inst, InstructionMetadata):
+                    # Create new metadata with macro name
+                    new_metadata = InstructionMetadata(
+                        type=inst.type,
+                        value=inst.value,
+                        token=inst.token,
+                        filename=inst.filename,
+                        line=inst.line,
+                        column=inst.column,
+                        source_line=inst.source_line,
+                        macro_name=name,
                     )
+                    expanded.append(new_metadata)
+                else:
+                    raise ValueError(f"Expected InstructionMetadata, got {type(inst)}")
 
             self.logger.debug(f"Expanded {name} to: {expanded}")
             return expanded
@@ -199,6 +178,6 @@ class MacroProcessor:
         """Check if a name refers to a defined macro."""
         return name in self.macros
 
-    def get_macro_info(self, name: str) -> Optional[Dict[str, Any]]:
+    def get_macro_info(self, name: str) -> Optional[MacroDefinition]:
         """Get information about a macro if it exists."""
         return self.macros.get(name)
