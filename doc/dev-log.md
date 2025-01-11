@@ -1,5 +1,51 @@
 # Development Log
 
+## 2025-01-11
+
+- Refactored assembler types and modifier handling:
+    - Renamed instruction_metadata.py to asm_types.py
+    - Added new dataclasses for modifier handling:
+        - Modifier: value, text, token
+        - ModifierList: combined value, text, tokens
+    - Added comprehensive type hints to asm.py and macro_processor.py
+    - Improved error reporting with source context
+
+- Fixed macro expansion text preservation:
+    - Modified expand_macro to preserve full instruction text
+    - Updated alu_op to handle ModifierList cleanly
+    - Ensured modifiers show in listing file output
+    - Fixed multiple modifier text combination
+    - Example: "T[T->N,d+1]" instead of just "T"
+
+- Improved code organization:
+    - Moved all type definitions to asm_types.py
+    - Added proper type hints to all major methods
+    - Simplified modifier processing chain:
+        1. modifier() -> Modifier
+        2. modifier_list() -> ModifierList
+        3. modifiers() -> ModifierList
+        4. alu_op() -> InstructionMetadata
+
+- Test Coverage:
+    - Verified macro expansion with test_macros_words.asm
+    - Confirmed correct machine code generation
+    - Validated listing file format improvements:
+        - Full instruction text with modifiers
+        - Proper macro attribution in comments
+        - Correct address and machine code values
+    - Example output shows proper formatting:
+        ```
+        0002     6011           15:5      T[T->N,d+1]                     //  (macro: dup)
+        0003     6103           16:5      N[d-1]                          //  (macro: drop)
+        0005     6000           20:5      T[d+0]                          //  (macro: noop)
+        ```
+
+- Next Steps:
+    1. Consider adding more complex macro test cases
+    2. Look into macro parameter support
+    3. Plan nested macro expansion implementation
+    4. Review optimization opportunities
+
 ## 2025-01-10
 
 - Enhanced macro processing in the assembler:

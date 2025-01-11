@@ -16,24 +16,20 @@
   - [x] More refactoring of asm.py
   - [x] Update listing so any comments are aligned in a column
   - [x] Test with macros with no comments
-
-- [x] Command Line Interface
-  - [x] Click library integration
-  - [x] Basic output options (hex, symbols, listing)
-  - [x] Debug logging support
-
-- [x] Documentation and Testing
-  - [x] Basic usage and setup instructions
-  - [x] Test cases for core features
-  - [x] Example code in test files
-  - [x] Improved error reporting with source context
-  - [x] InstructionMetadata implementation and documentation
+  - [x] Test with single line macros
+  - [x] Preserve full instruction text in macro expansion
 
 ## Current Development Focus
 
-### Macro System
-- [ ] Test with single line macros.
-
+### Macro System Enhancements
+- [ ] Macro Parameters
+  - [ ] Parameter syntax definition
+  - [ ] Parameter substitution
+  - [ ] Test coverage
+- [ ] Nested Macro Support
+  - [ ] Expansion tracking
+  - [ ] Error handling
+  - [ ] Stack effect validation
 
 ### High-Level Assembly Support
 - [ ] Control Structures
@@ -103,6 +99,6 @@
   - [ ] Add copyright notices to source files
 
 ## Notes
-- Focus on completing control structures next
+- Focus on macro parameters and nested macros next
 - Consider parameter register file implementation
 - Plan for disassembler development
