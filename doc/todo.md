@@ -13,6 +13,9 @@
   - [x] Basic test coverage
   - [x] Documentation
   - [x] Add a macro column to the listing file
+  - [x] More refactoring of asm.py
+  - [x] Update listing so any comments are aligned in a column
+  - [x] Test with macros with no comments
 
 - [x] Command Line Interface
   - [x] Click library integration
@@ -23,11 +26,12 @@
   - [x] Basic usage and setup instructions
   - [x] Test cases for core features
   - [x] Example code in test files
+  - [x] Improved error reporting with source context
+  - [x] InstructionMetadata implementation and documentation
 
 ## Current Development Focus
 
 ### Macro System
-- [ ] Test with macros with no comments.  See if adds macro name to comments.
 - [ ] Test with single line macros.
 
 

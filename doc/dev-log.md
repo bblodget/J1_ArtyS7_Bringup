@@ -19,6 +19,43 @@
     - Confirmed correct machine code generation and listing file output.
     - Ensured no crashes or errors during the assembly process.
 
+- Added InstructionMetadata class:
+    - Created new class to encapsulate instruction information
+    - Added fields for:
+        - Instruction type (BYTE_CODE, LABEL, JUMP, MACRO_DEF, MACRO_CALL, ALU)
+        - Value (bytecode/machine code)
+        - Source information (filename, line, column)
+        - Complete source line
+        - Optional metadata (macro_name, opt_name, label_name)
+    - Added factory method from_token() for easy creation
+    - Updated all assembler methods to use InstructionMetadata
+    - Refactored instruction handling to use metadata dictionaries:
+        - instruction_metadata for regular instructions
+        - label_metadata for labels
+    - Improved error reporting with source context
+
+- Improved listing file formatting:
+    - Left-aligned labels for better readability
+    - Indented code under labels by 2 spaces
+    - Aligned all comments to consistent column
+    - Fixed line:col field width for consistent alignment
+    - Added macro annotations to comment field
+    - Verified format with test files:
+        - Labels start at column 0
+        - Code indented under labels
+        - Comments aligned regardless of source type
+        - Line:col information properly formatted
+        - Macro expansions clearly annotated
+
+- Test Coverage:
+    - Verified label and code alignment
+    - Checked comment alignment with various source types
+    - Confirmed macro expansion annotations
+    - Tested with multiple labels and instructions
+    - Validated line:col formatting
+    - Tested InstructionMetadata with various instruction types
+    - Verified proper metadata propagation through macro expansion
+
 - Next Steps:
     1. Add more complex macro test cases.
     2. Consider adding macro parameter support.
