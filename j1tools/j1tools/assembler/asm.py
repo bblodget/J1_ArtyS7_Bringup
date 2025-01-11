@@ -273,29 +273,23 @@ class J1Assembler(Transformer):
 
         return ModifierList(value=result_value, text=",".join(texts), tokens=tokens)
 
-    def modifiers(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
+    def modifiers(self, items: List[Union[Token, ModifierList]]) -> ModifierList:
         """Process modifiers within square brackets."""
         self.logger.debug(f"\nModifiers: processing items: {items}")
 
         # Skip brackets
         modifier_items = items[1:-1]  # Skip '[' and ']'
 
-        # Process all modifiers and combine their values
-        total_value = 0
-        modifier_texts = []
+        # We should receive a single ModifierList from modifier_list()
+        if len(modifier_items) != 1 or not isinstance(modifier_items[0], ModifierList):
+            raise ValueError(f"Expected single ModifierList, got {modifier_items}")
 
-        for item in modifier_items:
-            if isinstance(item, tuple) and item[0] == "modifier":
-                total_value |= item[1]
-                # Get the original text for this modifier
-                for name, value in {**STACK_EFFECTS, **D_EFFECTS, **R_EFFECTS}.items():
-                    if value == item[1]:
-                        modifier_texts.append(name)
-                        break
+        modifier_list = modifier_items[0]
+        self.logger.debug(
+            f"Modifiers result: value={modifier_list.value:04x}, text=[{modifier_list.text}]"
+        )
 
-        self.logger.debug(f"Modifiers result: ('modifier', {total_value})")
-        self.logger.debug(f"Modifier texts: {modifier_texts}")
-        return ("modifier", total_value, modifier_texts)  # Return both value and text
+        return modifier_list
 
     def labelref(self, items: List[Token]) -> str:
         """Convert labelref rule into a string."""
@@ -372,25 +366,9 @@ class J1Assembler(Transformer):
 
     def alu_op(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
         """Convert ALU operations into their machine code representation."""
-        token = items[0]
-        base_op = token.value
+        token = items[0]  # This is the basic ALU operation token
+        base_op = str(token)
         modifier_value = 0
-        modifier_texts = []
-
-        # Process modifiers if present
-        if len(items) > 1:
-            for item in items[1:]:
-                if isinstance(item, tuple) and item[0] == "modifier":
-                    # Check if we have the text representation
-                    if len(item) > 2:
-                        modifier_texts.extend(item[2])
-                    modifier_value |= item[1]
-
-        # Create instruction text
-        if modifier_texts:
-            instr_text = f"{base_op}[{','.join(modifier_texts)}]"
-        else:
-            instr_text = base_op
 
         # Get the base ALU operation code
         if base_op not in ALU_OPS:
@@ -398,6 +376,13 @@ class J1Assembler(Transformer):
                 f"{self.current_file}:{token.line}:{token.column}: "
                 f"Unknown ALU operation '{base_op}'"
             )
+
+        # Process modifiers if present
+        instr_text = base_op
+        if len(items) > 1 and isinstance(items[1], ModifierList):
+            modifier_list = items[1]
+            modifier_value = modifier_list.value
+            instr_text = f"{base_op}[{modifier_list.text}]"
 
         # Combine all parts of the instruction
         result = ALU_OPS[base_op] | modifier_value | INST_TYPES["alu"]

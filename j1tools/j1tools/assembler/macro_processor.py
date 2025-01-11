@@ -20,7 +20,7 @@ class MacroDefinition:
 
 
 class MacroProcessor:
-    def __init__(self, debug: bool = False):
+    def __init__(self, debug: bool = False) -> None:
         # Dictionary to store macro definitions
         # Key: macro name
         # Value: MacroDefinition object
@@ -30,7 +30,7 @@ class MacroProcessor:
         self.expanding: Set[str] = set()
 
         # Current file being processed (for error messages)
-        self.current_file = "<unknown>"
+        self.current_file: str = "<unknown>"
 
         # Setup logging
         self.logger = logging.getLogger("j1asm.macro")
@@ -101,7 +101,7 @@ class MacroProcessor:
         raw_body = items[body_start:-1]  # -1 to skip the semicolon
 
         # Extract the actual instructions from the Tree structure
-        body = []
+        body: List[InstructionMetadata] = []
         tree_body = raw_body[0]
         if isinstance(tree_body, Tree):
             for child in tree_body.children:
@@ -122,7 +122,19 @@ class MacroProcessor:
         self.define_macro(name, body, stack_effect, name_token)
 
     def expand_macro(self, name: str, token: Token) -> List[InstructionMetadata]:
-        """Expand a macro into its constituent instructions."""
+        """
+        Expand a macro into its constituent instructions.
+
+        Args:
+            name: Name of the macro to expand
+            token: Token for error reporting and location information
+
+        Returns:
+            List of expanded instructions
+
+        Raises:
+            ValueError: If macro is unknown or recursive expansion is detected
+        """
         if name not in self.macros:
             raise ValueError(f"Unknown macro: {name}")
 
