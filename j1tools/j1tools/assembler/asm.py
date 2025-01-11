@@ -477,8 +477,15 @@ class J1Assembler(Transformer):
         # Process the macro definition
         self.macro_processor.process_macro_def(items)
 
-        # Return a tuple that matches our other instruction patterns
-        return ("macro_def", (macro_name, name_token))
+        # Return InstructionMetadata instead of tuple
+        return InstructionMetadata.from_token(
+            inst_type=InstructionType.MACRO_DEF,
+            value=0,  # No machine code value needed for macro definition
+            token=name_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            macro_name=macro_name,
+        )
 
     def macro_call(self, items):
         """Handle macro invocations."""
