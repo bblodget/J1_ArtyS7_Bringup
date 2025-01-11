@@ -185,3 +185,23 @@ def test_basic_ops_program(assembler, basic_ops_files):
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
+
+@pytest.fixture
+def macros_basic_files():
+    base_path = Path(__file__).parent.parent.parent / "firmware/test_macros_basic"
+    filename = "test_macros_basic.asm"
+    with open(base_path / filename, "r") as f:
+        source = f.read()
+    with open(base_path / "test_macros_basic.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+    return filename, source, expected
+
+
+def test_macros_basic_program(assembler, macros_basic_files):
+    filename, source, expected = macros_basic_files
+    result = assembler.transform(assembler.parse(source, filename))
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )

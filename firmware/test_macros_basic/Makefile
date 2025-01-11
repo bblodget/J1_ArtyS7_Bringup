@@ -1,4 +1,4 @@
-PROGRAM = test_macros
+PROGRAM = test_macros_basic
 
 .PHONY: compile debug clean
 
@@ -11,7 +11,7 @@ $(PROGRAM).hex: $(PROGRAM).asm
 	j1asm $< -o $@ --symbols --listing
 
 clean:
-	rm -f $(PROGRAM).hex
+	# rm -f $(PROGRAM).hex
 	rm -f $(PROGRAM).sym
 	rm -f $(PROGRAM).lst
 	rm -f aout.*
