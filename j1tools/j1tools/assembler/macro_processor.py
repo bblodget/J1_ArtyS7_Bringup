@@ -7,7 +7,7 @@ import logging
 from typing import Dict, List, Set, Optional, Any, Tuple
 from lark import Token, Tree
 from dataclasses import dataclass
-from .instruction_metadata import InstructionMetadata, InstructionType
+from .asm_types import InstructionType, InstructionMetadata
 
 
 @dataclass

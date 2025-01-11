@@ -15,19 +15,19 @@ from .instructionset_16kb_dualport import (
     JUMP_OPS,
 )
 import click
-from typing import List, Tuple, Dict, Optional
-from .instruction_metadata import InstructionMetadata, InstructionType
+from typing import List, Tuple, Dict, Optional, Union
+from .asm_types import InstructionType, InstructionMetadata, Modifier, ModifierList
 from .macro_processor import MacroProcessor
 
 
 class J1Assembler(Transformer):
-    def __init__(self, debug=False):
+    def __init__(self, debug: bool = False):
         super().__init__()
-        self.labels = {}  # label_name -> address
-        self.current_address = 0
-        self.debug = debug
-        self.current_file = "<unknown>"
-        self.source_lines = []
+        self.labels: Dict[str, int] = {}  # label_name -> address
+        self.current_address: int = 0
+        self.debug: bool = debug
+        self.current_file: str = "<unknown>"
+        self.source_lines: List[str] = []
 
         # Dict to store metadata for instructions
         # Key: bytecode word address
@@ -60,7 +60,7 @@ class J1Assembler(Transformer):
         except Exception as e:
             raise Exception(f"Failed to load grammar: {e}")
 
-    def parse(self, source, filename="<unknown>"):
+    def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
         self.macro_processor.set_current_file(filename)  # Add this line
@@ -76,7 +76,9 @@ class J1Assembler(Transformer):
 
         return tree
 
-    def program(self, statements):
+    def program(
+        self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
+    ) -> List[int]:
         """Process all statements and resolve labels."""
         self.current_address = 0
         instructions = []
@@ -147,7 +149,9 @@ class J1Assembler(Transformer):
         self.is_assembled = True
         return self.instructions
 
-    def statement(self, items):
+    def statement(
+        self, items: List[Union[InstructionMetadata, Tuple[str, str]]]
+    ) -> Union[InstructionMetadata, List[InstructionMetadata]]:
         """
         Handles the 'statement' rule by processing both labels and instructions.
         A statement can be:
@@ -170,7 +174,7 @@ class J1Assembler(Transformer):
         else:
             raise ValueError(f"Unexpected statement format: {items}")
 
-    def jump_op(self, items):
+    def jump_op(self, items: List[Token]) -> InstructionMetadata:
         """Handle jump operations with their labels."""
         token = items[0]  # JMP token
         op = str(token)
@@ -190,7 +194,9 @@ class J1Assembler(Transformer):
             instr_text=instr_text,  # Add instruction text
         )
 
-    def instruction(self, items):
+    def instruction(
+        self, items: List[Union[InstructionMetadata, List[InstructionMetadata], Tuple]]
+    ) -> Union[InstructionMetadata, List[InstructionMetadata]]:
         """Handles the 'instruction' rule."""
         item = items[0]
 
@@ -222,41 +228,42 @@ class J1Assembler(Transformer):
 
         raise ValueError(f"Unexpected instruction format: {type(item)}")
 
-    def modifier(self, items):
+    def modifier(self, items: List[Token]) -> Modifier:
         """Convert modifiers into their machine code representation with type."""
         token = items[0]
         mod = str(token)
         self.logger.debug(f"\nModifier: processing '{mod}'")
 
         if mod in STACK_EFFECTS:
-            result = ("modifier", STACK_EFFECTS[mod])
+            value = STACK_EFFECTS[mod]
         elif mod in D_EFFECTS:
-            result = ("modifier", D_EFFECTS[mod])
+            value = D_EFFECTS[mod]
         elif mod in R_EFFECTS:
-            result = ("modifier", R_EFFECTS[mod])
+            value = R_EFFECTS[mod]
         else:
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
                 f"Unknown modifier: {mod}"
             )
 
-        self.logger.debug(f"Modifier result: {result}")
-        return result
+        self.logger.debug(f"Modifier result: value={value:04x}, text={mod}")
+        return Modifier(value=value, text=mod, token=token)
 
-    def modifier_list(self, items):
-        """Combines all modifiers into a single integer using bitwise OR."""
+    def modifier_list(self, items: List[Union[Modifier, Token]]) -> ModifierList:
+        """Combines all modifiers into a single ModifierList."""
         self.logger.debug(f"\nModifier list items: {items}")
 
-        result = 0
-        for item in items:
-            self.logger.debug(f"Processing modifier item: {item}")
+        result_value = 0
+        texts = []
+        tokens = []
 
+        for item in items:
             if isinstance(item, Token) and item.type == "COMMA":
-                self.logger.debug("Skipping comma token")
                 continue
-            elif isinstance(item, tuple) and item[0] == "modifier":
-                self.logger.debug(f"Adding modifier value: {item[1]:04x}")
-                result |= item[1]
+            elif isinstance(item, Modifier):
+                result_value |= item.value
+                texts.append(item.text)
+                tokens.append(item.token)
             else:
                 token = item if isinstance(item, Token) else items[0]
                 raise ValueError(
@@ -264,10 +271,9 @@ class J1Assembler(Transformer):
                     f"Expected modifier, got {item}"
                 )
 
-        self.logger.debug(f"Final modifier list result: ('modifier', {result:04x})")
-        return ("modifier", result)
+        return ModifierList(value=result_value, text=",".join(texts), tokens=tokens)
 
-    def modifiers(self, items):
+    def modifiers(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
         """Process modifiers within square brackets."""
         self.logger.debug(f"\nModifiers: processing items: {items}")
 
@@ -288,13 +294,14 @@ class J1Assembler(Transformer):
                         break
 
         self.logger.debug(f"Modifiers result: ('modifier', {total_value})")
+        self.logger.debug(f"Modifier texts: {modifier_texts}")
         return ("modifier", total_value, modifier_texts)  # Return both value and text
 
-    def labelref(self, items):
+    def labelref(self, items: List[Token]) -> str:
         """Convert labelref rule into a string."""
         return str(items[0])  # Just return the label name as a string
 
-    def label(self, items):
+    def label(self, items: List[Token]) -> InstructionMetadata:
         """Convert label rule into InstructionMetadata."""
         self.logger.debug(f"\nLabel items: {items}")
         token = items[0]  # This is the IDENT token
@@ -313,7 +320,7 @@ class J1Assembler(Transformer):
             instr_text=instr_text,  # Add instruction text
         )
 
-    def number(self, items):
+    def number(self, items: List[Token]) -> InstructionMetadata:
         """Convert number tokens to their machine code representation."""
         token = items[0]
         if token.type == "HEX":
@@ -358,12 +365,12 @@ class J1Assembler(Transformer):
         else:
             raise ValueError(f"Unknown number format: {token}")
 
-    def basic_alu(self, items):
+    def basic_alu(self, items: List[Token]) -> Token:
         """Convert basic_alu rule into its token."""
         # items[0] is the Token for the ALU operation
         return items[0]
 
-    def alu_op(self, items):
+    def alu_op(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
         """Convert ALU operations into their machine code representation."""
         token = items[0]
         base_op = token.value
