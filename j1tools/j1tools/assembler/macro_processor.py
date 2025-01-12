@@ -73,53 +73,38 @@ class MacroProcessor:
             defined_at=f"{self.current_file}:{token.line if token else 'unknown'}",
         )
 
-    def process_macro_def(self, items: List[Any]) -> None:
-        """
-        Process a macro definition from the parser.
+    def process_macro_def(self, items):
+        """Process a macro definition."""
+        _, name_token, stack_comment, body_tree, _ = items
 
-        Args:
-            items: List of items from the parser representing a macro definition
-        """
-        self.logger.debug(f"Processing macro definition: {items}")
+        # Extract instructions from macro body
+        if not isinstance(body_tree, Tree) or body_tree.data != "macro_body":
+            raise ValueError(f"Invalid macro body structure")
 
-        # Extract macro name (items[1] is the IDENT token)
-        name_token = items[1]
-        name = str(name_token)
+        # Get the instruction list from the body
+        instructions = body_tree.children
 
-        # Extract stack effect comment if present
-        stack_effect = None
-        body_start = 2
-        if (
-            len(items) > 3
-            and isinstance(items[2], Token)
-            and items[2].type == "STACK_COMMENT"
-        ):
-            stack_effect = str(items[2])
-            body_start = 3
+        # Flatten and validate instructions
+        flattened_instructions = []
+        for instr in instructions:
+            if isinstance(instr, list):
+                # Flatten nested macro expansions
+                flattened_instructions.extend(instr)
+            elif isinstance(instr, InstructionMetadata):
+                flattened_instructions.append(instr)
+            else:
+                raise ValueError(
+                    f"{self.current_file}:{name_token.line}:{name_token.column}: "
+                    f"Expected InstructionMetadata or list in macro body, got {type(instr)}"
+                )
 
-        # Collect macro body instructions (everything before the semicolon)
-        raw_body = items[body_start:-1]  # -1 to skip the semicolon
-
-        # Extract the actual instructions from the Tree structure
-        body: List[InstructionMetadata] = []
-        tree_body = raw_body[0]
-        if isinstance(tree_body, Tree):
-            for child in tree_body.children:
-                if isinstance(child, InstructionMetadata):
-                    body.append(child)
-                else:
-                    raise ValueError(
-                        f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                        f"Expected InstructionMetadata in macro body, got {type(child)}"
-                    )
-        else:
-            raise ValueError(
-                f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                f"Unexpected macro body structure: {tree_body}"
-            )
-
-        # Define the macro
-        self.define_macro(name, body, stack_effect, name_token)
+        # Store the macro definition
+        self.define_macro(
+            str(name_token),
+            flattened_instructions,
+            str(stack_comment) if stack_comment else None,
+            name_token,
+        )
 
     def expand_macro(self, name: str, token: Token) -> List[InstructionMetadata]:
         """
