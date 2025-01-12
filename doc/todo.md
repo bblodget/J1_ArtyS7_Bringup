@@ -22,6 +22,12 @@
 ## Current Development Focus
 
 ### Macro System Enhancements
+- [ ] Include File Support
+  - [ ] Add 'include' keyword to grammar
+  - [ ] Implement include file processing
+  - [ ] Handle nested includes
+  - [ ] Add include path search
+  - [ ] Test with macro libraries
 - [ ] Macro Parameters
   - [ ] Parameter syntax definition
   - [ ] Parameter substitution
@@ -32,6 +38,7 @@
   - [ ] Stack effect validation
 
 ### High-Level Assembly Support
+- [ ] Case insensitive keywords
 - [ ] Control Structures
   - [ ] IF THEN
   - [ ] IF ELSE THEN
