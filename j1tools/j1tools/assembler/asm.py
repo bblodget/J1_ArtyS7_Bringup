@@ -16,7 +16,7 @@ from .instructionset_16kb_dualport import (
 )
 import click
 from typing import List, Tuple, Dict, Optional, Union
-from .asm_types import InstructionType, InstructionMetadata, Modifier, ModifierList
+from .asm_types import InstructionType, InstructionMetadata, Modifier, ModifierList, IncludeStack
 from .macro_processor import MacroProcessor
 
 
@@ -28,6 +28,7 @@ class J1Assembler(Transformer):
         self.debug: bool = debug
         self.current_file: str = "<unknown>"
         self.source_lines: List[str] = []
+        self.include_stack: List[IncludeStack] = []
 
         # Dict to store metadata for instructions
         # Key: bytecode word address
@@ -544,6 +545,59 @@ class J1Assembler(Transformer):
 
         # Get expanded instructions directly
         return self.macro_processor.expand_macro(macro_name, token)
+
+    def include_stmt(self, items: List[Token]) -> None:
+        """Process an include statement."""
+        # items[0] is INCLUDE token, items[1] is STRING token
+        token = items[1]
+        # Remove quotes from the string
+        filename = str(token)[1:-1]
+
+        # Try to open and read the file
+        try:
+            # Save current state
+            include_stack_entry = IncludeStack(
+                filename=self.current_file,
+                line_number=token.line,
+                source_lines=self.source_lines,
+            )
+
+            # Read the included file
+            with open(filename, "r") as f:
+                included_source = f.read()
+                included_lines = [
+                    line.rstrip() for line in included_source.splitlines()
+                ]
+
+            # Parse and process the included file
+            self.logger.debug(f"Processing include file: {filename}")
+
+            # Save current state to stack
+            self.include_stack.append(include_stack_entry)
+
+            # Set new current state
+            self.current_file = filename
+            self.source_lines = included_lines
+
+            # Parse and process the included file
+            tree = self.parser.parse(included_source)
+            self.transform(tree)
+
+            # Restore previous state
+            prev_state = self.include_stack.pop()
+            self.current_file = prev_state.filename
+            self.source_lines = prev_state.source_lines
+
+        except FileNotFoundError:
+            raise ValueError(
+                f"{self.current_file}:{token.line}:{token.column}: "
+                f"Include file not found: {filename}"
+            )
+        except Exception as e:
+            raise ValueError(
+                f"{self.current_file}:{token.line}:{token.column}: "
+                f"Error processing include file {filename}: {str(e)}"
+            )
 
 
 @click.command()
