@@ -11,6 +11,9 @@ HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#-?[0-9]+/
 IDENT: /[a-zA-Z][a-zA-Z0-9_]*/
 
+// Add string literal support for includes
+STRING: /"[^"]*"/
+
 // Syntax tokens
 COLON: ":"
 LBRACKET: "["
@@ -20,6 +23,9 @@ COMMA: ","
 // Macro tokens
 MACRO.2: "macro:"
 SEMICOLON: ";"
+
+// Include directive
+INCLUDE.2: "include"
 
 // Add stack effect comment support
 STACK_COMMENT: /\([^)]*\)/
@@ -82,7 +88,12 @@ R_MINUS_2: "r-2"
 // Program structure
 ?start: program
 program: statement*
-statement: label | instruction | CODE | BYTE | macro_def
+statement: label | instruction | CODE | BYTE | macro_def | include_stmt
+
+// Add include statement rule
+include_stmt: INCLUDE STRING
+
+// Add label rule
 label: IDENT COLON
 
 // Numbers and references

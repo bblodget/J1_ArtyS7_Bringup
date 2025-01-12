@@ -78,3 +78,22 @@ class InstructionMetadata:
             instr_text=instr_text,
             **kwargs
         )
+
+
+@dataclass
+class IncludeStack:
+    """Tracks include file processing state."""
+
+    filename: str
+    line_number: int
+    source_lines: List[str]
+
+
+@dataclass
+class AssemblerState:
+    """Global state for the assembler."""
+
+    current_file: str
+    include_paths: List[str]
+    include_stack: List[IncludeStack]
+    source_lines: List[str]
