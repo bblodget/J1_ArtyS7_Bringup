@@ -552,8 +552,8 @@ class J1Assembler(Transformer):
         # Get expanded instructions directly
         return self.macro_processor.expand_macro(macro_name, token)
 
-    def include_stmt(self, items: List[Token]) -> None:
-        """Process an include statement."""
+    def include_stmt(self, items: List[Token]) -> List[InstructionMetadata]:
+        """Process an include statement and return an empty list (no instructions generated)."""
         # items[0] is INCLUDE token, items[1] is STRING token
         token = items[1]
         # Remove quotes from the string
@@ -594,17 +594,18 @@ class J1Assembler(Transformer):
             self.current_file = prev_state.filename
             self.source_lines = prev_state.source_lines
 
+            # Return empty list since include itself doesn't generate instructions
+            return []
+
         except FileNotFoundError:
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
                 f"Include file not found: {filename}"
             )
         except Exception as e:
-            trace = self.format_include_trace()
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
-                f"Error processing include file {filename}: {str(e)}\n"
-                f"{trace}"
+                f"Error processing include file {filename}: {str(e)}"
             )
 
     def format_include_trace(self) -> str:
