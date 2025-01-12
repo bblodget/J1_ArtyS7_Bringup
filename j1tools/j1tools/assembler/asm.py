@@ -16,7 +16,13 @@ from .instructionset_16kb_dualport import (
 )
 import click
 from typing import List, Tuple, Dict, Optional, Union
-from .asm_types import InstructionType, InstructionMetadata, Modifier, ModifierList, IncludeStack
+from .asm_types import (
+    InstructionType,
+    InstructionMetadata,
+    Modifier,
+    ModifierList,
+    IncludeStack,
+)
 from .macro_processor import MacroProcessor
 
 
@@ -594,10 +600,22 @@ class J1Assembler(Transformer):
                 f"Include file not found: {filename}"
             )
         except Exception as e:
+            trace = self.format_include_trace()
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
-                f"Error processing include file {filename}: {str(e)}"
+                f"Error processing include file {filename}: {str(e)}\n"
+                f"{trace}"
             )
+
+    def format_include_trace(self) -> str:
+        """Format the include stack for error messages."""
+        if not self.include_stack:
+            return ""
+
+        trace = []
+        for entry in reversed(self.include_stack):
+            trace.append(f"Included from {entry.filename}:{entry.line_number}")
+        return "\n".join(trace)
 
 
 @click.command()
