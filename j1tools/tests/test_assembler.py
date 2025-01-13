@@ -328,3 +328,69 @@ def test_nested_stdlib_no_stdlib(assembler, nested_stdlib_files):
     with pytest.raises((ValueError, VisitError)) as exc_info:
         assembler.transform(assembler.parse(source, filename))
     assert "Include file not found" in str(exc_info.value)
+
+
+@pytest.fixture
+def include_path_files(tmp_path):
+    """Test include path search order."""
+    # Create test directories
+    test_dir = tmp_path / "test_include_path"
+    test_dir.mkdir()
+    custom_dir = test_dir / "custom"
+    custom_dir.mkdir()
+
+    # Create a custom version of core_words.asm
+    custom_words = """
+    // Custom version of core words
+    macro: dup ( a -- a a ) T[T->N,d+1] ;  // Same as stdlib
+    macro: drop ( a -- ) N[d-1] ;          // Same as stdlib
+    macro: custom ( -- ) #42 ;             // Custom word
+    """
+
+    with open(custom_dir / "core_words.asm", "w") as f:
+        f.write(custom_words)
+
+    # Create main test file
+    source = """
+    // Test include path resolution
+    include "core_words.asm"
+    
+    start:
+        custom      // Should use custom version
+        drop
+        JMP done
+    done:
+        JMP done
+    """
+
+    # Expected output using custom words
+    expected = [
+        0x802A,  # custom (#42)
+        0x6103,  # drop
+        0x0003,  # JMP done
+        0x0003,  # JMP done
+    ]
+
+    return str(test_dir / "test_paths.asm"), source, expected, str(custom_dir)
+
+
+def test_include_path_order(assembler, include_path_files):
+    """Test that include paths are searched in the correct order."""
+    filename, source, expected, custom_path = include_path_files
+
+    # Write the main test file
+    with open(filename, "w") as f:
+        f.write(source)
+
+    # Add custom path before stdlib
+    assembler.config.add_include_path(custom_path)
+
+    # Process the file
+    result = assembler.transform(assembler.parse(source, filename))
+
+    # Compare results
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
