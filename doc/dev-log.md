@@ -1,5 +1,39 @@
 # Development Log
 
+## 2025-01-13
+
+- Organized J1 macro libraries into logical groups:
+  - Created core/j1_base_macros.asm for fundamental operations
+  - Created core/j1_dualport_macros.asm for memory operations
+  - Created core/j1_extended_macros.asm for HX8K-specific operations
+  - Created platforms/j1_16kb_dualport.asm for platform configuration
+
+- Improved macro organization:
+  - Removed duplicate macros between files
+  - Properly categorized operations based on ALU capabilities:
+    - Base (0x0000-0x0F00): stack, basic ALU, I/O, status
+    - Extended (0x1000-0x1900): shifts, multiply, inc/dec
+    - Dualport: memory operations using mem[T] and 3OS
+  - Added clear stack effect comments
+  - Grouped related operations together
+
+- Created initial test platform:
+  - Added firmware/test_platform/test_platform.asm
+  - Structured to test all macro categories
+  - Identified grammar issue with operator symbols (+, -, etc.)
+  - TODO: Update grammar to support operator symbols in macro names
+
+- Discovered implementation insights:
+  - Confirmed 16KB variant works with 8KB (4K words) memory
+  - Extended instruction set provides optimization opportunities
+  - Dual-port operations available with single BRAM implementation
+
+- Next steps:
+  1. Update grammar to support operator symbols in macro names
+  2. Complete test platform implementation
+  3. Add comprehensive test cases for all macro categories
+  4. Consider adding platform-specific configuration options
+
 ## 2025-01-12
 
 - Fixed nested macro expansion and include processing:

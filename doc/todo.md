@@ -46,6 +46,7 @@
 - [ ] Core Word Library
   - [ ] Document all J1 ALU operations
   - [ ] Create macros for all single-instruction operations
+    - [ ] Update grammar to support operator symbols in macro names
   - [ ] Add stack effect documentation
   - [ ] Add operation descriptions
   - [ ] Test coverage for all operations
