@@ -1,5 +1,53 @@
 # Development Log
 
+## 2025-01-12
+
+- Fixed nested macro expansion and include processing:
+    - Updated MacroProcessor to use proper MacroDefinition class
+    - Fixed macro body handling for nested expansions
+    - Ensured correct source line tracking through macro expansion
+    - Example working with nested includes and macros:
+        ```forth
+        // Core word
+        macro: over ( a b -- a b a ) N[T->N,d+1] ;
+
+        // Complex macro using core word
+        macro: 2dup ( a b -- a b a b )
+            over
+            over
+        ;
+        ```
+
+- Improved macro expansion handling:
+    - Added proper flattening of nested macro instructions
+    - Maintained correct source attribution in listing file
+    - Preserved macro names in expanded instructions
+    - Example listing output shows proper expansion:
+        ```
+        0002     6111            6:5      N[T->N,d+1]                     //  (macro: 2dup)
+        0003     6111            6:5      N[T->N,d+1]                     //  (macro: 2dup)
+        ```
+
+- Enhanced include file processing:
+    - Fixed nested include file handling
+    - Maintained proper file context for error messages
+    - Tracked macro definitions across included files
+    - Example include chain working:
+        ```
+        test_nested_include.asm
+          -> math_words.asm
+              -> core_words.asm
+        ```
+
+- Test Coverage:
+    - Verified nested macro expansion with test_nested_include.asm
+    - Confirmed correct machine code generation:
+        - Stack manipulation (dup, drop, swap, over)
+        - ALU operations (T+N)
+        - Control flow (JMP)
+    - Validated listing file shows proper macro attribution
+    - Tested include file processing with multiple levels
+
 ## 2025-01-11
 
 - Refactored assembler types and modifier handling:

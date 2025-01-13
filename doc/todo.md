@@ -18,24 +18,29 @@
   - [x] Test with macros with no comments
   - [x] Test with single line macros
   - [x] Preserve full instruction text in macro expansion
+  - [x] Nested macro support
+    - [x] Expansion tracking
+    - [x] Error handling
+    - [x] Stack effect validation
+  - [x] Include File Support
+    - [x] Add 'include' keyword to grammar
+    - [x] Implement include file processing
+    - [x] Handle nested includes
+    - [x] Test with macro libraries
 
 ## Current Development Focus
 
 ### Macro System Enhancements
-- [ ] Include File Support
-  - [ ] Add 'include' keyword to grammar
-  - [ ] Implement include file processing
-  - [ ] Handle nested includes
+- [ ] Include Path Support
   - [ ] Add include path search
-  - [ ] Test with macro libraries
+  - [ ] Test with macro libraries in different directories
+- [ ] Improve listing file.
+  - [ ] Show macro chain in comments. // (macro: 2dup.over) 
+  - [ ] Provide filename somehow.  Give each file a number for reference?
 - [ ] Macro Parameters
   - [ ] Parameter syntax definition
   - [ ] Parameter substitution
   - [ ] Test coverage
-- [ ] Nested Macro Support
-  - [ ] Expansion tracking
-  - [ ] Error handling
-  - [ ] Stack effect validation
 
 ### High-Level Assembly Support
 - [ ] Case insensitive keywords
@@ -106,6 +111,6 @@
   - [ ] Add copyright notices to source files
 
 ## Notes
-- Focus on macro parameters and nested macros next
+- Focus on include path support and macro parameters next
 - Consider parameter register file implementation
 - Plan for disassembler development
