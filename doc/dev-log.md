@@ -35,9 +35,34 @@
     - Example include chain working:
         ```
         test_nested_include.asm
-          -> math_words.asm
-              -> core_words.asm
+          -> math/math_words.asm
+              -> core/core_words.asm
         ```
+
+- Implemented standard library organization:
+    - Created standard library directory structure:
+        ```
+        lib/
+        ├── core/           # Core Forth words
+        ├── math/           # Math operations
+        └── string/         # Future string ops
+        ```
+    - Added core_words.asm with basic stack operations
+    - Added math_words.asm with arithmetic operations
+    - Verified nested includes across library files
+
+- Enhanced include path handling:
+    - Added --include (-I) option for additional search paths
+    - Added --no-stdlib option to disable standard library
+    - Implemented proper include path search order:
+        1. Current directory
+        2. Explicit include paths (-I)
+        3. Standard library (unless disabled)
+    - Added comprehensive tests:
+        - Basic file inclusion
+        - Stdlib access
+        - Include path precedence
+        - Error conditions
 
 - Test Coverage:
     - Verified nested macro expansion with test_nested_include.asm
@@ -47,6 +72,8 @@
         - Control flow (JMP)
     - Validated listing file shows proper macro attribution
     - Tested include file processing with multiple levels
+    - Added tests for include path search order
+    - Verified stdlib disable/enable functionality
 
 ## 2025-01-11
 

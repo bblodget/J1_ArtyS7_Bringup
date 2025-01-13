@@ -1,6 +1,6 @@
 # J1 Assembler Development Tasks
 
-## Completed Core Features
+## Completed Features
 - [x] Initial Grammar and Syntax
   - [x] ALU operations, stack modifiers, stack deltas
   - [x] Instruction encoding (ALU, stack, return stack, data stack bits)
@@ -27,16 +27,46 @@
     - [x] Implement include file processing
     - [x] Handle nested includes
     - [x] Test with macro libraries
+  - [x] Include Path Support
+    - [x] Add include path search
+    - [x] Test with macro libraries in different directories
+    - [x] Add standard library structure
+    - [x] Implement --no-stdlib option
+
+- [x] CLI Features
+  - [x] Include Path Support
+    - [x] `-I, --include DIR`
+    - [x] Include search order
+    - [x] Macro library path
+    - [x] `--no-stdlib` option
 
 ## Current Development Focus
 
+### Standard Library Development
+- [ ] Core Word Library
+  - [ ] Document all J1 ALU operations
+  - [ ] Create macros for all single-instruction operations
+  - [ ] Add stack effect documentation
+  - [ ] Add operation descriptions
+  - [ ] Test coverage for all operations
+- [ ] Organization
+  - [ ] Group operations by type (ALU, stack, etc)
+  - [ ] Create index/reference document
+  - [ ] Add usage examples
+
+### CLI Enhancements
+- [ ] Optimization Controls
+  - [ ] `--opt-level N`
+  - [ ] `--no-fold`, `--no-inline`
+- [ ] Debug Options
+  - [ ] `--preprocess`
+  - [ ] `--dump-ir`
+  - [ ] `--trace-macros`
+
 ### Macro System Enhancements
-- [ ] Include Path Support
-  - [ ] Add include path search
-  - [ ] Test with macro libraries in different directories
-- [ ] Improve listing file.
+- [ ] Improve listing file
   - [ ] Show macro chain in comments. // (macro: 2dup.over) 
-  - [ ] Provide filename somehow.  Give each file a number for reference?
+  - [ ] Provide filename somehow. Give each file a number for reference?
 - [ ] Macro Parameters
   - [ ] Parameter syntax definition
   - [ ] Parameter substitution
@@ -74,19 +104,6 @@
   - [ ] Symbol cross-references
   - [ ] Memory maps
 
-### CLI Enhancements
-- [ ] Include Path Support
-  - [ ] `-I, --include DIR`
-  - [ ] Include search order
-  - [ ] Macro library path
-- [ ] Optimization Controls
-  - [ ] `--opt-level N`
-  - [ ] `--no-fold`, `--no-inline`
-- [ ] Debug Options
-  - [ ] `--preprocess`
-  - [ ] `--dump-ir`
-  - [ ] `--trace-macros`
-
 ### Hardware Features
 - [ ] Parameter Register File
   - [ ] >P(n) instruction
@@ -111,6 +128,6 @@
   - [ ] Add copyright notices to source files
 
 ## Notes
-- Focus on include path support and macro parameters next
+- Focus on macro parameters next
 - Consider parameter register file implementation
 - Plan for disassembler development
