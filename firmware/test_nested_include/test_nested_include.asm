@@ -1,5 +1,5 @@
 // Test nested includes and complex macros
-include "math_words.asm"
+include "math/math_words.asm"
 
 start:
     #5 #3        // Push 5 and 3

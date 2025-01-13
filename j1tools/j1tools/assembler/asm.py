@@ -24,6 +24,7 @@ from .asm_types import (
     IncludeStack,
 )
 from .macro_processor import MacroProcessor
+from .config import AssemblerConfig
 
 
 class J1Assembler(Transformer):
@@ -66,6 +67,9 @@ class J1Assembler(Transformer):
             self.logger.debug(f"Loaded grammar from {grammar_path}")
         except Exception as e:
             raise Exception(f"Failed to load grammar: {e}")
+
+        # Add config instance
+        self.config = AssemblerConfig(debug=debug)
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -553,14 +557,19 @@ class J1Assembler(Transformer):
         return self.macro_processor.expand_macro(macro_name, token)
 
     def include_stmt(self, items: List[Token]) -> List[InstructionMetadata]:
-        """Process an include statement and return an empty list (no instructions generated)."""
-        # items[0] is INCLUDE token, items[1] is STRING token
+        """Process an include statement and return an empty list."""
         token = items[1]
-        # Remove quotes from the string
-        filename = str(token)[1:-1]
+        filename = str(token)[1:-1]  # Remove quotes
 
-        # Try to open and read the file
         try:
+            # Use config to resolve include file
+            resolved_path = self.config.resolve_include(
+                filename, Path(self.current_file).parent
+            )
+
+            if resolved_path is None:
+                raise FileNotFoundError(f"Include file not found: {filename}")
+
             # Save current state
             include_stack_entry = IncludeStack(
                 filename=self.current_file,
@@ -568,21 +577,25 @@ class J1Assembler(Transformer):
                 source_lines=self.source_lines,
             )
 
-            # Read the included file
-            with open(filename, "r") as f:
+            # Read the included file using the resolved path
+            with open(
+                resolved_path, "r"
+            ) as f:  # Changed from filename to resolved_path
                 included_source = f.read()
                 included_lines = [
                     line.rstrip() for line in included_source.splitlines()
                 ]
 
             # Parse and process the included file
-            self.logger.debug(f"Processing include file: {filename}")
+            self.logger.debug(
+                f"Processing include file: {resolved_path}"
+            )  # Updated log message
 
             # Save current state to stack
             self.include_stack.append(include_stack_entry)
 
             # Set new current state
-            self.current_file = filename
+            self.current_file = str(resolved_path)  # Use resolved path as current file
             self.source_lines = included_lines
 
             # Parse and process the included file
@@ -597,11 +610,6 @@ class J1Assembler(Transformer):
             # Return empty list since include itself doesn't generate instructions
             return []
 
-        except FileNotFoundError:
-            raise ValueError(
-                f"{self.current_file}:{token.line}:{token.column}: "
-                f"Include file not found: {filename}"
-            )
         except Exception as e:
             raise ValueError(
                 f"{self.current_file}:{token.line}:{token.column}: "
@@ -627,7 +635,15 @@ class J1Assembler(Transformer):
 @click.option("-d", "--debug", is_flag=True, help="Enable debug output")
 @click.option("--symbols", is_flag=True, help="Generate symbol file (.sym)")
 @click.option("--listing", is_flag=True, help="Generate listing file (.lst)")
-def main(input, output, debug, symbols, listing):
+@click.option(
+    "-I",
+    "--include",
+    multiple=True,
+    type=click.Path(exists=True, dir_okay=True, file_okay=False),
+    help="Add directory to include search path",
+)
+@click.option("--no-stdlib", is_flag=True, help="Disable standard library include path")
+def main(input, output, debug, symbols, listing, include, no_stdlib):
     """J1 Forth CPU Assembler"""
     try:
         # Configure logging
@@ -649,6 +665,14 @@ def main(input, output, debug, symbols, listing):
         logger.debug("Parsing source...")
 
         assembler = J1Assembler(debug=debug)
+
+        # Configure include paths
+        for path in include:
+            assembler.config.add_include_path(path)
+
+        if no_stdlib:
+            assembler.config.disable_stdlib()
+
         try:
             tree = assembler.parse(source, filename=input)
             instructions = assembler.transform(tree)
