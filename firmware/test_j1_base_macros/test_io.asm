@@ -20,8 +20,9 @@ start:
     io@          // Stack: status rx_data ticks
     
     // Test cycles counter (0x8000)
-    //#$8000       // Stack: status rx_data ticks 0x8000
-    //io@          // Stack: status rx_data ticks cycles
+    #$7FFF       // Stack: status rx_data ticks 0x7FFF
+    invert       // Stack: status rx_data ticks 0x8000 (by inverting 0x7FFF)
+    io@          // Stack: status rx_data ticks cycles
 
 done:
     noop
