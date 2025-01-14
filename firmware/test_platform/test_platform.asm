@@ -41,6 +41,18 @@ start:
     2*           // Stack: -5 8
     2/           // Stack: -5 4
 
+    // Test return stack operations
+    #42          // Stack: -5 4 42
+    >r           // Stack: -5 4, R: 42
+    #7           // Stack: -5 4 7
+    >r           // Stack: -5 4, R: 42 7
+    r@           // Stack: -5 4 7, R: 42 7 (peek at top of return stack)
+    r>           // Stack: -5 4 7 7, R: 42
+    =            // Stack: -5 4 1 (true: values match)
+    r>           // Stack: -5 4 1 42, R: empty
+    drop         // Stack: -5 4 1
+    drop         // Stack: -5 4
+
 done:
     noop
     JMP done     // Loop forever
