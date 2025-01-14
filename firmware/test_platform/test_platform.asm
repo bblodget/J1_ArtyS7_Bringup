@@ -53,6 +53,53 @@ start:
     drop         // Stack: -5 4 1
     drop         // Stack: -5 4
 
+    // Test I/O operations
+    #1234        // Stack: -5 4 1234 (test data)
+    #42          // Stack: -5 4 1234 42 (test address)
+    io!          // Stack: -5 4 (write 1234 to IO addr 42)
+    #42          // Stack: -5 4 42
+    io@          // Stack: -5 4 1234 (read back from IO addr 42)
+    drop         // Stack: -5 4
+
+    // Test Status and Control
+    depth        // Stack: -5 4 2 (current stack depth)
+    dint         // Stack: -5 4 2 (disable interrupts)
+    eint         // Stack: -5 4 2 (enable interrupts)
+    
+    // Test Basic elided words
+    #5 #3        // Stack: -5 4 2 5 3
+    2dupand      // Stack: -5 4 2 5 3 1
+    drop         // Stack: -5 4 2 5 3
+    2dup<        // Stack: -5 4 2 5 3 0
+    drop         // Stack: -5 4 2 5 3
+    2dup=        // Stack: -5 4 2 5 3 0
+    drop         // Stack: -5 4 2 5 3
+    2dupor       // Stack: -5 4 2 5 3 7
+    drop         // Stack: -5 4 2 5 3
+    2dup+        // Stack: -5 4 2 5 3 8
+    drop         // Stack: -5 4 2 5 3
+    2dup-        // Stack: -5 4 2 5 3 -2
+    drop         // Stack: -5 4 2 5 3
+    2dupu<       // Stack: -5 4 2 5 3 0
+    drop         // Stack: -5 4 2 5 3
+    2dupxor      // Stack: -5 4 2 5 3 6
+    drop         // Stack: -5 4 2 5 3
+
+    // Test dup>r and over operations
+    dup>r        // Stack: -5 4 2 5 3, R: 3
+    r>           // Stack: -5 4 2 5 3 3
+    drop         // Stack: -5 4 2 5 3
+    overand      // Stack: -5 4 2 5 1
+    over>        // Stack: -5 4 2 5 0
+    over=        // Stack: -5 4 2 5 0
+    overor       // Stack: -5 4 2 5 5
+    over+        // Stack: -5 4 2 5 10
+    overu>       // Stack: -5 4 2 5 0
+    overxor      // Stack: -5 4 2 5 0
+
+    // Clean up stack
+    drop drop drop drop    // Stack: -5 4
+
 done:
     noop
     JMP done     // Loop forever
