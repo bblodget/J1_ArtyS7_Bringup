@@ -394,3 +394,38 @@ def test_include_path_order(assembler, include_path_files):
         for i, (exp, act) in enumerate(zip(expected, result))
         if exp != act
     )
+
+
+@pytest.fixture
+def test_memory_files():
+    """
+    Test files for memory operations.
+    Returns the filename, source, and expected output.
+    """
+    base_path = Path(__file__).parent.parent.parent / "firmware/test_memory"
+    filename = "test_memory.asm"
+
+    # Get main test file
+    with open(base_path / filename, "r") as f:
+        source = f.read()
+
+    # Get expected output
+    with open(base_path / "test_memory.hex", "r") as f:
+        expected = [int(line.strip(), 16) for line in f if line.strip()]
+
+    return filename, source, expected
+
+
+def test_memory_program(assembler, test_memory_files):
+    """Test memory operations program."""
+    filename, source, expected = test_memory_files
+
+    # Process the file
+    result = assembler.transform(assembler.parse(source, filename))
+
+    # Compare results
+    assert result == expected, "\n".join(
+        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
+        for i, (exp, act) in enumerate(zip(expected, result))
+        if exp != act
+    )
