@@ -6,6 +6,11 @@
   - [x] Instruction encoding (ALU, stack, return stack, data stack bits)
   - [x] Support for literals, jumps, and labels
   - [x] Basic error handling with line numbers
+  - [x] Complex identifier support (Forth-style operators)
+    - [x] Number-operator combinations (2*, 2/)
+    - [x] Special char prefix/suffix (>r, r@)
+    - [x] Special char infix (dup>r)
+    - [x] Pure operator sequences (+, -, etc)
 
 - [x] Macro System
   - [x] Core macro implementation (`macro:` directive)
@@ -44,12 +49,19 @@
 
 ### Standard Library Development
 - [ ] Core Word Library
-  - [ ] Document all J1 ALU operations
-  - [ ] Create macros for all single-instruction operations
-    - [ ] Update grammar to support operator symbols in macro names
+  - [x] Document all J1 ALU operations
+  - [x] Create macros for all single-instruction operations
+    - [x] Update grammar to support operator symbols in macro names
   - [ ] Add stack effect documentation
   - [ ] Add operation descriptions
   - [ ] Test coverage for all operations
+    - [x] Basic stack operations
+    - [x] ALU operations
+    - [x] Comparison operations
+    - [x] Shift operations
+    - [ ] Return stack operations
+    - [ ] I/O operations
+    - [ ] Status operations
 - [ ] Organization
   - [ ] Group operations by type (ALU, stack, etc)
   - [ ] Create index/reference document

@@ -1,5 +1,41 @@
 # Development Log
 
+## 2025-01-14
+
+- Fixed identifier pattern matching in j1.lark grammar:
+  - Added support for Forth-style compound identifiers
+  - Updated IDENT patterns to handle:
+    - Basic identifiers with optional special char suffix (`swap`, `u<`)
+    - Pure operator sequences (`+`, `-`)
+    - Number-operator combinations (`2*`, `2/`)
+    - Special char prefix with letters (`>r`, `r@`)
+    - Special char infix identifiers (`dup>r`)
+    - Added support for `@` and `!` operators
+  - Verified all patterns with test_platform.asm
+
+- Created comprehensive test platform:
+  - Implemented test_platform.asm with full coverage:
+    - Basic stack operations (dup, drop, swap, over, nip)
+    - ALU operations (+, -, and, or, xor, invert)
+    - Comparison operations (u<, <, =)
+    - Shift operations (2*, 2/)
+  - Verified correct machine code generation
+  - Added detailed stack effect comments
+  - Confirmed proper listing file generation
+
+- Validated assembler functionality:
+  - Tested macro expansion with complex identifiers
+  - Verified correct source line tracking
+  - Confirmed proper machine code generation
+  - Validated listing file format and comments
+  - Tested symbol file generation
+
+- Next steps:
+  1. Add tests for return stack operations (>r, r>, r@)
+  2. Implement I/O operation tests (io@, io!)
+  3. Add status operation tests (depth, exit, dint, eint)
+  4. Consider adding multi-instruction macro support
+
 ## 2025-01-13
 
 - Organized J1 macro libraries into logical groups:
