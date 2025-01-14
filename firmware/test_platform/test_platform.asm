@@ -1,14 +1,20 @@
 // Test platform for J1 16KB Dual-Port configuration
-include "platform/j1_16kb_dualport_macros.asm"
+//include "platform/j1_16kb_dualport_macros.asm"
+include "core/j1_base_macros.asm"
 
 // Test program start
 start:
     // Test basic stack operations
     #5 #3        // Push 5 and 3 onto stack
-    2dup         // Stack: 5 3 5 3
-    //+            // Stack: 5 3 8
-    swap         // Stack: 5 8 3
-    drop         // Stack: 5 8
+    swap         // Stack: 3 5
+    +            // Stack: 8
+    #10          // Push 10 onto stack
+    u<           //Stack: -1 (true) 8 u< 10
+    drop         // Stack: 
+    //+            // Stack: 8
+    //2dup         // Stack: 5 3 5 3
+    // swap         // Stack: 5 8 3
+    //drop         // Stack: 5 8
 
     JMP done
 
@@ -40,5 +46,5 @@ start:
     //tuck!        // Store and keep value
 
 done:
-    noop
+    //noop
     JMP done     // Loop forever

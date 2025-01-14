@@ -3,13 +3,15 @@
 // Basic tokens
 %import common.WS
 %ignore WS
-COMMENT: "//" /[^\n]*/
+
+// Comments - match and ignore entire line
+COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
 
 // Numbers and identifiers
 HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#-?[0-9]+/
-IDENT: /[0-9]*[a-zA-Z][a-zA-Z0-9_]*/
+IDENT: /[0-9]*[a-zA-Z][a-zA-Z0-9_]*[\+\-\*\<\>\=\&\|\^\~]?/ | /[\+\-\*\<\>\=\&\|\^\~]+/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
@@ -172,7 +174,7 @@ BYTE: "BYTE"
 macro_def: MACRO IDENT STACK_COMMENT? macro_body SEMICOLON
 macro_body: instruction+
 
-// Add macro call rule
+// Add macro call rule - using a different syntax for lookahead
 macro_call: IDENT
 
 

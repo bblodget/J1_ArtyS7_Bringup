@@ -77,9 +77,13 @@ class J1Assembler(Transformer):
         self.macro_processor.set_current_file(filename)  # Add this line
         # Store source lines for listing generation, removing trailing whitespace
         self.source_lines = [line.rstrip() for line in source.splitlines()]
+        logging.getLogger("lark").setLevel(logging.DEBUG)
         tree = self.parser.parse(source)
-        self.logger.debug("\n=== Tokens ===")
 
+        # print out the tree
+        self.logger.debug(tree.pretty())
+
+        self.logger.debug("\n=== Tokens ===")
         if self.debug:
             # Output all tokens in the tree
             for token in tree.scan_values(lambda v: isinstance(v, Token)):
