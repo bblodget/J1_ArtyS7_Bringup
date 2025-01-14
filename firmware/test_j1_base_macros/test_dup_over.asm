@@ -11,8 +11,8 @@ start:
     over=        // Stack: 5 0
     overor       // Stack: 5 5
     over+        // Stack: 5 10
-    overu>       // Stack: 5 0
-    overxor      // Stack: 5 5
+    overu>       // Stack: 5 FFFF (true, because 10 > 5)
+    overxor      // Stack: 5 FFFA (FFFF xor 5 = FFFA)
 
 done:
     noop
