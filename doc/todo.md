@@ -47,6 +47,14 @@
 
 ## Current Development Focus
 
+### Hardware Testing
+- [ ] UART Testing
+  - [x] Basic UART write test
+  - [x] Status register read
+  - [ ] Hardware timing verification
+  - [ ] Multi-byte transmission test
+  - [ ] Echo test (TX -> RX loopback)
+
 ### Standard Library Development
 - [ ] Core Word Library
   - [x] Document all J1 ALU operations
@@ -60,12 +68,15 @@
     - [x] Comparison operations
     - [x] Shift operations
     - [ ] Return stack operations
-    - [ ] I/O operations
+    - [x] I/O operations
     - [ ] Status operations
-- [ ] Organization
-  - [ ] Group operations by type (ALU, stack, etc)
-  - [ ] Create index/reference document
-  - [ ] Add usage examples
+
+### Interrupt System
+- [ ] Interrupt Handler
+  - [ ] Test ticks overflow interrupt
+  - [ ] Implement basic interrupt service routine
+  - [ ] Add interrupt vector table
+  - [ ] Document interrupt handling
 
 ### CLI Enhancements
 - [ ] Optimization Controls

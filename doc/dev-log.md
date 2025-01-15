@@ -36,6 +36,38 @@
   3. Add status operation tests (depth, exit, dint, eint)
   4. Consider adding multi-instruction macro support
 
+### Afternoon 2025-01-14
+
+- Implemented and tested basic I/O operations:
+  - Created test_io.asm to verify I/O functionality:
+    - UART write at 0x1000 (verified with ASCII 'H')
+    - Status register read at 0x2000 (busy/valid bits)
+    - UART read at 0x1000
+    - Ticks counter read at 0x4000
+    - Cycles counter read at 0x8000
+  - Verified address access above 0x7FFF using invert trick
+  - Confirmed correct machine code generation for I/O instructions
+  - Tested in simulator with expected results
+
+- Fixed test_dup_over.asm stack effect comments:
+  - Corrected expectations for overu> operation
+  - Updated comments to show correct stack effects
+  - Verified proper operation in simulator
+
+- Validated I/O address decoding in hardware:
+  - UART_ADDR (0x1000) for TX/RX
+  - MISC_IN_ADDR (0x2000) for status
+  - TICKS_ADDR (0x4000) for counter/control
+  - CYCLES_ADDR (0x8000) for cycle counting
+  - Confirmed proper address selection logic
+  - Verified read/write enable generation
+
+- Next steps:
+  1. Test UART timing on actual hardware
+  2. Implement interrupt handling for ticks overflow
+  3. Add more comprehensive UART test cases
+  4. Consider adding ticks counter write tests
+
 ## 2025-01-13
 
 - Organized J1 macro libraries into logical groups:
