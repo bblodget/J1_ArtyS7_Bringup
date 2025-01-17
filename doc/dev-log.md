@@ -1,5 +1,37 @@
 # Development Log
 
+## 2025-01-16
+
+- Reorganized test files structure:
+  - Moved test files from firmware/ to j1tools/tests/test_files/
+  - Created organized category directories:
+    - arith/ (test_add_subroutine, test_basic_ops)
+    - include/ (test_basic_include, test_nested_include)
+    - macros/ (test_macros_basic, test_macros_words, test_j1_base_macros)
+    - memory/ (test_memory)
+  - Preserved all .asm, .hex, and Makefile files
+  - Created migration script (migrate_tests.py)
+
+- Refactored test_assembler.py:
+  - Simplified test program handling using parameterized tests
+  - Removed redundant test fixtures and methods
+  - Created single parameterized test_program function
+  - Maintained special case handling for include tests
+  - Updated file paths to use new test_files structure
+  - Verified all 47 tests passing successfully
+
+- Benefits of new structure:
+  - Cleaner separation of test files from firmware
+  - Better organization by test category
+  - Easier to add new tests
+  - More maintainable test code
+  - Proper Python project structure
+  - Clear test output with category/name identification
+
+- Next steps:
+ - Cleanup test_files/macros/test_j1_base_macros
+ - Add these tests to the test_assembler.py
+
 ## 2025-01-14
 
 - Fixed identifier pattern matching in j1.lark grammar:

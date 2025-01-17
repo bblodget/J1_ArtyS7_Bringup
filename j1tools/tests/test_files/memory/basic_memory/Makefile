@@ -1,4 +1,4 @@
-PROGRAM = test_memory
+PROGRAM = basic_memory
 
 .PHONY: compile debug clean
 
