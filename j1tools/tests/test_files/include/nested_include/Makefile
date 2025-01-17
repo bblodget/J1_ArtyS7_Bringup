@@ -1,4 +1,4 @@
-PROGRAM = test_nested_include
+PROGRAM = nested_include
 
 .PHONY: compile debug clean
 

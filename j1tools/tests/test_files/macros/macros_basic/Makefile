@@ -1,4 +1,4 @@
-PROGRAM = test_add_subroutine
+PROGRAM = macros_basic
 
 .PHONY: compile debug clean
 

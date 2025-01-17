@@ -1,4 +1,4 @@
-PROGRAM = test_basic_include
+PROGRAM = macros_words
 
 .PHONY: compile debug clean
 
