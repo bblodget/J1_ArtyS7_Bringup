@@ -148,13 +148,13 @@ def test_combined_modifiers(assembler, source, expected):
 @pytest.mark.parametrize(
     "category,test_name",
     [
-        ("memory", "test_memory"),
-        ("arith", "test_add_subroutine"),
-        ("arith", "test_basic_ops"),
-        ("include", "test_basic_include"),
-        ("include", "test_nested_include"),
-        ("macros", "test_macros_basic"),
-        ("macros", "test_macros_words"),
+        ("memory", "basic_memory"),
+        ("arith", "basic_ops"),
+        ("arith", "add_subroutine"),
+        ("include", "basic_include"),
+        ("include", "nested_include"),
+        ("macros", "macros_basic"),
+        ("macros", "macros_words"),
     ],
 )
 def test_program(assembler, category, test_name):
@@ -181,15 +181,15 @@ def test_program(assembler, category, test_name):
     )
 
 
-# Special case for test_basic_include since it needs the words.asm file
+# Special case for basic_include since it needs the words.asm file
 @pytest.fixture
 def basic_include_files(tmp_path):
     """Setup for basic include test that requires additional files."""
-    test_dir = tmp_path / "test_basic_include"
+    test_dir = tmp_path / "basic_include"
     test_dir.mkdir()
 
     # Copy files from test_files directory
-    base_path = Path(__file__).parent / "test_files/include/test_basic_include"
+    base_path = Path(__file__).parent / "test_files/include/basic_include"
 
     # Copy words.asm to test directory
     words_path = base_path / "words.asm"
@@ -199,12 +199,12 @@ def basic_include_files(tmp_path):
         f.write(words_content)
 
     # Get main test file
-    filename = "test_basic_include.asm"
+    filename = "basic_include.asm"
     with open(base_path / filename, "r") as f:
         source = f.read()
 
     # Get expected output
-    with open(base_path / "test_basic_include.hex", "r") as f:
+    with open(base_path / "basic_include.hex", "r") as f:
         expected = [int(line.strip(), 16) for line in f if line.strip()]
 
     return str(test_dir / filename), source, expected
