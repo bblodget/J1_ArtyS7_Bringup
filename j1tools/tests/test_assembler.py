@@ -155,6 +155,13 @@ def test_combined_modifiers(assembler, source, expected):
         ("include", "nested_include"),
         ("macros", "macros_basic"),
         ("macros", "macros_words"),
+        ("macros", "base_alu"),
+        ("macros", "base_compare"),
+        ("macros", "base_dup_over"),
+        ("macros", "base_elided"),
+        ("macros", "base_io"),
+        ("macros", "base_rstack"),
+        ("macros", "base_status"),
     ],
 )
 def test_program(assembler, category, test_name):
