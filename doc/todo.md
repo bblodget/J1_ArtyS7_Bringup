@@ -79,6 +79,11 @@
   - [ ] Document interrupt handling
 
 ### CLI Enhancements
+- [x] Test Organization
+  - [x] Move test files from firmware/ to j1tools/tests/test_files/
+  - [x] Create organized category directories
+  - [x] Update test_assembler.py to use parameterized tests
+  - [x] Verify all tests passing in new structure
 - [ ] Optimization Controls
   - [ ] `--opt-level N`
   - [ ] `--no-fold`, `--no-inline`
