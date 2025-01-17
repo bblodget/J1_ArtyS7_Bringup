@@ -145,20 +145,35 @@ def test_combined_modifiers(assembler, source, expected):
 ##############################
 
 
-@pytest.fixture
-def add_subroutine_files():
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_add_subroutine"
-    filename = "test_add_subroutine.asm"
-    with open(base_path / filename, "r") as f:
+@pytest.mark.parametrize(
+    "category,test_name",
+    [
+        ("memory", "test_memory"),
+        ("arith", "test_add_subroutine"),
+        ("arith", "test_basic_ops"),
+        ("include", "test_basic_include"),
+        ("include", "test_nested_include"),
+        ("macros", "test_macros_basic"),
+        ("macros", "test_macros_words"),
+    ],
+)
+def test_program(assembler, category, test_name):
+    """Generic test runner for assembly programs."""
+    # Construct path to test files
+    base_path = Path(__file__).parent / "test_files" / category / test_name
+    asm_file = base_path / f"{test_name}.asm"
+    hex_file = base_path / f"{test_name}.hex"
+
+    # Read source and expected output
+    with open(asm_file, "r") as f:
         source = f.read()
-    with open(base_path / "test_add_subroutine.hex", "r") as f:
+    with open(hex_file, "r") as f:
         expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return filename, source, expected
 
+    # Process the file
+    result = assembler.transform(assembler.parse(source, str(asm_file)))
 
-def test_add_subroutine_program(assembler, add_subroutine_files):
-    filename, source, expected = add_subroutine_files
-    result = assembler.transform(assembler.parse(source, filename))
+    # Compare results with detailed error message
     assert result == expected, "\n".join(
         f"Instruction {i}: expected {exp:04x}, got {act:04x}"
         for i, (exp, act) in enumerate(zip(expected, result))
@@ -166,81 +181,15 @@ def test_add_subroutine_program(assembler, add_subroutine_files):
     )
 
 
-@pytest.fixture
-def basic_ops_files():
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_basic_ops"
-    filename = "test_basic_ops.asm"
-    with open(base_path / filename, "r") as f:
-        source = f.read()
-    with open(base_path / "test_basic_ops.hex", "r") as f:
-        expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return filename, source, expected
-
-
-def test_basic_ops_program(assembler, basic_ops_files):
-    filename, source, expected = basic_ops_files
-    result = assembler.transform(assembler.parse(source, filename))
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
-@pytest.fixture
-def macros_basic_files():
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_macros_basic"
-    filename = "test_macros_basic.asm"
-    with open(base_path / filename, "r") as f:
-        source = f.read()
-    with open(base_path / "test_macros_basic.hex", "r") as f:
-        expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return filename, source, expected
-
-
-def test_macros_basic_program(assembler, macros_basic_files):
-    filename, source, expected = macros_basic_files
-    result = assembler.transform(assembler.parse(source, filename))
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
-@pytest.fixture
-def macros_words_files():
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_macros_words"
-    filename = "test_macros_words.asm"
-    with open(base_path / filename, "r") as f:
-        source = f.read()
-    with open(base_path / "test_macros_words.hex", "r") as f:
-        expected = [int(line.strip(), 16) for line in f if line.strip()]
-    return filename, source, expected
-
-
-def test_macros_words_program(assembler, macros_words_files):
-    filename, source, expected = macros_words_files
-    result = assembler.transform(assembler.parse(source, filename))
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
+# Special case for test_basic_include since it needs the words.asm file
 @pytest.fixture
 def basic_include_files(tmp_path):
-    """
-    Create a temporary test environment with both the main file and its include.
-    Returns the filename, source, and expected output.
-    """
-    # Create test directory
+    """Setup for basic include test that requires additional files."""
     test_dir = tmp_path / "test_basic_include"
     test_dir.mkdir()
 
-    # Base path for original files
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_basic_include"
+    # Copy files from test_files directory
+    base_path = Path(__file__).parent / "test_files/include/test_basic_include"
 
     # Copy words.asm to test directory
     words_path = base_path / "words.asm"
@@ -251,174 +200,23 @@ def basic_include_files(tmp_path):
 
     # Get main test file
     filename = "test_basic_include.asm"
-    main_path = base_path / filename
-    with open(main_path, "r") as f:
+    with open(base_path / filename, "r") as f:
         source = f.read()
 
     # Get expected output
     with open(base_path / "test_basic_include.hex", "r") as f:
         expected = [int(line.strip(), 16) for line in f if line.strip()]
 
-    # Return tuple of (filename, source, expected)
     return str(test_dir / filename), source, expected
 
 
 def test_basic_include_program(assembler, basic_include_files, tmp_path):
-    """Test basic include functionality."""
+    """Special test case for basic include functionality."""
     filename, source, expected = basic_include_files
 
     # Write the main test file
     with open(filename, "w") as f:
         f.write(source)
-
-    # Process the file
-    result = assembler.transform(assembler.parse(source, filename))
-
-    # Compare results
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
-@pytest.fixture
-def nested_stdlib_files():
-    """
-    Test files for nested includes using stdlib.
-    Returns the filename, source, and expected output.
-    """
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_nested_include"
-    filename = "test_nested_include.asm"
-
-    # Get main test file
-    with open(base_path / filename, "r") as f:
-        source = f.read()
-
-    # Get expected output
-    with open(base_path / "test_nested_include.hex", "r") as f:
-        expected = [int(line.strip(), 16) for line in f if line.strip()]
-
-    return filename, source, expected
-
-
-def test_nested_stdlib_program(assembler, nested_stdlib_files):
-    """Test nested includes using the standard library."""
-    filename, source, expected = nested_stdlib_files
-
-    # Process the file
-    result = assembler.transform(assembler.parse(source, filename))
-
-    # Compare results
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
-def test_nested_stdlib_no_stdlib(assembler, nested_stdlib_files):
-    """Test that stdlib includes fail when stdlib is disabled."""
-    filename, source, _ = nested_stdlib_files
-
-    # Disable stdlib
-    assembler.config.disable_stdlib()
-
-    # Should raise an error when trying to include stdlib files
-    with pytest.raises((ValueError, VisitError)) as exc_info:
-        assembler.transform(assembler.parse(source, filename))
-    assert "Include file not found" in str(exc_info.value)
-
-
-@pytest.fixture
-def include_path_files(tmp_path):
-    """Test include path search order."""
-    # Create test directories
-    test_dir = tmp_path / "test_include_path"
-    test_dir.mkdir()
-    custom_dir = test_dir / "custom"
-    custom_dir.mkdir()
-
-    # Create a custom version of core_words.asm
-    custom_words = """
-    // Custom version of core words
-    macro: dup ( a -- a a ) T[T->N,d+1] ;  // Same as stdlib
-    macro: drop ( a -- ) N[d-1] ;          // Same as stdlib
-    macro: custom ( -- ) #42 ;             // Custom word
-    """
-
-    with open(custom_dir / "core_words.asm", "w") as f:
-        f.write(custom_words)
-
-    # Create main test file
-    source = """
-    // Test include path resolution
-    include "core_words.asm"
-    
-    start:
-        custom      // Should use custom version
-        drop
-        JMP done
-    done:
-        JMP done
-    """
-
-    # Expected output using custom words
-    expected = [
-        0x802A,  # custom (#42)
-        0x6103,  # drop
-        0x0003,  # JMP done
-        0x0003,  # JMP done
-    ]
-
-    return str(test_dir / "test_paths.asm"), source, expected, str(custom_dir)
-
-
-def test_include_path_order(assembler, include_path_files):
-    """Test that include paths are searched in the correct order."""
-    filename, source, expected, custom_path = include_path_files
-
-    # Write the main test file
-    with open(filename, "w") as f:
-        f.write(source)
-
-    # Add custom path before stdlib
-    assembler.config.add_include_path(custom_path)
-
-    # Process the file
-    result = assembler.transform(assembler.parse(source, filename))
-
-    # Compare results
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
-
-
-@pytest.fixture
-def test_memory_files():
-    """
-    Test files for memory operations.
-    Returns the filename, source, and expected output.
-    """
-    base_path = Path(__file__).parent.parent.parent / "firmware/test_memory"
-    filename = "test_memory.asm"
-
-    # Get main test file
-    with open(base_path / filename, "r") as f:
-        source = f.read()
-
-    # Get expected output
-    with open(base_path / "test_memory.hex", "r") as f:
-        expected = [int(line.strip(), 16) for line in f if line.strip()]
-
-    return filename, source, expected
-
-
-def test_memory_program(assembler, test_memory_files):
-    """Test memory operations program."""
-    filename, source, expected = test_memory_files
 
     # Process the file
     result = assembler.transform(assembler.parse(source, filename))
