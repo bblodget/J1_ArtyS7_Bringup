@@ -17,6 +17,7 @@ class InstructionType(Enum):
     MACRO_DEF = auto()
     MACRO_CALL = auto()
     ALU = auto()
+    SUBROUTINE_DEF = auto()  
 
 
 @dataclass

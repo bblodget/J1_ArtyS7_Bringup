@@ -1,66 +1,67 @@
 // Terminal I/O Library for J1 Processor
 // Implements basic UART communication primitives
 
-// Memory-mapped UART registers
+include "core/j1_base_macros.asm"
+
+// UART Register Addresses
 macro: UART_STATUS_REG ( -- addr ) #$2000 ;
 macro: UART_DATA_REG   ( -- addr ) #$1000 ;
 
-// Basic Operations
+// Basic utility macros
 macro: nop ( -- )
-    noop        // Use standard noop macro
+    noop
 ;
 
 macro: pause ( -- )
-    nop         // Currently just a noop
+    nop
 ;
 
-// UART Status Operations
+// UART Status Check
 : uartstat ( mask -- flag )
-    UART_STATUS_REG    // Expands to #$2000
-    io@
-    and
-    exit
+    UART_STATUS_REG io@ and exit
 ;
 
-// Transmit Operations
+// Check if UART is ready to transmit
 : emit? ( -- ? )
     pause
     #1                   // Push transmit ready mask
-    UART_STATUS_REG     // Push status register address
-    io@                 // Read status
-    over                // Duplicate mask for comparison
-    and                 // Mask the status bits
-    =                   // Compare with mask
+    UART_STATUS_REG io@  // Get UART status
+    over and            // AND with mask
+    =                   // Compare result
     exit
 ;
 
-: emit ( c -- )
-begin:
-    emit?              // Check if ready to transmit
-    ZJMP begin        // Loop until ready
-    UART_DATA_REG    // Push data register address
-    io!               // Write character
-    exit
-;
-
-: 2emit ( c2 c1 -- )
-    emit               // Output first character
-    emit               // Output second character
-    exit
-;
-
-// Receive Operations
+// Check if UART has received data
 : key? ( -- ? )
     pause
-    #2 uartstat         // Use uartstat macro with receive mask
+    #2                  // Push receive ready mask
+    CALL uartstat      // Check UART status
     exit
 ;
 
+// Send a character to UART
+: emit ( c -- )
+    swap >r            // Save character to return stack
+emit_wait:
+    CALL emit?              // Check if ready to transmit
+    ZJMP emit_wait     // If not ready, keep waiting
+    r>                 // Restore character
+    UART_DATA_REG io!  // Send character
+    exit
+;
+
+// Read a character from UART
 : key ( -- c )
-begin:
-    key?                // Check for input
-    ZJMP begin         // Loop until ready
-    UART_DATA_REG     // Push data register address
-    io@                // Read character
+    CALL key?              // Check if character available
+    ZJMP key         // If no character, keep waiting
+    UART_DATA_REG io@ // Read character
+    exit
+;
+
+// Send two characters to UART
+: 2emit ( c2 c1 -- )
+    swap >r            // Save second char
+    CALL emit               // Send first char
+    r> CALL emit           // Send second char
     exit
 ;
