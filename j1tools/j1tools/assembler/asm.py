@@ -76,8 +76,12 @@ class J1Assembler(Transformer):
         self.instructions: List[InstructionMetadata] = []
         self.macros: List[InstructionMetadata] = []
 
+        self.main_file: str = "<unknown>"  # Track the main file
+
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
+        if self.main_file == "<unknown>":
+            self.main_file = filename  # Remember the first file we process
         self.current_file = filename
         self.macro_processor.set_current_file(filename)  # Add this line
         # Store source lines for listing generation, removing trailing whitespace
@@ -150,15 +154,18 @@ class J1Assembler(Transformer):
                 if not inst.label_name:
                     raise ValueError(f"Jump instruction missing label name")
                 if inst.label_name not in self.labels:
-                    #raise ValueError(
-                    #    f"{self.current_file}:{inst.line}:{inst.column}: "
-                    #    f"Undefined label: {inst.label_name}"
-                    #)
-                    self.logger.warning(
-                        f"{self.current_file}:{inst.line}:{inst.column}: "
-                        f"Undefined label: {inst.label_name}"
-                    )
-                    continue
+                    # Only raise error if we're processing the main file
+                    if self.current_file == self.main_file:
+                        raise ValueError(
+                            f"{self.current_file}:{inst.line}:{inst.column}: "
+                            f"Undefined label: {inst.label_name}"
+                        )
+                    else:
+                        self.logger.warning(
+                            f"{self.current_file}:{inst.line}:{inst.column}: "
+                            f"Undefined label: {inst.label_name}"
+                        )
+                        continue
                 target = self.labels[inst.label_name]
                 inst.value |= target  # Modify the instruction value in place
 
