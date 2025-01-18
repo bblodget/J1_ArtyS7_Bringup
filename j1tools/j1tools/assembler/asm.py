@@ -74,6 +74,7 @@ class J1Assembler(Transformer):
 
         # Add this to store all instructions
         self.instructions: List[InstructionMetadata] = []
+        self.macros: List[InstructionMetadata] = []
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -99,13 +100,12 @@ class J1Assembler(Transformer):
         self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
     ) -> None:
         """Process all statements and resolve labels."""
-        file_base_address = len(self.instructions)  # Use current length as base
-
-        # First pass: collect labels and flatten instructions
+        # First pass: collect labels and instructions
         for stmt in statements:
             if isinstance(stmt, InstructionMetadata):
                 if stmt.type == InstructionType.LABEL:
-                    addr = file_base_address + len(self.instructions)
+                    # Labels use actual instruction count for address
+                    addr = len(self.instructions)
                     if stmt.label_name in self.labels:
                         raise ValueError(
                             f"{self.current_file}:{stmt.line}:{stmt.column}: "
@@ -113,6 +113,10 @@ class J1Assembler(Transformer):
                         )
                     self.labels[stmt.label_name] = addr
                     self.label_metadata[addr] = stmt
+                    continue
+
+                if stmt.type == InstructionType.MACRO_DEF:
+                    self.macros.append(stmt)
                     continue
 
                 self.instruction_metadata[len(self.instructions)] = stmt
@@ -127,7 +131,7 @@ class J1Assembler(Transformer):
                         )
 
                     if inst.type == InstructionType.LABEL:
-                        addr = file_base_address + len(self.instructions)
+                        addr = len(self.instructions)
                         if inst.label_name in self.labels:
                             raise ValueError(
                                 f"{self.current_file}:{inst.line}:{inst.column}: "
@@ -710,6 +714,7 @@ class J1Assembler(Transformer):
             for inst in self.instructions
             if inst.type != InstructionType.MACRO_DEF
         ]
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
