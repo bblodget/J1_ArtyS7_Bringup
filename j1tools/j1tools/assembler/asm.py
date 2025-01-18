@@ -150,10 +150,15 @@ class J1Assembler(Transformer):
                 if not inst.label_name:
                     raise ValueError(f"Jump instruction missing label name")
                 if inst.label_name not in self.labels:
-                    raise ValueError(
+                    #raise ValueError(
+                    #    f"{self.current_file}:{inst.line}:{inst.column}: "
+                    #    f"Undefined label: {inst.label_name}"
+                    #)
+                    self.logger.warning(
                         f"{self.current_file}:{inst.line}:{inst.column}: "
                         f"Undefined label: {inst.label_name}"
                     )
+                    continue
                 target = self.labels[inst.label_name]
                 inst.value |= target  # Modify the instruction value in place
 

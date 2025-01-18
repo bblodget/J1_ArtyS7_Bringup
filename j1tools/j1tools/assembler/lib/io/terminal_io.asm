@@ -3,6 +3,11 @@
 
 include "core/j1_base_macros.asm"
 
+// FIXME: We should not have to jump to start here
+// Need to figure out a better way to handle this
+// Jump to start
+JMP start
+
 // UART Register Addresses
 macro: UART_STATUS_REG ( -- addr ) #$2000 ;
 macro: UART_DATA_REG   ( -- addr ) #$1000 ;
