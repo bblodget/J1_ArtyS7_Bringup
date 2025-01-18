@@ -23,7 +23,7 @@ macro: pause ( -- )
 
 // UART Status Check
 : uartstat ( mask -- flag )
-    UART_STATUS_REG io@ and exit
+    UART_STATUS_REG io@ overand = exit
 ;
 
 // Check if UART is ready to transmit
@@ -31,7 +31,7 @@ macro: pause ( -- )
     pause
     #1                   // Push transmit ready mask
     UART_STATUS_REG io@  // Get UART status
-    over and            // AND with mask
+    overand              // Duplicate status
     =                   // Compare result
     exit
 ;
@@ -46,11 +46,8 @@ macro: pause ( -- )
 
 // Send a character to UART
 : emit ( c -- )
-    swap >r            // Save character to return stack
-emit_wait:
     CALL emit?              // Check if ready to transmit
-    ZJMP emit_wait     // If not ready, keep waiting
-    r>                 // Restore character
+    ZJMP emit     // If not ready, keep waiting
     UART_DATA_REG io!  // Send character
     exit
 ;
