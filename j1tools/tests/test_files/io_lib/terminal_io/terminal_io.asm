@@ -8,15 +8,15 @@ start:                  // Program entry point
     #$0A CALL emit  // Send newline (ASCII 0x0A)
 
     // Test receive functionality
-    // CALL key?       // Check if character available
-    // ZJMP no_input   // Skip if no input
-    // CALL key        // Read the character
-    // CALL emit       // Echo it back
+read_key:
+    CALL key        // Read the character
+    CALL emit       // Echo it back
+    #$0A CALL emit  // Send newline (ASCII 0x0A)
 
-// no_input:
-//     // Test 2emit for sending two characters
-//     // #$4F #$4B CALL 2emit  // Send "OK" (ASCII 0x4F, 0x4B)
-//     // #$0A CALL emit        // Send newline
+send_ok:
+    // Test 2emit for sending two characters
+    #$4F #$4B CALL 2emit  // Send "OK" (ASCII 0x4F, 0x4B)
+    #$0A CALL emit        // Send newline
 
 wait_forever:
      noop
