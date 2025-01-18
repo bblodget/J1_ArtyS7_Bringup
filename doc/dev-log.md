@@ -1,5 +1,31 @@
 # Development Log
 
+## 2025-01-18
+
+- Debugged UART I/O library (terminal_io.asm):
+  - Fixed stack manipulation issues in UART status checking
+  - Identified incorrect `over` usage in `emit?` function
+  - Found simulator always returns 0xF for UART status (0x2000)
+  - Simplified `uartstat` function implementation
+  - Tested basic I/O functionality:
+    - Character output working (`emit`)
+    - Character input working (`key`)
+    - Two-character output working (`2emit`)
+    - Echo test functioning but unrealistic due to simulator
+
+- Fixed assembler unresolved jump handling:
+  - Modified to warn about unresolved jumps in included files
+  - Maintained strict checking for main file
+  - Added main file tracking in assembler
+  - Preserved all test cases (54 passing)
+  - Improved error reporting for undefined labels
+
+- Next steps:
+  1. Improve simulator UART status behavior
+  2. Remove temporary JMP start from library files
+  3. Add proper entry point handling
+  4. Consider adding string output capabilities
+
 ## 2025-01-17
 
 - Finished refactoring test_assembler.py
