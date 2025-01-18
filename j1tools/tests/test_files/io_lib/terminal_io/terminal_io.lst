@@ -1,0 +1,39 @@
+Address  Machine Code  #:col  Source
+--------------------------------------------------
+002f     a000           21:5      #$2000                          //  (macro: UART_STATUS_REG)
+0030     6d50           21:21     io[T][IORD]                     //  (macro: io@)
+0031     6303           21:25     T&N[d-1]                        //  (macro: and)
+0032     608c           21:29     T[RET,r-1]                      //  (macro: exit)
+0033     6000           26:5      T                               //  (macro: pause)
+0034     8001           27:5      #1                              //  Push transmit ready mask
+0035     a000           28:5      #$2000                          //  (macro: UART_STATUS_REG)
+0036     6d50           28:21     io[T][IORD]                     //  (macro: io@)
+0037     6111           29:5      N[T->N,d+1]                     //  (macro: over)
+0038     6303           29:10     T&N[d-1]                        //  (macro: and)
+0039     6703           30:5      N==T[d-1]                       //  (macro: =)
+003a     608c           31:5      T[RET,r-1]                      //  (macro: exit)
+003b     6000           36:5      T                               //  (macro: pause)
+003c     8002           37:5      #2                              //  Push receive ready mask
+003d     405a           38:5      CALL uartstat                   //  Check UART status
+003e     608c           39:5      T[RET,r-1]                      //  (macro: exit)
+003f     6110           44:5      N[T->N]                         //  (macro: swap)
+0040     6127           44:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+0041     405e           46:5      CALL emit?                      //  Check if ready to transmit
+0042     206c           47:5      ZJMP emit_wait                  //  If not ready, keep waiting
+0043     6b1d           48:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+0044     9000           49:5      #$1000                          //  (macro: UART_DATA_REG)
+0045     6043           49:19     T[N->io[T],d-1]                 //  (macro: io!)
+0046     608c           50:5      T[RET,r-1]                      //  (macro: exit)
+0047     4066           55:5      CALL key?                       //  Check if character available
+0048     2072           56:5      ZJMP key                        //  If no character, keep waiting
+0049     9000           57:5      #$1000                          //  (macro: UART_DATA_REG)
+004a     6d50           57:19     io[T][IORD]                     //  (macro: io@)
+004b     608c           58:5      T[RET,r-1]                      //  (macro: exit)
+004c     6110           63:5      N[T->N]                         //  (macro: swap)
+004d     6127           63:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+004e     406a           64:5      CALL emit                       //  Send first char
+004f     6b1d           65:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+0050     406a           65:8      CALL emit                       //  Send second char
+0051     608c           66:5      T[RET,r-1]                      //  (macro: exit)
+0052     8048            6:5      #$48                            //  Send 'H' (ASCII 0x48)
+0053     406a            6:10     CALL emit                       //  Send 'H' (ASCII 0x48)

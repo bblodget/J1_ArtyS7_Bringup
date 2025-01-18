@@ -1,0 +1,8 @@
+005a uartstat
+005e emit?
+0066 key?
+006a emit
+006c emit_wait
+0072 key
+0077 2emit
+00a4 start

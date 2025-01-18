@@ -92,7 +92,7 @@ R_MINUS_2: "r-2"
 // Program structure
 ?start: program
 program: statement*
-statement: label | instruction | CODE | BYTE | macro_def | include_stmt
+statement: label | instruction | CODE | BYTE | macro_def | include_stmt | subroutine_def
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
@@ -178,5 +178,9 @@ macro_body: instruction+
 
 // Add macro call rule - using a different syntax for lookahead
 macro_call: IDENT
+
+// Add subroutine definition rule
+subroutine_def: COLON IDENT STACK_COMMENT? subroutine_body SEMICOLON
+subroutine_body: (instruction | label)+
 
 

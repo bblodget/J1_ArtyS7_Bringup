@@ -32,6 +32,7 @@ class J1Assembler(Transformer):
         super().__init__()
         self.labels: Dict[str, int] = {}  # label_name -> address
         self.current_address: int = 0
+        self.base_address: int = 0  # Add this to track base address for includes
         self.debug: bool = debug
         self.current_file: str = "<unknown>"
         self.source_lines: List[str] = []
@@ -71,6 +72,9 @@ class J1Assembler(Transformer):
         # Add config instance
         self.config = AssemblerConfig(debug=debug)
 
+        # Add this to store all instructions
+        self.instructions: List[InstructionMetadata] = []
+
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
         self.current_file = filename
@@ -93,62 +97,52 @@ class J1Assembler(Transformer):
 
     def program(
         self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
-    ) -> List[int]:
+    ) -> None:
         """Process all statements and resolve labels."""
-        self.current_address = 0
-        instructions = []
+        file_base_address = len(self.instructions)  # Use current length as base
 
         # First pass: collect labels and flatten instructions
         for stmt in statements:
-            self.logger.debug(f"Statement: {stmt}")
-
             if isinstance(stmt, InstructionMetadata):
                 if stmt.type == InstructionType.LABEL:
-                    # Check if label is already defined
+                    addr = file_base_address + len(self.instructions)
                     if stmt.label_name in self.labels:
                         raise ValueError(
                             f"{self.current_file}:{stmt.line}:{stmt.column}: "
                             f"Duplicate label: {stmt.label_name}"
                         )
-                    # Record label information in both dictionaries
-                    addr = len(instructions)
                     self.labels[stmt.label_name] = addr
                     self.label_metadata[addr] = stmt
-                    continue  # Skip to next statement
+                    continue
 
-                elif stmt.type == InstructionType.MACRO_DEF:
-                    continue  # Skip macro definitions
-
-                else:
-                    # Regular instruction
-                    addr = len(instructions)
-                    self.instruction_metadata[addr] = stmt
-                    instructions.append(stmt)
+                self.instruction_metadata[len(self.instructions)] = stmt
+                self.instructions.append(stmt)
 
             elif isinstance(stmt, list):
-                # Handle macro expansions - each item in the list should be InstructionMetadata
-                for macro_inst in stmt:
-                    if not isinstance(macro_inst, InstructionMetadata):
+                # Handle lists from both macro expansions and subroutine definitions
+                for inst in stmt:
+                    if not isinstance(inst, InstructionMetadata):
                         raise ValueError(
-                            f"{self.current_file}: Expected InstructionMetadata in macro expansion, got {type(macro_inst)}"
+                            f"{self.current_file}: Expected InstructionMetadata, got {type(inst)}"
                         )
-                    self.instruction_metadata[len(instructions)] = macro_inst
-                    instructions.append(macro_inst)
 
-            else:
-                raise ValueError(f"Unexpected statement type: {type(stmt)}")
+                    if inst.type == InstructionType.LABEL:
+                        addr = file_base_address + len(self.instructions)
+                        if inst.label_name in self.labels:
+                            raise ValueError(
+                                f"{self.current_file}:{inst.line}:{inst.column}: "
+                                f"Duplicate label: {inst.label_name}"
+                            )
+                        self.labels[inst.label_name] = addr
+                        self.label_metadata[addr] = inst
+                        continue
 
-        self.logger.debug(f"\nCollected labels: {self.labels}")
-        self.logger.debug(f"Instructions: {instructions}")
+                    self.instruction_metadata[len(self.instructions)] = inst
+                    self.instructions.append(inst)
 
-        # Second pass: resolve labels and generate final bytecode
-        self.instructions = []
-        for inst in instructions:
-            if not isinstance(inst, InstructionMetadata):
-                raise ValueError(f"Expected InstructionMetadata, got {type(inst)}")
-
+        # Second pass: resolve jumps in place
+        for inst in self.instructions:
             if inst.type == InstructionType.JUMP:
-                # Resolve label reference
                 if not inst.label_name:
                     raise ValueError(f"Jump instruction missing label name")
                 if inst.label_name not in self.labels:
@@ -157,12 +151,9 @@ class J1Assembler(Transformer):
                         f"Undefined label: {inst.label_name}"
                     )
                 target = self.labels[inst.label_name]
-                self.instructions.append(inst.value | target)
-            else:
-                self.instructions.append(inst.value)
+                inst.value |= target  # Modify the instruction value in place
 
         self.is_assembled = True
-        return self.instructions
 
     def statement(
         self, items: List[Union[InstructionMetadata, Tuple[str, str]]]
@@ -488,7 +479,7 @@ class J1Assembler(Transformer):
             f.write("-" * 50 + "\n")
 
             # Write each instruction with its source
-            for addr, code in enumerate(self.instructions):
+            for addr in range(len(self.instructions)):
                 # First check if there's a label at this address
                 if addr in self.label_metadata:
                     label_info = self.label_metadata[addr]
@@ -496,9 +487,11 @@ class J1Assembler(Transformer):
                     f.write(line)
 
                 # Then write the instruction
-                if addr in self.instruction_metadata:
-                    inst_info = self.instruction_metadata[addr]
-                    line = self.generate_listing_line(addr, code, inst_info)
+                inst = self.instructions[addr]
+                if inst.type != InstructionType.MACRO_DEF:
+                    line = self.generate_listing_line(
+                        addr, inst.value, inst
+                    )  # Pass inst.value instead of inst
                     f.write(line)
 
     def generate_symbols(self, output_file: str):
@@ -517,9 +510,20 @@ class J1Assembler(Transformer):
         if not self.is_assembled:
             raise ValueError("Cannot generate output before assembling")
 
+        # Debug print all instructions
+        # self.logger.debug("\n\nFinal instructions:")
+        # for inst in self.instructions:
+        #    if inst.type == InstructionType.MACRO_DEF:
+        #        continue
+        #    self.logger.debug(f"\n{inst}")
+
+        self.logger.debug("\n\nFinal instructions:")
         with open(output_file, "w") as f:
             for inst in self.instructions:
-                print(f"{inst:04x}", file=f)
+                if inst.type == InstructionType.MACRO_DEF:
+                    continue
+                self.logger.debug(f"\n{inst}")
+                print(f"{inst.value:04x}", file=f)
 
     def macro_def(self, items):
         """Handle macro definitions by delegating to macro processor."""
@@ -630,6 +634,82 @@ class J1Assembler(Transformer):
             trace.append(f"Included from {entry.filename}:{entry.line_number}")
         return "\n".join(trace)
 
+    def subroutine_def(self, items):
+        """Handle Forth-style subroutine definitions."""
+        colon_token = items[0]  # COLON token
+        name_token = items[1]  # IDENT token
+        subroutine_name = str(name_token)
+
+        # Get stack effect comment if present
+        stack_effect = ""
+        for item in items:
+            if isinstance(item, Token) and item.type == "STACK_COMMENT":
+                stack_effect = f" {str(item)}"
+                break
+
+        # Create a label for the subroutine
+        label_metadata = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=name_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{subroutine_name}:",
+            label_name=subroutine_name,
+        )
+
+        # Process the body instructions
+        body_instructions = []
+        for item in items:
+            if isinstance(item, Tree):  # This is the instruction list
+                self.logger.debug(f"\nProcessing subroutine body: ")
+                data = item.data
+                self.logger.debug(f"Data: {data}")
+                children = item.children
+                self.logger.debug(f"Children: {children}")
+                # Flatten nested lists of instructions
+                for child in children:
+                    if isinstance(child, list):
+                        body_instructions.extend(child)
+                    else:
+                        body_instructions.append(child)
+
+        # Add RET instruction at the end if not already present
+        if not body_instructions or not self._is_return_instruction(
+            body_instructions[-1]
+        ):
+            ret_token = name_token  # Reuse the name token for location info
+            ret_inst = InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=0x0080,  # RET instruction value
+                token=ret_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="RET",
+            )
+            body_instructions.append(ret_inst)
+
+        # Return the label and all body instructions
+        return [label_metadata] + body_instructions
+
+    def _is_return_instruction(self, inst):
+        """Check if an instruction is a return instruction."""
+        return (
+            isinstance(inst, InstructionMetadata)
+            and inst.type == InstructionType.BYTE_CODE
+            and (inst.value & 0x0080) == 0x0080
+        )  # Check for RET bit
+
+    def get_bytecodes(self) -> List[int]:
+        """Return a list of resolved bytecodes for testing."""
+        if not self.is_assembled:
+            raise ValueError("Cannot get bytecodes before assembling")
+
+        return [
+            inst.value
+            for inst in self.instructions
+            if inst.type != InstructionType.MACRO_DEF
+        ]
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
@@ -679,7 +759,7 @@ def main(input, output, debug, symbols, listing, include, no_stdlib):
 
         try:
             tree = assembler.parse(source, filename=input)
-            instructions = assembler.transform(tree)
+            assembler.transform(tree)
 
             # Write output to specified file
             assembler.generate_output(output)

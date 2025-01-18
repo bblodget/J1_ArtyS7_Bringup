@@ -27,7 +27,8 @@ def assembler(j1debug):
 def test_alu_operations(assembler, source, expected):
     """Test basic ALU operations without modifiers."""
     tree = assembler.parse(source)
-    result = assembler.transform(tree)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == expected
 
 
@@ -46,7 +47,9 @@ def test_alu_operations(assembler, source, expected):
 )
 def test_stack_effects(assembler, source, expected):
     """Test stack effect modifiers."""
-    result = assembler.transform(assembler.parse(source))
+    tree = assembler.parse(source)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == expected
 
 
@@ -65,7 +68,9 @@ def test_stack_effects(assembler, source, expected):
 )
 def test_stack_deltas(assembler, source, expected):
     """Test stack delta modifiers."""
-    result = assembler.transform(assembler.parse(source))
+    tree = assembler.parse(source)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == expected
 
 
@@ -79,7 +84,9 @@ def test_jump_instructions(assembler):
     end:
         CALL middle
     """
-    result = assembler.transform(assembler.parse(source))
+    tree = assembler.parse(source)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == 0x0002  # JMP to end (addr 2)
     assert result[1] == 0x2000  # ZJMP to start (addr 0)
     assert result[2] == 0x4001  # CALL to middle (addr 1)
@@ -97,7 +104,9 @@ def test_jump_instructions(assembler):
 )
 def test_number_literals(assembler, source, expected):
     """Test number literal handling."""
-    result = assembler.transform(assembler.parse(source))
+    tree = assembler.parse(source)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == expected
 
 
@@ -136,7 +145,9 @@ def test_duplicate_label(assembler):
 )
 def test_combined_modifiers(assembler, source, expected):
     """Test combinations of modifiers."""
-    result = assembler.transform(assembler.parse(source))
+    tree = assembler.parse(source)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
     assert result[0] == expected
 
 
@@ -178,7 +189,9 @@ def test_program(assembler, category, test_name):
         expected = [int(line.strip(), 16) for line in f if line.strip()]
 
     # Process the file
-    result = assembler.transform(assembler.parse(source, str(asm_file)))
+    tree = assembler.parse(source, str(asm_file))
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
 
     # Compare results with detailed error message
     assert result == expected, "\n".join(
@@ -226,11 +239,8 @@ def test_basic_include_program(assembler, basic_include_files, tmp_path):
         f.write(source)
 
     # Process the file
-    result = assembler.transform(assembler.parse(source, filename))
+    tree = assembler.parse(source, filename)
+    assembler.transform(tree)
+    result = assembler.get_bytecodes()
 
-    # Compare results
-    assert result == expected, "\n".join(
-        f"Instruction {i}: expected {exp:04x}, got {act:04x}"
-        for i, (exp, act) in enumerate(zip(expected, result))
-        if exp != act
-    )
+    assert result == expected
