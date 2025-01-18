@@ -45,15 +45,25 @@
     - [x] Macro library path
     - [x] `--no-stdlib` option
 
+- [x] Assembler Improvements
+  - [x] Warning for unresolved jumps in included files
+  - [x] Error for undefined labels in main file
+  - [x] Added main file tracking
+  - [x] Preserved test coverage
+  - [x] Basic UART write test
+  - [x] Status register read
+  - [x] Fixed stack manipulation in UART status checking
+  - [x] Identified simulator UART status always returns 0xF
+  - [x] Echo test (TX -> RX loopback)
+
 ## Current Development Focus
 
 ### Hardware Testing
 - [ ] UART Testing
-  - [x] Basic UART write test
-  - [x] Status register read
   - [ ] Hardware timing verification
   - [ ] Multi-byte transmission test
-  - [ ] Echo test (TX -> RX loopback)
+  - [ ] Add realistic UART status simulation
+  - [ ] Test with actual hardware
 
 ### Standard Library Development
 - [ ] Core Word Library
@@ -138,6 +148,13 @@
   - [ ] >P(n) instruction
   - [ ] Parameter scope management
   - [ ] Assembler support
+
+### Assembler Improvements
+- [ ] Entry Point Handling
+  - [ ] Remove temporary JMP start from library files
+  - [ ] Add proper entry point handling
+  - [ ] Add entry point directive to grammar
+  - [ ] Test with multiple library includes
 
 ## Future Enhancements
 - [ ] Forth-like Syntax
