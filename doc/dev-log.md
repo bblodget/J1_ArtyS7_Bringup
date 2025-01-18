@@ -1,5 +1,16 @@
 # Development Log
 
+## 2025-01-17
+
+- Finished refactoring test_assembler.py
+    - Added test_files/macros/base_status
+    - Added test_files/macros/base_rstack
+    - Added test_files/macros/base_io
+    - Added test_files/macros/base_elided
+    - Added test_files/macros/base_dup_over
+    - Added test_files/macros/base_compare
+    - Added test_files/macros/base_alu
+
 ## 2025-01-16
 
 - Reorganized test files structure:
