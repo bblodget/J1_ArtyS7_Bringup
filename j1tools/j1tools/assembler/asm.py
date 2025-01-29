@@ -25,6 +25,7 @@ from .asm_types import (
 )
 from .macro_processor import MacroProcessor
 from .config import AssemblerConfig
+from .subroutine_processor import SubroutineProcessor
 
 
 class J1Assembler(Transformer):
@@ -55,8 +56,9 @@ class J1Assembler(Transformer):
         else:
             self.logger.setLevel(logging.INFO)
 
-        # Initialize macro processor
+        # Initialize processors
         self.macro_processor = MacroProcessor(debug=debug)
+        self.subroutine_processor = SubroutineProcessor(debug=debug)
 
         # Load the grammar
         grammar_path = Path(__file__).parent / "j1.lark"
@@ -241,12 +243,13 @@ class J1Assembler(Transformer):
                 return item  # Pass through jump instructions
             if item_type == "macro_call":
                 macro_name = value[0]
-                if not self.macro_processor.is_macro(macro_name):
-                    raise ValueError(
-                        f"{self.current_file}:{token.line}:{token.column}: "
-                        f"Unknown macro: {macro_name}"
+                if self.macro_processor.is_macro(macro_name):
+                    return self.macro_processor.expand_macro(macro_name, value[1])
+                elif self.subroutine_processor.is_subroutine(macro_name):
+                    return self.subroutine_processor.expand_subroutine_call(
+                        macro_name, value[1]
                     )
-                return self.macro_processor.expand_macro(macro_name, value[1])
+                raise ValueError(f"Unknown macro/subroutine: {macro_name}")
 
         raise ValueError(f"Unexpected instruction format: {type(item)}")
 
@@ -652,69 +655,20 @@ class J1Assembler(Transformer):
 
     def subroutine_def(self, items):
         """Handle Forth-style subroutine definitions."""
-        colon_token = items[0]  # COLON token
+        self.logger.debug(f"Processing subroutine definition: {items}")
         name_token = items[1]  # IDENT token
         subroutine_name = str(name_token)
 
-        # Get stack effect comment if present
-        stack_effect = ""
-        for item in items:
-            if isinstance(item, Token) and item.type == "STACK_COMMENT":
-                stack_effect = f" {str(item)}"
-                break
+        # Process the subroutine definition
+        instructions = self.subroutine_processor.process_subroutine_def(items)
 
-        # Create a label for the subroutine
-        label_metadata = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL,
-            value=0,
-            token=name_token,
-            filename=self.current_file,
-            source_lines=self.source_lines,
-            instr_text=f"{subroutine_name}:",
-            label_name=subroutine_name,
-        )
+        # Update the entry point in the subroutine processor
+        entry_point = len(self.instructions)
+        subroutine = self.subroutine_processor.get_subroutine_info(subroutine_name)
+        if subroutine:
+            subroutine.entry_point = entry_point
 
-        # Process the body instructions
-        body_instructions = []
-        for item in items:
-            if isinstance(item, Tree):  # This is the instruction list
-                self.logger.debug(f"\nProcessing subroutine body: ")
-                data = item.data
-                self.logger.debug(f"Data: {data}")
-                children = item.children
-                self.logger.debug(f"Children: {children}")
-                # Flatten nested lists of instructions
-                for child in children:
-                    if isinstance(child, list):
-                        body_instructions.extend(child)
-                    else:
-                        body_instructions.append(child)
-
-        # Add RET instruction at the end if not already present
-        if not body_instructions or not self._is_return_instruction(
-            body_instructions[-1]
-        ):
-            ret_token = name_token  # Reuse the name token for location info
-            ret_inst = InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
-                value=0x0080,  # RET instruction value
-                token=ret_token,
-                filename=self.current_file,
-                source_lines=self.source_lines,
-                instr_text="RET",
-            )
-            body_instructions.append(ret_inst)
-
-        # Return the label and all body instructions
-        return [label_metadata] + body_instructions
-
-    def _is_return_instruction(self, inst):
-        """Check if an instruction is a return instruction."""
-        return (
-            isinstance(inst, InstructionMetadata)
-            and inst.type == InstructionType.BYTE_CODE
-            and (inst.value & 0x0080) == 0x0080
-        )  # Check for RET bit
+        return instructions
 
     def get_bytecodes(self) -> List[int]:
         """Return a list of resolved bytecodes for testing."""
