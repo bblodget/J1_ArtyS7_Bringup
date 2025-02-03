@@ -1,5 +1,30 @@
 # Development Log
 
+## 2025-02-03
+
+Enhanced listing output:
+- Added byte address column to listing output
+- Maintained word address column for instruction references
+- Aligned all columns for better readability
+- Updated column headers to match data alignment
+- Preserved existing functionality:
+  - Label formatting
+  - Macro expansion annotations
+  - Source line comments
+  - Line and column numbers
+- Reused and enhanced generate_listing_line method
+- Extended separator line to match wider format
+
+Example output now shows:
+```
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0021            9:1      JMP start                    //
+```
+- BYTE column shows memory-mapped addresses (0000, 0002, etc.)
+- WORD column shows instruction addresses (0000, 0001, etc.)
+- Maintains all previous information and formatting
+
 ## 2025-02-02
 
 Completed:

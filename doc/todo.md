@@ -61,10 +61,10 @@
     - [ ] Add entry point directive to grammar
     - [ ] Test with multiple library includes
   - [ ] Address and Memory Management
-    - [ ] Enhanced Listing Output
-      - [NEXT] Show both byte and word addresses
-      - [ ] Add address column headers (BYTE/WORD)
-      - [ ] Align address columns
+    - [x] Enhanced Listing Output
+      - [x] Show both byte and word addresses
+      - [x] Add address column headers (BYTE/WORD)
+      - [x] Align address columns
     - [ ] Origin Directive Support
       - [ ] Add 'ORG' keyword to grammar
       - [ ] Implement address space management
