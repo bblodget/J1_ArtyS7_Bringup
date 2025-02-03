@@ -452,6 +452,9 @@ class J1Assembler(Transformer):
         comment_space = " " * 2  # Before comment
         indent = " " * 2  # Indentation for code under labels
 
+        # Calculate byte address
+        byte_addr = addr * 2
+
         # Get comment from original source line
         comment_part = ""
         if "//" in metadata.source_line:
@@ -477,44 +480,40 @@ class J1Assembler(Transformer):
         # Format the line with explicit spacing
         if metadata.type == InstructionType.LABEL:
             return (
-                f"{addr:04x}{addr_space}----{mcode_space}"
+                f"{byte_addr:04x}{addr_space}"
+                f"{addr:04x}{addr_space}"
+                f"----{mcode_space}"
                 f"{line_col}{line_num_space}"
                 f"{code_part:<30}{indent}"
                 f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
             )
         else:
             return (
-                f"{addr:04x}{addr_space}{code:04x}{mcode_space}"
+                f"{byte_addr:04x}{addr_space}"
+                f"{addr:04x}{addr_space}"
+                f"{code:04x}{mcode_space}"
                 f"{line_col}{line_num_space}"
                 f"{code_part:<32}"
                 f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
             )
 
-    def generate_listing(self, output_file: str) -> None:
-        """Generate listing file showing address, machine code, and source."""
-        if not self.is_assembled:
-            raise ValueError("Cannot generate listing before assembling")
-
-        with open(output_file, "w") as f:
-            # Write header
-            f.write("Address  Machine Code  #:col  Source\n")
+    def generate_listing(self, filename: str) -> None:
+        """Generate listing file with both byte and word addresses."""
+        with open(filename, 'w') as f:
+            # Write header with column labels
+            f.write("BYTE   WORD   CODE      #:col    SOURCE\n")
             f.write("-" * 50 + "\n")
 
-            # Write each instruction with its source
-            for addr in range(len(self.instructions)):
+            # Process instructions in order
+            for word_addr in sorted(self.instruction_metadata.keys()):
                 # First check if there's a label at this address
-                if addr in self.label_metadata:
-                    label_info = self.label_metadata[addr]
-                    line = self.generate_listing_line(addr, 0, label_info)
-                    f.write(line)
+                if word_addr in self.label_metadata:
+                    label_metadata = self.label_metadata[word_addr]
+                    f.write(self.generate_listing_line(word_addr, 0, label_metadata))
 
-                # Then write the instruction
-                inst = self.instructions[addr]
-                if inst.type != InstructionType.MACRO_DEF:
-                    line = self.generate_listing_line(
-                        addr, inst.value, inst
-                    )  # Pass inst.value instead of inst
-                    f.write(line)
+                # Now process the instruction
+                metadata = self.instruction_metadata[word_addr]
+                f.write(self.generate_listing_line(word_addr, metadata.value, metadata))
 
     def generate_symbols(self, output_file: str):
         """Generate symbol file showing addresses and their associated labels."""
