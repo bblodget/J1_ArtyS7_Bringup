@@ -26,3 +26,4 @@ start:
 wait_forever:
      noop
      JMP wait_forever
+

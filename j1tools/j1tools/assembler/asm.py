@@ -175,15 +175,20 @@ class J1Assembler(Transformer):
         self, items: List[Union[InstructionMetadata, Tuple[str, str]]]
     ) -> Union[InstructionMetadata, List[InstructionMetadata]]:
         """
-        Handles the 'statement' rule by processing both labels and instructions.
-        A statement can be:
-        - Just an instruction (1 item)
-        - Label + instruction (2 items)
+        Handles the 'statement' rule by processing labels and instructions.
+        A statement can return:
+        - A single instruction (InstructionMetadata)
+        - A list of instructions (from subroutine definitions or label+instruction pairs)
+        
+        Input items can be:
+        - [instruction] -> returns single instruction
+        - [label, instruction] -> returns [label, instruction] as list
+        - [list_of_instructions] -> returns list (from subroutine definitions)
         """
         self.logger.debug(f"\nStatement items: {items}")
 
         if len(items) == 1:
-            # Just an instruction
+            # Single item: either an instruction or a list of instructions
             return items[0]
         elif len(items) == 2:
             # Label + instruction pair
@@ -233,6 +238,7 @@ class J1Assembler(Transformer):
             return item
 
         # For backwards compatibility or special cases (like labels)
+        # TODO: Check if this is needed
         if isinstance(item, tuple):
             item_type, value = item
             if item_type == "label":

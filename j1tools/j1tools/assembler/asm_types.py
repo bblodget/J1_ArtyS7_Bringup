@@ -56,6 +56,10 @@ class InstructionMetadata:
     opt_name: Optional[str] = None  # Name of optimization if applied
     label_name: Optional[str] = None  # Name of label (for LABEL type)
 
+    def __repr__(self) -> str:
+        """Returns a human-readable string representation of the instruction metadata."""
+        return f"instruction:{self.type.name} {self.instr_text}"
+
     @classmethod
     def from_token(
         cls,
