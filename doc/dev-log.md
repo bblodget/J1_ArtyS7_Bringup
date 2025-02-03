@@ -1,5 +1,18 @@
 # Development Log
 
+## 2025-02-02
+
+Completed:
+- Reverted code back to have a subroutine_def method in the asm.py file.
+Instead of having a subroutine_processor.py file.
+- Merge this code back into the main branch.
+- Basic subroutine definition and call implemented.
+
+Next Steps:
+- enhance listing output. Show both byte and word addresses.
+- Implement ORG directive.
+- Subroutine call syntax. Allow direct subroutine names as CALL targets
+
 ## 2025-01-18
 
 - Debugged UART I/O library (terminal_io.asm):

@@ -55,6 +55,27 @@
   - [x] Fixed stack manipulation in UART status checking
   - [x] Identified simulator UART status always returns 0xF
   - [x] Echo test (TX -> RX loopback)
+  - [ ] Entry Point Handling
+    - [ ] Remove temporary JMP start from library files
+    - [ ] Add proper entry point handling
+    - [ ] Add entry point directive to grammar
+    - [ ] Test with multiple library includes
+  - [ ] Address and Memory Management
+    - [ ] Enhanced Listing Output
+      - [NEXT] Show both byte and word addresses
+      - [ ] Add address column headers (BYTE/WORD)
+      - [ ] Align address columns
+    - [ ] Origin Directive Support
+      - [ ] Add 'ORG' keyword to grammar
+      - [ ] Implement address space management
+      - [ ] Handle non-contiguous code blocks
+      - [ ] Add collision detection
+      - [ ] Update listing generation for ORG blocks
+    - [ ] Subroutine Call Syntax
+      - [ ] Allow direct subroutine names as CALL targets
+      - [ ] Update grammar to recognize bare identifiers as calls
+      - [ ] Maintain backward compatibility with explicit CALL
+      - [ ] Add documentation for both calling styles
 
 ## Current Development Focus
 
@@ -148,13 +169,6 @@
   - [ ] >P(n) instruction
   - [ ] Parameter scope management
   - [ ] Assembler support
-
-### Assembler Improvements
-- [ ] Entry Point Handling
-  - [ ] Remove temporary JMP start from library files
-  - [ ] Add proper entry point handling
-  - [ ] Add entry point directive to grammar
-  - [ ] Test with multiple library includes
 
 ## Future Enhancements
 - [ ] Forth-like Syntax
