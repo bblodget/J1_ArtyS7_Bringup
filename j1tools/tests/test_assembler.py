@@ -173,6 +173,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("macros", "base_io"),
         ("macros", "base_rstack"),
         ("macros", "base_status"),
+        ("io_lib", "terminal_io"),
     ],
 )
 def test_program(assembler, category, test_name):
