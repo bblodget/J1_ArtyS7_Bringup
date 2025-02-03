@@ -500,9 +500,9 @@ class J1Assembler(Transformer):
     def generate_listing(self, filename: str) -> None:
         """Generate listing file with both byte and word addresses."""
         with open(filename, 'w') as f:
-            # Write header with column labels
-            f.write("BYTE   WORD   CODE      #:col    SOURCE\n")
-            f.write("-" * 50 + "\n")
+            # Write header with column labels aligned with data columns
+            f.write("BYTE     WORD     CODE            #:col    SOURCE\n")
+            f.write("-" * 70 + "\n")  # Extended line to match wider format
 
             # Process instructions in order
             for word_addr in sorted(self.instruction_metadata.keys()):
