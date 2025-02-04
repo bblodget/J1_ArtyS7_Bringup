@@ -1,5 +1,12 @@
 # Development Log
 
+## 2025-02-04
+
+Planning for ORG and SECTIONS directives.
+- [sections_simplified.md](sections_simplified.md)
+- [ORG_command.md](ORG_command.md)
+- [org_section_plan.md](org_section_plan.md)
+
 ## 2025-02-03
 
 Enhanced listing output:
