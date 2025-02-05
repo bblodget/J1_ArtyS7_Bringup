@@ -10,7 +10,7 @@ The `ORG` directive sets the current assembly address, enabling precise control 
 
 ## Syntax
 ```forth
-ORG <address>
+ORG <word address>
 ```
 - **address**: Absolute 16-bit address (hex: `#$xxxx`, decimal: `#1234`, symbol: `label`)
 
@@ -18,7 +18,7 @@ ORG <address>
 
 ### 1. Address Control
 ```forth
-ORG #2000       ; Set assembly address to 0x2000
+ORG #$2000       ; Set assembly address to 0x2000
 main:
     NOP         ; Assembled at 0x2000
     RET         ; Assembled at 0x2001
@@ -26,31 +26,31 @@ main:
 
 ### 2. Multiple ORG Directives
 ```forth
-    ORG #0000
+    ORG #$0000
 reset_vector:
     JMP main    ; @ 0x0000
 
-    ORG #2000
+    ORG #$2000
 main:           ; @ 0x2000
     NOP
 ```
 
 ### 3. Collision Detection
 ```forth
-ORG #1000
+ORG #$1000
 data: #1234     ; Occupies 0x1000-0x1001
 
-ORG #1000       ; Error: Address collision at 1000
+ORG #$1000       ; Error: Address collision at 1000
 conflict: #5678
 ```
 
 ### 4. Listing Support
 ```
 ADDRESS  CODE  SOURCE
-0000     6000  ORG #0000
+0000     6000  ORG #$0000
 0000     6000  reset_vec: JMP main
 ...
-2000     8000  ORG #2000
+2000     8000  ORG #$2000
 2000     8000  main: NOP
 ```
 
@@ -58,19 +58,19 @@ ADDRESS  CODE  SOURCE
 
 ### 1. Interrupt Vectors
 ```forth
-ORG #0000
+ORG #$0000
 reset_vector:
     JMP main        ; @ 0x0000
     NOP             ; @ 0x0001
 
-ORG #0008
+ORG #$0008
 timer_int:
     JMP isr_timer   ; @ 0x0008
 ```
 
 ### 2. Memory-Mapped I/O
 ```forth
-ORG #1000
+ORG #$1000
 uart_status:  #0     ; Status register @ 0x1000
 uart_data:   #0     ; Data register @ 0x1001
 ```
@@ -78,12 +78,12 @@ uart_data:   #0     ; Data register @ 0x1001
 ### 3. Code Relocation
 ```forth
 ; Bootloader at start of RAM
-ORG #0000
+ORG #$0000
 bootloader:
     ...             ; @ 0x0000-0x00FF
 
 ; Main application at 0x0100
-ORG #0100
+ORG #$0100
 main:
     ...             ; @ 0x0100+
 ```
