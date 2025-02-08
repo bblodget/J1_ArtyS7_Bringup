@@ -576,38 +576,39 @@ class J1Assembler(Transformer):
             for symbol, addr in sorted_symbols:
                 print(f"{addr:04x} {symbol}", file=f)
 
+    def get_bytecodes(self) -> List[int]:
+        """Return a list of resolved bytecodes for testing."""
+        if not self.is_assembled:
+            raise ValueError("Cannot get bytecodes before assembling")
+
+        bytecodes = []
+        prev_word_addr = 0
+
+        # Process instructions in order by address
+        for word_addr in sorted(self.instruction_metadata.keys()):
+            inst = self.instruction_metadata[word_addr]
+            
+            # Fill gaps with zeros
+            while prev_word_addr < word_addr:
+                bytecodes.append(0x0000)
+                prev_word_addr += 1
+
+            if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP:
+                bytecodes.append(inst.value)
+                prev_word_addr = word_addr + 1
+
+        return bytecodes
+
     def generate_output(self, output_file: str):
         """Generate output file containing machine code in hex format."""
         if not self.is_assembled:
             raise ValueError("Cannot generate output before assembling")
 
-        # Debug print all instructions
-        # self.logger.debug("\n\nFinal instructions:")
-        # for inst in self.instructions:
-        #    if inst.type == InstructionType.MACRO_DEF:
-        #        continue
-        #    self.logger.debug(f"\n{inst}")
-
-        self.logger.debug("\n\nFinal instructions:")
+        bytecodes = self.get_bytecodes()
+        
         with open(output_file, "w") as f:
-
-            prev_word_addr: int = 0
-
-            # Process instructions in order
-            for word_addr in sorted(self.instruction_metadata.keys()):
-                inst = self.instruction_metadata[word_addr]
-                if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP:
-                    # fill in 0000 for all addresses between prev_word_addr and word_addr
-                    prev_word_addr = prev_word_addr + 1
-                    while prev_word_addr < word_addr:
-                        self.logger.debug(f"\n{prev_word_addr:04x}: 0000")
-                        print(f"0000", file=f)
-                        prev_word_addr = prev_word_addr + 1
-
-                    self.logger.debug(f"\n{word_addr:04x}: {inst.value:04x} {inst.instr_text}")
-                    print(f"{inst.value:04x}", file=f)
-                    prev_word_addr = word_addr
-
+            for code in bytecodes:
+                print(f"{code:04x}", file=f)
 
     def macro_def(self, items):
         """Handle macro definitions by delegating to macro processor."""
@@ -783,17 +784,6 @@ class J1Assembler(Transformer):
             and inst.type == InstructionType.BYTE_CODE
             and (inst.value & 0x0080) == 0x0080
         )  # Check for RET bit
-
-    def get_bytecodes(self) -> List[int]:
-        """Return a list of resolved bytecodes for testing."""
-        if not self.is_assembled:
-            raise ValueError("Cannot get bytecodes before assembling")
-
-        return [
-            inst.value
-            for inst in self.instructions
-            if inst.type != InstructionType.MACRO_DEF
-        ]
 
     def org_directive(self, items):
         """Handle ORG directive with word address"""
