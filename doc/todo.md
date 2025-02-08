@@ -71,6 +71,10 @@
       - [ ] Handle non-contiguous code blocks
       - [ ] Add collision detection
       - [ ] Update listing generation for ORG blocks
+      - [ ] Optimize address range tracking (in address_space.py)
+        - [ ] Merge adjacent ranges
+        - [ ] Consider range objects for better management
+        - [ ] Add performance testing with large programs
     - [ ] Subroutine Call Syntax
       - [ ] Allow direct subroutine names as CALL targets
       - [ ] Update grammar to recognize bare identifiers as calls

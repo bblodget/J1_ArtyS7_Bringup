@@ -8,7 +8,7 @@ from typing import Dict, List, Set, Optional, Any, Tuple
 from lark import Token, Tree
 from dataclasses import dataclass
 from .asm_types import InstructionType, InstructionMetadata
-
+from .address_space import AddressSpace
 
 @dataclass
 class MacroDefinition:
@@ -20,7 +20,7 @@ class MacroDefinition:
 
 
 class MacroProcessor:
-    def __init__(self, debug: bool = False) -> None:
+    def __init__(self, addr_space: AddressSpace, debug: bool = False) -> None:
         # Dictionary to store macro definitions
         # Key: macro name
         # Value: MacroDefinition object
@@ -31,6 +31,9 @@ class MacroProcessor:
 
         # Current file being processed (for error messages)
         self.current_file: str = "<unknown>"
+
+        # Address space
+        self.addr_space = addr_space
 
         # Setup logging
         self.logger = logging.getLogger("j1asm.macro")
@@ -88,9 +91,19 @@ class MacroProcessor:
         flattened_instructions = []
         for instr in instructions:
             if isinstance(instr, list):
-                # Flatten nested macro expansions
-                flattened_instructions.extend(instr)
+                # Does this ever happen?
+                # raise an exception to find out
+                raise ValueError(
+                    f"{self.current_file}:{name_token.line}:{name_token.column}: "
+                    f"GOT HERE: Nested macro expansion in macro {name_token}"
+                )
             elif isinstance(instr, InstructionMetadata):
+                # We are just defining a macro, so undo the advance of the address space
+                self.addr_space.undo_advance()
+
+                # Ther is no address for this instruction yet
+                instr.word_addr = -1;
+
                 flattened_instructions.append(instr)
             else:
                 raise ValueError(
@@ -145,6 +158,7 @@ class MacroProcessor:
                 macro_name=name,
                 opt_name=None,
                 label_name=None,
+                word_addr=self.addr_space.advance()
             )
             expanded.append(new_instr)
 

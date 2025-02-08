@@ -25,6 +25,7 @@ from .asm_types import (
 )
 from .macro_processor import MacroProcessor
 from .config import AssemblerConfig
+from .address_space import AddressSpace
 
 
 class J1Assembler(Transformer):
@@ -54,9 +55,12 @@ class J1Assembler(Transformer):
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
+        
+        # Initialize address space
+        self.addr_space = AddressSpace()
 
         # Initialize macro processor
-        self.macro_processor = MacroProcessor(debug=debug)
+        self.macro_processor = MacroProcessor(self.addr_space, debug=debug)
 
         # Load the grammar
         grammar_path = Path(__file__).parent / "j1.lark"
@@ -77,6 +81,8 @@ class J1Assembler(Transformer):
         self.macros: List[InstructionMetadata] = []
 
         self.main_file: str = "<unknown>"  # Track the main file
+
+        self.current_section = '.code'
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -107,24 +113,35 @@ class J1Assembler(Transformer):
         # First pass: collect labels and instructions
         for stmt in statements:
             if isinstance(stmt, InstructionMetadata):
+                if stmt.type == InstructionType.DIRECTIVE:
+                    continue    # ORG already handled
                 if stmt.type == InstructionType.LABEL:
-                    # Labels use actual instruction count for address
-                    addr = len(self.instructions)
+                    if stmt.word_addr == -1:
+                        raise ValueError(
+                            f"{self.current_file}:{stmt.line}:{stmt.column}: "
+                            f"Label {stmt.label_name} has no word address"
+                        )
                     if stmt.label_name in self.labels:
                         raise ValueError(
                             f"{self.current_file}:{stmt.line}:{stmt.column}: "
                             f"Duplicate label: {stmt.label_name}"
                         )
-                    self.labels[stmt.label_name] = addr
-                    self.label_metadata[addr] = stmt
+                    self.labels[stmt.label_name] = stmt.word_addr
+                    self.label_metadata[stmt.word_addr] = stmt
                     continue
 
                 if stmt.type == InstructionType.MACRO_DEF:
                     self.macros.append(stmt)
                     continue
 
-                self.instruction_metadata[len(self.instructions)] = stmt
+                # Other Instruction types should have a word address
+                if stmt.word_addr == -1:
+                    raise ValueError(
+                        f"{self.current_file}:{stmt.line}:{stmt.column}: "
+                        f"Instruction {stmt.instr_text} has no word address"
+                    )
                 self.instructions.append(stmt)
+                self.instruction_metadata[stmt.word_addr] = stmt
 
             elif isinstance(stmt, list):
                 # Handle lists from both macro expansions and subroutine definitions
@@ -135,18 +152,29 @@ class J1Assembler(Transformer):
                         )
 
                     if inst.type == InstructionType.LABEL:
-                        addr = len(self.instructions)
+                        if inst.word_addr == -1:
+                            raise ValueError(
+                                f"{self.current_file}:{inst.line}:{inst.column}: "
+                                f"Label {inst.label_name} has no word address"
+                            )
                         if inst.label_name in self.labels:
                             raise ValueError(
                                 f"{self.current_file}:{inst.line}:{inst.column}: "
                                 f"Duplicate label: {inst.label_name}"
                             )
-                        self.labels[inst.label_name] = addr
-                        self.label_metadata[addr] = inst
+                        self.labels[inst.label_name] = inst.word_addr
+                        self.label_metadata[inst.word_addr] = inst
                         continue
 
-                    self.instruction_metadata[len(self.instructions)] = inst
+                    # Other Instruction types should have a word address
+                    if inst.word_addr == -1:
+                        raise ValueError(
+                            f"{self.current_file}:{inst.line}:{inst.column}: "
+                            f"Instruction {inst.instr_text} has no word address"
+                        )
+
                     self.instructions.append(inst)
+                    self.instruction_metadata[inst.word_addr] = inst
 
         # Second pass: resolve jumps in place
         for inst in self.instructions:
@@ -235,10 +263,16 @@ class J1Assembler(Transformer):
 
         # Handle InstructionMetadata directly
         if isinstance(item, InstructionMetadata):
+            # Set the word address
+            item.word_addr = self.addr_space.advance()
             return item
 
         # For backwards compatibility or special cases (like labels)
         # TODO: Check if this is needed
+
+        # Raise an error if we get an unexpected item type
+        raise ValueError(f"Unexpected instruction format: {type(item)}")
+
         if isinstance(item, tuple):
             item_type, value = item
             if item_type == "label":
@@ -332,6 +366,9 @@ class J1Assembler(Transformer):
         # Create instruction text with colon
         instr_text = f"{label_name}:"
 
+        # Get allocation address
+        addr = self.addr_space.get_word_address()
+
         return InstructionMetadata.from_token(
             inst_type=InstructionType.LABEL,
             value=0,  # Labels don't have a value
@@ -340,6 +377,7 @@ class J1Assembler(Transformer):
             source_lines=self.source_lines,
             label_name=label_name,
             instr_text=instr_text,  # Add instruction text
+            word_addr=addr,
         )
 
     def number(self, items: List[Token]) -> InstructionMetadata:
@@ -376,6 +414,9 @@ class J1Assembler(Transformer):
                 #    ("byte_code", (24584, token)),               # INVERT
                 # ]
             machine_code = 0x8000 | value
+
+            # Get allocation address
+            addr = self.addr_space.advance()
             return InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
                 value=machine_code,
@@ -478,7 +519,16 @@ class J1Assembler(Transformer):
             code_part = f"{indent}{code_part}"
 
         # Format the line with explicit spacing
-        if metadata.type == InstructionType.LABEL:
+        if metadata.type == InstructionType.DIRECTIVE:
+            return (
+                f"{byte_addr:04x}{addr_space}"
+                f"{addr:04x}{addr_space}"
+                f"{code:04x}{mcode_space}"
+                f"{line_col}{line_num_space}"
+                f"{code_part:<32}"
+                f"{comment_space}//{comment_space}{comment_part if comment_part else ''}\n"
+            )
+        elif metadata.type == InstructionType.LABEL:
             return (
                 f"{byte_addr:04x}{addr_space}"
                 f"{addr:04x}{addr_space}"
@@ -540,10 +590,18 @@ class J1Assembler(Transformer):
 
         self.logger.debug("\n\nFinal instructions:")
         with open(output_file, "w") as f:
+            curr_word_addr: int = 0
             for inst in self.instructions:
                 if inst.type == InstructionType.MACRO_DEF:
                     continue
                 self.logger.debug(f"\n{inst}")
+
+                # Print 0000 if curr_word_addr is not the same as inst.word_addr
+                word_addr = inst.word_addr
+                while word_addr > curr_word_addr:
+                    print(f"\n0000", file=f)
+                    curr_word_addr = curr_word_addr + 1
+
                 print(f"{inst.value:04x}", file=f)
 
     def macro_def(self, items):
@@ -731,6 +789,23 @@ class J1Assembler(Transformer):
             for inst in self.instructions
             if inst.type != InstructionType.MACRO_DEF
         ]
+
+    def org_directive(self, items):
+        """Handle ORG directive with word address"""
+        number = items[0]
+        
+        address = number.value & 0xFFFF  # Ensure 16-bit
+        self.addr_space.set_org(address)
+        
+        # Create metadata for listing
+        return InstructionMetadata.from_token(
+            inst_type=InstructionType.DIRECTIVE,
+            value=address,
+            token=items[0].token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"ORG {items[0].instr_text}",
+        )
 
 
 @click.command()
