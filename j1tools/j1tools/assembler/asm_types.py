@@ -51,7 +51,8 @@ class InstructionMetadata:
     column: int  # Column number
     source_line: str  # Complete source line
     instr_text: str  # Clean instruction text for listing
-    word_addr: int = -1  # Add this field (default -1 = unassigned)
+    word_addr: int = -1  # Word address of the instruction (default -1 = unassigned)
+    num_value: int = -1  # If number, value of the number (default -1 = not a number)
 
     # Optional metadata
     macro_name: Optional[str] = None  # Name of macro if from macro expansion

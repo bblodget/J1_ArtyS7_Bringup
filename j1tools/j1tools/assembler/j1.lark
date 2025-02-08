@@ -12,6 +12,9 @@ COMMENT: "//" /[^\n]*/ "\n"?
 HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#-?[0-9]+/
 
+// Add to directive tokens
+ORG.2: "ORG"
+
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
 IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~>]+/
 
@@ -89,8 +92,6 @@ R_PLUS_1: "r+1"
 R_MINUS_1: "r-1"
 R_MINUS_2: "r-2"
 
-// Add to directive tokens
-ORG.2: "ORG"
 
 // Program structure
 ?start: program
