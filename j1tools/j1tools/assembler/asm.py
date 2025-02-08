@@ -398,6 +398,7 @@ class J1Assembler(Transformer):
                 filename=self.current_file,
                 source_lines=self.source_lines,
                 instr_text=str(token),  # Use token string directly
+                num_value=value,
             )
         elif token.type == "DECIMAL":
             value = int(str(token)[1:], 10)
@@ -415,8 +416,6 @@ class J1Assembler(Transformer):
                 # ]
             machine_code = 0x8000 | value
 
-            # Get allocation address
-            addr = self.addr_space.advance()
             return InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
                 value=machine_code,
@@ -424,6 +423,7 @@ class J1Assembler(Transformer):
                 filename=self.current_file,
                 source_lines=self.source_lines,
                 instr_text=str(token),  # Use token string directly
+                num_value=value,
             )
         else:
             raise ValueError(f"Unknown number format: {token}")
@@ -590,19 +590,24 @@ class J1Assembler(Transformer):
 
         self.logger.debug("\n\nFinal instructions:")
         with open(output_file, "w") as f:
-            curr_word_addr: int = 0
-            for inst in self.instructions:
-                if inst.type == InstructionType.MACRO_DEF:
-                    continue
-                self.logger.debug(f"\n{inst}")
 
-                # Print 0000 if curr_word_addr is not the same as inst.word_addr
-                word_addr = inst.word_addr
-                while word_addr > curr_word_addr:
-                    print(f"\n0000", file=f)
-                    curr_word_addr = curr_word_addr + 1
+            prev_word_addr: int = 0
 
-                print(f"{inst.value:04x}", file=f)
+            # Process instructions in order
+            for word_addr in sorted(self.instruction_metadata.keys()):
+                inst = self.instruction_metadata[word_addr]
+                if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP:
+                    # fill in 0000 for all addresses between prev_word_addr and word_addr
+                    prev_word_addr = prev_word_addr + 1
+                    while prev_word_addr < word_addr:
+                        self.logger.debug(f"\n{prev_word_addr:04x}: 0000")
+                        print(f"0000", file=f)
+                        prev_word_addr = prev_word_addr + 1
+
+                    self.logger.debug(f"\n{word_addr:04x}: {inst.value:04x} {inst.instr_text}")
+                    print(f"{inst.value:04x}", file=f)
+                    prev_word_addr = word_addr
+
 
     def macro_def(self, items):
         """Handle macro definitions by delegating to macro processor."""
@@ -792,19 +797,19 @@ class J1Assembler(Transformer):
 
     def org_directive(self, items):
         """Handle ORG directive with word address"""
-        number = items[0]
+        number = items[1]
         
-        address = number.value & 0xFFFF  # Ensure 16-bit
+        address = number.num_value & 0xFFFF  # Ensure 16-bit
         self.addr_space.set_org(address)
         
         # Create metadata for listing
         return InstructionMetadata.from_token(
             inst_type=InstructionType.DIRECTIVE,
             value=address,
-            token=items[0].token,
+            token=number.token,
             filename=self.current_file,
             source_lines=self.source_lines,
-            instr_text=f"ORG {items[0].instr_text}",
+            instr_text=f"ORG {number.instr_text}",
         )
 
 
