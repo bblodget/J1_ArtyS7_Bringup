@@ -17,7 +17,8 @@ class InstructionType(Enum):
     MACRO_DEF = auto()
     MACRO_CALL = auto()
     ALU = auto()
-    SUBROUTINE_DEF = auto()  
+    SUBROUTINE_DEF = auto()
+    DIRECTIVE = auto()  # For ORG statements
 
 
 @dataclass
@@ -50,6 +51,7 @@ class InstructionMetadata:
     column: int  # Column number
     source_line: str  # Complete source line
     instr_text: str  # Clean instruction text for listing
+    word_addr: int = -1  # Add this field (default -1 = unassigned)
 
     # Optional metadata
     macro_name: Optional[str] = None  # Name of macro if from macro expansion
@@ -58,6 +60,8 @@ class InstructionMetadata:
 
     def __repr__(self) -> str:
         """Returns a human-readable string representation of the instruction metadata."""
+        if self.type == InstructionType.DIRECTIVE:
+            return f"directive:{self.instr_text}"
         return f"instruction:{self.type.name} {self.instr_text}"
 
     @classmethod

@@ -89,10 +89,14 @@ R_PLUS_1: "r+1"
 R_MINUS_1: "r-1"
 R_MINUS_2: "r-2"
 
+// Add to directive tokens
+ORG.2: "ORG"
+
 // Program structure
 ?start: program
-program: statement*
-statement: label | instruction | CODE | BYTE | macro_def | include_stmt | subroutine_def
+program: (statement | org_directive)*
+statement: label | instruction | macro_def | include_stmt | subroutine_def
+org_directive: ORG number
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
@@ -169,8 +173,9 @@ data_stack_delta: D_PLUS_0 | D_PLUS_1 | D_MINUS_1 | D_MINUS_2
 return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 
 // Direct code insertion
-CODE: "CODE"
-BYTE: "BYTE"
+// TODO: How do we want to do "code literals"
+// CODE: "CODE"
+// BYTE: "BYTE"
 
 // Add new rules for macros
 macro_def: MACRO IDENT STACK_COMMENT? macro_body SEMICOLON
