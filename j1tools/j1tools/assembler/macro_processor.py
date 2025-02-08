@@ -91,12 +91,16 @@ class MacroProcessor:
         flattened_instructions = []
         for instr in instructions:
             if isinstance(instr, list):
-                # Does this ever happen?
-                # raise an exception to find out
-                raise ValueError(
-                    f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                    f"GOT HERE: Nested macro expansion in macro {name_token}"
-                )
+                # TODO: Why does this happen?
+                if len(instr) == 1:
+                    self.addr_space.undo_advance()
+                    instr[0].word_addr = -1;
+                    flattened_instructions.append(instr[0])
+                else:
+                    raise ValueError(
+                        f"{self.current_file}:{name_token.line}:{name_token.column}: "
+                        f"GOT HERE: Expected InstructionMetadata or list in macro body, got {type(instr)}"
+                    )
             elif isinstance(instr, InstructionMetadata):
                 # We are just defining a macro, so undo the advance of the address space
                 self.addr_space.undo_advance()
