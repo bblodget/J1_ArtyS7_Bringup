@@ -732,47 +732,23 @@ class J1Assembler(Transformer):
                 stack_effect = f" {str(item)}"
                 break
 
-        # Create a label for the subroutine
-        label_metadata = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL,
-            value=0,
-            token=name_token,
-            filename=self.current_file,
-            source_lines=self.source_lines,
-            instr_text=f"{subroutine_name}:",
-            label_name=subroutine_name,
-            word_addr=self.addr_space.get_word_address(),
-        )
-
         # Process the body instructions
         body_instructions = []
         for item in items:
-            if isinstance(item, Tree):  # This is the instruction list
-                self.logger.debug(f"\nProcessing subroutine body: ")
-                data = item.data
-                self.logger.debug(f"Data: {data}")
+            if isinstance(item, Tree):  # This is the instruction list (subroutine_body)
+                self.logger.debug("\nProcessing subroutine body: ")
                 children = item.children
                 self.logger.debug(f"Children: {children}")
                 # Flatten nested lists of instructions
                 for child in children:
                     if isinstance(child, list):
-                        if len(child) == 1:
-                            child[0].word_addr = self.addr_space.advance()
-                            body_instructions.append(child[0])
-                        else:
-                            # body_instructions.extend(child)
-                            raise ValueError(
-                                f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                                f"GOT HERE: Subroutine_def {name_token}"
-                            )
+                        # Do not reassign word_addr here; the instruction already got an address
+                        body_instructions.append(child[0])
                     else:
-                        child.word_addr = self.addr_space.advance()
                         body_instructions.append(child)
 
         # Add RET instruction at the end if not already present
-        if not body_instructions or not self._is_return_instruction(
-            body_instructions[-1]
-        ):
+        if not body_instructions or not self._is_return_instruction(body_instructions[-1]):
             ret_token = name_token  # Reuse the name token for location info
             ret_inst = InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
@@ -781,11 +757,29 @@ class J1Assembler(Transformer):
                 filename=self.current_file,
                 source_lines=self.source_lines,
                 instr_text="RET",
-                word_addr=self.addr_space.advance(),
+                word_addr=self.addr_space.advance(),  # Only for the RET, as it is not set yet
             )
             body_instructions.append(ret_inst)
 
-        # Return the label and all body instructions
+        # Use the word address of the first instruction in the body as the subroutine label address.
+        if body_instructions:
+            start_addr = body_instructions[0].word_addr
+        else:
+            start_addr = self.addr_space.get_word_address()
+
+        # Create a label for the subroutine at the beginning address
+        label_metadata = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=name_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{subroutine_name}:",
+            label_name=subroutine_name,
+            word_addr=start_addr,
+        )
+
+        # Return the label and all body instructions in order
         return [label_metadata] + body_instructions
 
     def _is_return_instruction(self, inst):
