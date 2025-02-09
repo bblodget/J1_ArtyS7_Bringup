@@ -1,5 +1,11 @@
 # Development Log
 
+## 2025-02-09
+
+- Fixed subroutine definition to use the word address of the first instruction in the body as the subroutine label address.
+- Added ORG directive to set the starting address of the next instruction.
+- All test passing.
+
 ## 2025-02-04
 
 Planning for ORG and SECTIONS directives.
