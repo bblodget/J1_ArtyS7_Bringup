@@ -741,6 +741,7 @@ class J1Assembler(Transformer):
             source_lines=self.source_lines,
             instr_text=f"{subroutine_name}:",
             label_name=subroutine_name,
+            word_addr=self.addr_space.get_word_address(),
         )
 
         # Process the body instructions
@@ -755,8 +756,17 @@ class J1Assembler(Transformer):
                 # Flatten nested lists of instructions
                 for child in children:
                     if isinstance(child, list):
-                        body_instructions.extend(child)
+                        if len(child) == 1:
+                            child[0].word_addr = self.addr_space.advance()
+                            body_instructions.append(child[0])
+                        else:
+                            # body_instructions.extend(child)
+                            raise ValueError(
+                                f"{self.current_file}:{name_token.line}:{name_token.column}: "
+                                f"GOT HERE: Subroutine_def {name_token}"
+                            )
                     else:
+                        child.word_addr = self.addr_space.advance()
                         body_instructions.append(child)
 
         # Add RET instruction at the end if not already present
@@ -771,6 +781,7 @@ class J1Assembler(Transformer):
                 filename=self.current_file,
                 source_lines=self.source_lines,
                 instr_text="RET",
+                word_addr=self.addr_space.advance(),
             )
             body_instructions.append(ret_inst)
 
