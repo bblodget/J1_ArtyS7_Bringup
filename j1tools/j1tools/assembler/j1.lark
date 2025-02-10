@@ -113,7 +113,7 @@ labelref: IDENT
 instruction: number            // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
-          | macro_call        // Macro invocation
+          | call_expr        // Macro or subroutine invocation
 
 // Jump operations
 jump_op: (JMP | ZJMP | CALL) labelref
@@ -182,8 +182,9 @@ return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 macro_def: MACRO IDENT STACK_COMMENT? macro_body SEMICOLON
 macro_body: instruction+
 
-// Add macro call rule - using a different syntax for lookahead
-macro_call: IDENT
+// call_expr: an identifier that is interpreted as a macro call if defined,
+// otherwise it is assembled as a CALL instruction.
+call_expr: IDENT
 
 // Add subroutine definition rule
 subroutine_def: COLON IDENT STACK_COMMENT? subroutine_body SEMICOLON

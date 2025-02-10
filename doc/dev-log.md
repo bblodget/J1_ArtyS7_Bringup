@@ -5,6 +5,9 @@
 - Fixed subroutine definition to use the word address of the first instruction in the body as the subroutine label address.
 - Added ORG directive to set the starting address of the next instruction.
 - All test passing.
+- Added ability to call subroutines using bare identifiers.
+- Added call_expr.md documentation.
+- Added io_words.asm to io_lib to test calling subroutines.
 
 ## 2025-02-04
 

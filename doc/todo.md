@@ -55,6 +55,11 @@
   - [x] Fixed stack manipulation in UART status checking
   - [x] Identified simulator UART status always returns 0xF
   - [x] Echo test (TX -> RX loopback)
+  - [x] Subroutine Call Syntax
+    - [x] Allow direct subroutine names as CALL targets
+    - [x] Update grammar to recognize bare identifiers as calls
+    - [x] Maintain backward compatibility with explicit CALL
+    - [x] Add documentation for both calling styles
   - [ ] Entry Point Handling
     - [ ] Remove temporary JMP start from library files
     - [ ] Add proper entry point handling
@@ -75,11 +80,6 @@
         - [ ] Merge adjacent ranges
         - [ ] Consider range objects for better management
         - [ ] Add performance testing with large programs
-    - [ ] Subroutine Call Syntax
-      - [ ] Allow direct subroutine names as CALL targets
-      - [ ] Update grammar to recognize bare identifiers as calls
-      - [ ] Maintain backward compatibility with explicit CALL
-      - [ ] Add documentation for both calling styles
 
 ## Current Development Focus
 

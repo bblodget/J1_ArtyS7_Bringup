@@ -178,6 +178,7 @@ def test_combined_modifiers(assembler, source, expected):
         # ("io_lib", "terminal_io"), 
         # io_org uses ORG directive and JMP to start in main asm file.
         ("io_lib", "io_org"),
+        ("io_lib", "io_words"),
     ],
 )
 def test_program(assembler, category, test_name):

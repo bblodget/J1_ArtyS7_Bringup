@@ -641,13 +641,33 @@ class J1Assembler(Transformer):
             macro_name=macro_name,
         )
 
-    def macro_call(self, items):
-        """Handle macro invocations."""
+    def call_expr(self, items):
+        """
+        Handle macro or subroutine invocations.
+        """
         token = items[0]
-        macro_name = str(token)
-
-        # Get expanded instructions directly
-        return self.macro_processor.expand_macro(macro_name, token)
+        name = str(token)
+        # Check if the identifier is a defined macro
+        if self.macro_processor.is_macro(name):
+            # Expand as a macro as before
+            return self.macro_processor.expand_macro(name, token)
+        else:
+            # Otherwise, treat it as a subroutine call.
+            # Create an InstructionMetadata for a CALL instruction by populating:
+            # - inst_type as JUMP (to be resolved as a CALL during label resolution)
+            # - value with the CALL opcode
+            # - label_name set to the identifier (subroutine name)
+            instr_text = f"CALL {name}"
+            return InstructionMetadata.from_token(
+                inst_type=InstructionType.JUMP,
+                value=JUMP_OPS["CALL"],   # Corresponds to the subroutine call op-code
+                token=token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                label_name=name,          # This is the subroutine label referenced by the CALL
+                instr_text=instr_text,
+                word_addr=self.addr_space.get_word_address(),
+            )
 
     def include_stmt(self, items: List[Token]) -> List[InstructionMetadata]:
         """Process an include statement and return an empty list."""
