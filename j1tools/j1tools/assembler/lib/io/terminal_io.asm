@@ -40,13 +40,13 @@ macro: pause ( -- )
 : key? ( -- ? )
     pause
     #2                  // Push receive ready mask
-    CALL uartstat      // Check UART status
+    uartstat      // Check UART status
     exit
 ;
 
 // Send a character to UART
 : emit ( c -- )
-    CALL emit?              // Check if ready to transmit
+    emit?              // Check if ready to transmit
     ZJMP emit     // If not ready, keep waiting
     UART_DATA_REG io!  // Send character
     exit
@@ -54,7 +54,7 @@ macro: pause ( -- )
 
 // Read a character from UART
 : key ( -- c )
-    CALL key?              // Check if character available
+    key?              // Check if character available
     ZJMP key         // If no character, keep waiting
     UART_DATA_REG io@ // Read character
     exit
@@ -63,7 +63,7 @@ macro: pause ( -- )
 // Send two characters to UART
 : 2emit ( c2 c1 -- )
     swap >r            // Save second char
-    CALL emit               // Send first char
-    r> CALL emit           // Send second char
+    emit               // Send first char
+    r> emit           // Send second char
     exit
 ;
