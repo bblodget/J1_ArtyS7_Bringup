@@ -827,6 +827,69 @@ class J1Assembler(Transformer):
             instr_text=f"ORG {number.instr_text}",
         )
 
+    def _generate_unique_label(self, base: str) -> str:
+        """Generate a unique temporary label for control structures."""
+        if not hasattr(self, '_label_counter'):
+            self._label_counter = 0
+        label_name = f"{base}_{self._label_counter}"
+        self._label_counter += 1
+        return label_name
+
+    def if_then(self, items):
+        """
+        Transform an IF...THEN control structure.
+        
+        Grammar rule:
+            if_then: IF block THEN
+
+        This method emits:
+          - A conditional jump (ZJMP) instruction with an unresolved jump target.
+          - The list of instructions from the IF block.
+          - A label marker instruction marking the end of the IF block (for backpatching).
+        """
+        # Expected items: [IF_token, block, THEN_token]
+        # Use the IF token for location reference (fallback to THEN token if needed)
+        ref_token = items[0] if hasattr(items[0], "line") else items[2]
+        
+        # Generate a unique label name for the end of the IF block.
+        label_name = self._generate_unique_label("if_end")
+        
+        # Create a conditional jump instruction, leaving its target unresolved.
+        cond_jump = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["ZJMP"],
+            token=ref_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=label_name,
+            instr_text="IF"
+        )
+        
+        # Process the block of statements enclosed between IF and THEN.
+        block_stmts = []
+        if isinstance(items[1], list):
+            for stmt in items[1]:
+                if isinstance(stmt, list):
+                    block_stmts.extend(stmt)
+                else:
+                    block_stmts.append(stmt)
+        else:
+            block_stmts.append(items[1])
+        
+        # Create a label marker instruction to denote the end of the IF block for backpatching.
+        label_marker = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=ref_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=label_name,
+            instr_text=f"{label_name}:"
+        )
+        
+        # Return the complete instruction list for the IF...THEN construct.
+        return [cond_jump] + block_stmts + [label_marker]
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))

@@ -12,6 +12,15 @@ COMMENT: "//" /[^\n]*/ "\n"?
 HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#-?[0-9]+/
 
+// Control Structure Keywords (added with higher priority)
+IF.2: "IF"
+ELSE.2: "ELSE"
+THEN.2: "THEN"
+BEGIN.2: "BEGIN"
+UNTIL.2: "UNTIL"
+WHILE.2: "WHILE"
+REPEAT.2: "REPEAT"
+
 // Add to directive tokens
 ORG.2: "ORG"
 
@@ -92,11 +101,10 @@ R_PLUS_1: "r+1"
 R_MINUS_1: "r-1"
 R_MINUS_2: "r-2"
 
-
 // Program structure
 ?start: program
 program: (statement | org_directive)*
-statement: label | instruction | macro_def | include_stmt | subroutine_def
+statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
 org_directive: ORG number
 
 // Add include statement rule
@@ -113,7 +121,7 @@ labelref: IDENT
 instruction: number            // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
-          | call_expr        // Macro or subroutine invocation
+          | call_expr         // Macro or subroutine invocation
 
 // Jump operations
 jump_op: (JMP | ZJMP | CALL) labelref
@@ -152,7 +160,6 @@ basic_alu: T
 // Modifiers
 modifiers: LBRACKET modifier_list RBRACKET
 modifier_list: modifier (COMMA modifier)*
-
 modifier: stack_effect
        | stack_delta
 
@@ -189,5 +196,16 @@ call_expr: IDENT
 // Add subroutine definition rule
 subroutine_def: COLON IDENT STACK_COMMENT? subroutine_body SEMICOLON
 subroutine_body: (instruction | label)+
+
+// New rules for control structures
+control_structure: if_then | if_else_then | loop_until | loop_while
+
+if_then: IF block THEN
+if_else_then: IF block ELSE block THEN
+
+loop_until: BEGIN block UNTIL
+loop_while: BEGIN block WHILE block REPEAT
+
+block: (statement)*
 
 
