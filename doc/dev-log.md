@@ -1,5 +1,13 @@
 # Development Log
 
+## 2025-02-12
+
+- Added THEN operation to support conditional jumps.
+- Added IF operation to support conditional jumps.
+- Added test cases for IF and THEN operations.
+- Byte code looks correct.
+- TODO: Fix missing labels in listing file.
+
 ## 2025-02-09
 
 - Fixed subroutine definition to use the word address of the first instruction in the body as the subroutine label address.
