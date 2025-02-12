@@ -835,60 +835,72 @@ class J1Assembler(Transformer):
         self._label_counter += 1
         return label_name
 
-    def if_then(self, items):
+    def if_op(self, items):
         """
-        Transform an IF...THEN control structure.
-        
-        Grammar rule:
-            if_then: IF block THEN
+        Transform an IF operation.
 
-        This method emits:
-          - A conditional jump (ZJMP) instruction with an unresolved jump target.
-          - The list of instructions from the IF block.
-          - A label marker instruction marking the end of the IF block (for backpatching).
+        Grammar rule:
+            if_op: IF
+
+        This method immediately emits a conditional jump (ZJMP) instruction,
+        with its jump target being unresolved. It also pushes the generated unique
+        label onto a stack for later backpatching by THEN.
         """
-        # Expected items: [IF_token, block, THEN_token]
-        # Use the IF token for location reference (fallback to THEN token if needed)
-        ref_token = items[0] if hasattr(items[0], "line") else items[2]
-        
-        # Generate a unique label name for the end of the IF block.
+        # Expected items: [IF_token]
+        token_if = items[0]
         label_name = self._generate_unique_label("if_end")
         
-        # Create a conditional jump instruction, leaving its target unresolved.
+        # Create the conditional jump instruction with the generated label.
+        # Note that we now update the source information to show "ZJMP <label>".
         cond_jump = InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
             value=JUMP_OPS["ZJMP"],
-            token=ref_token,
+            token=token_if,
             filename=self.current_file,
             source_lines=self.source_lines,
             label_name=label_name,
-            instr_text="IF"
+            instr_text=f"ZJMP {label_name}"
         )
+        # Assign a word address to the jump instruction.
+        cond_jump.word_addr = self.addr_space.advance()
         
-        # Process the block of statements enclosed between IF and THEN.
-        block_stmts = []
-        if isinstance(items[1], list):
-            for stmt in items[1]:
-                if isinstance(stmt, list):
-                    block_stmts.extend(stmt)
-                else:
-                    block_stmts.append(stmt)
-        else:
-            block_stmts.append(items[1])
+        # Push the label onto the IF stack for later resolution.
+        if not hasattr(self, "if_stack"):
+            self.if_stack = []
+        self.if_stack.append(label_name)
         
-        # Create a label marker instruction to denote the end of the IF block for backpatching.
-        label_marker = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL,
-            value=0,
-            token=ref_token,
-            filename=self.current_file,
-            source_lines=self.source_lines,
-            label_name=label_name,
-            instr_text=f"{label_name}:"
-        )
+        return cond_jump
+
+    def then_op(self, items):
+        """
+        Transform a THEN operation.
+
+        Grammar rule:
+            then_op: THEN
+
+        This method performs the following:
+          - It pops the corresponding IF label from the stack.
+          - It registers (backpatches) that label with the current word address.
+          
+        No instruction is generated for THEN—its effect is to mark the current address.
+        """
+        # Expected items: [THEN_token]
+        token_then = items[0]
+        if not hasattr(self, "if_stack") or not self.if_stack:
+            raise ValueError(f"{self.current_file}:{token_then.line}:{token_then.column}: THEN without matching IF")
         
-        # Return the complete instruction list for the IF...THEN construct.
-        return [cond_jump] + block_stmts + [label_marker]
+        # Pop the matching label.
+        label_name = self.if_stack.pop()
+        
+        # Register (backpatch) the label with the current word address.
+        # Note: We do not advance the word address here.
+        label_addr = self.addr_space.get_word_address()
+        self.labels[label_name] = label_addr
+        
+        # Optionally add this label into the symbol metadata.
+        # (Typically label definitions do not generate a new instruction word.)
+        # Return an empty list so that THEN produces no output line.
+        return []
 
 
 @click.command()

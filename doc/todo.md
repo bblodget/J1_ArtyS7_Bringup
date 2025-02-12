@@ -60,18 +60,15 @@
     - [x] Update grammar to recognize bare identifiers as calls
     - [x] Maintain backward compatibility with explicit CALL
     - [x] Add documentation for both calling styles
-  - [ ] Entry Point Handling
-    - [ ] Remove temporary JMP start from library files
-    - [ ] Add proper entry point handling
-    - [ ] Add entry point directive to grammar
-    - [ ] Test with multiple library includes
-  - [ ] Address and Memory Management
+  - [x] Entry Point Handling
+    - [x] Remove temporary JMP start from library files
+  - [x] Address and Memory Management
     - [x] Enhanced Listing Output
       - [x] Show both byte and word addresses
       - [x] Add address column headers (BYTE/WORD)
       - [x] Align address columns
-    - [ ] Origin Directive Support
-      - [ ] Add 'ORG' keyword to grammar
+    - [x] Origin Directive Support
+      - [x] Add 'ORG' keyword to grammar
       - [ ] Implement address space management
       - [ ] Handle non-contiguous code blocks
       - [ ] Add collision detection
@@ -176,7 +173,7 @@
 
 ## Future Enhancements
 - [ ] Forth-like Syntax
-  - [ ] Function definitions (`: name ... ;`)
+  - [x] Function definitions (`: name ... ;`)
   - [ ] Stack effect validation
   - [ ] Optimization directives
 - [ ] Binary Output Support
