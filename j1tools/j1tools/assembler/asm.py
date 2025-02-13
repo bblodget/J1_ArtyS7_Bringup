@@ -859,10 +859,8 @@ class J1Assembler(Transformer):
             filename=self.current_file,
             source_lines=self.source_lines,
             label_name=label_name,
-            instr_text=f"ZJMP {label_name}"
+            instr_text=f"ZJMP {label_name}: IF",
         )
-        # Assign a word address to the jump instruction.
-        cond_jump.word_addr = self.addr_space.advance()
         
         # Push the label onto the IF stack for later resolution.
         if not hasattr(self, "if_stack"):
@@ -895,12 +893,24 @@ class J1Assembler(Transformer):
         # Register (backpatch) the label with the current word address.
         # Note: We do not advance the word address here.
         label_addr = self.addr_space.get_word_address()
-        self.labels[label_name] = label_addr
+        # self.labels[label_name] = label_addr
+
+        # Create metadata for the label
+        label_metadata = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=label_addr,
+            token=token_then,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{label_name}: THEN",
+            label_name=label_name,
+            word_addr=label_addr,
+        )
         
         # Optionally add this label into the symbol metadata.
         # (Typically label definitions do not generate a new instruction word.)
         # Return an empty list so that THEN produces no output line.
-        return []
+        return [label_metadata]
 
 
 @click.command()
