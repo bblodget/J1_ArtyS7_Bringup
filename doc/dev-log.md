@@ -1,5 +1,23 @@
 # Development Log
 
+## 2025-02-13
+
+- Implemented Forth-style IF/THEN control structures:
+  - Added IF and THEN tokens to grammar
+  - Removed old if_then rule in favor of separate if_op and then_op rules
+  - IF generates ZJMP instruction with unique label
+  - THEN generates label marker for backpatching
+  - Added if_stack to track nested IF/THEN pairs
+  - Updated listing output to show:
+    - ZJMP instructions with target labels
+    - Label markers at correct word addresses
+  - Verified correct bytecode generation
+  - Added test case (if_then.asm) demonstrating:
+    - True condition branch execution
+    - False condition branch skipping
+    - Proper label resolution
+    - Correct word addressing
+
 ## 2025-02-12
 
 - Added THEN operation to support conditional jumps.

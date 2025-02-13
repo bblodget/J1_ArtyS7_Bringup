@@ -80,6 +80,21 @@
 
 ## Current Development Focus
 
+### Control Structures
+- [x] IF THEN
+  - [x] Grammar support
+  - [x] Instruction generation
+  - [x] Label management
+  - [x] Backpatching
+  - [x] Test coverage
+- [ ] IF ELSE THEN
+- [ ] BEGIN UNTIL
+- [ ] BEGIN WHILE REPEAT
+- [ ] Documentation
+  - [ ] Control structure examples
+  - [ ] Stack effect documentation
+  - [ ] Machine code mappings
+
 ### Hardware Testing
 - [ ] UART Testing
   - [ ] Hardware timing verification
@@ -135,11 +150,6 @@
 
 ### High-Level Assembly Support
 - [ ] Case insensitive keywords
-- [ ] Control Structures
-  - [ ] IF THEN
-  - [ ] IF ELSE THEN
-  - [ ] BEGIN UNTIL
-  - [ ] BEGIN WHILE REPEAT
 - [ ] Documentation
   - [ ] Control structure examples
   - [ ] Stack effect documentation
