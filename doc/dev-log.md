@@ -1,5 +1,13 @@
 # Development Log
 
+## 2025-02-14
+
+- Updated IF ELSE THEN control structure implementation:
+  - Modified the `else_op` method in `asm.py` to emit an unconditional JMP **before** generating the false branch label.
+  - Ensured that the false branch label now appears after the JMP, providing correct backpatching for control flow.
+  - Verified via symbol and listing outputs that labels (e.g., `if_false_0` and `if_end_1`) are correctly ordered.
+  - Tested with `if_else_then.asm` to confirm that for a true condition, the false branch is skipped, and for a false condition, the false branch is executed.
+
 ## 2025-02-13
 
 - Implemented Forth-style IF/THEN control structures:

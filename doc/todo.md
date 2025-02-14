@@ -87,7 +87,7 @@
   - [x] Label management
   - [x] Backpatching
   - [x] Test coverage
-- [ ] IF ELSE THEN
+- [x] IF ELSE THEN
 - [ ] BEGIN UNTIL
 - [ ] BEGIN WHILE REPEAT
 - [ ] Documentation
