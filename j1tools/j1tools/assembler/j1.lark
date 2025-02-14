@@ -123,6 +123,7 @@ instruction: number            // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
           | if_op             // IF control operation
+          | else_op           // ELSE control operation
           | then_op           // THEN control operation
           | call_expr         // Macro or subroutine invocation
 
@@ -214,5 +215,6 @@ block: (statement)*
 // New rules for control operations as standalone instructions
 if_op: IF
 then_op: THEN
+else_op: ELSE
 
 
