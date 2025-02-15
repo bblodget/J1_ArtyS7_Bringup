@@ -3,6 +3,7 @@
 ## 2025-02-15
 
 - Created new nested_if_then test case
+- Refactored IF THEN control structure to use new `if_then` rule
 
 
 ## 2025-02-14
