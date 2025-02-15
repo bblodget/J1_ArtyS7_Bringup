@@ -105,7 +105,7 @@ R_MINUS_2: "r-2"
 ?start: program
 program: (statement | org_directive)*
 // statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
-statement: label | instruction | macro_def | include_stmt | subroutine_def
+statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
 org_directive: ORG number
 
 // Add include statement rule
@@ -122,9 +122,6 @@ labelref: IDENT
 instruction: number            // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
-          | if_op             // IF control operation
-          | else_op           // ELSE control operation
-          | then_op           // THEN control operation
           | call_expr         // Macro or subroutine invocation
 
 // Jump operations
@@ -198,23 +195,29 @@ macro_body: instruction+
 call_expr: IDENT
 
 // Add subroutine definition rule
-subroutine_def: COLON IDENT STACK_COMMENT? subroutine_body SEMICOLON
-subroutine_body: (instruction | label)+
+subroutine_def: COLON IDENT STACK_COMMENT? block SEMICOLON
+//subroutine_body: (instruction | label)+
+block: (block_item)*
+
+?block_item: instruction
+        | label
+        | control_structure
 
 // New rules for control structures
 // control_structure: if_then | if_else_then | loop_until | loop_while
+?control_structure: if_then | if_else_then 
 
-// if_then: IF block THEN
-// if_else_then: IF block ELSE block THEN
+if_then: IF block THEN
+if_else_then: IF block ELSE block THEN
 
 // loop_until: BEGIN block UNTIL
 // loop_while: BEGIN block WHILE block REPEAT
 
-block: (statement)*
+//block: (statement)*
 
 // New rules for control operations as standalone instructions
-if_op: IF
-then_op: THEN
-else_op: ELSE
+// if_op: IF
+// then_op: THEN
+// else_op: ELSE
 
 

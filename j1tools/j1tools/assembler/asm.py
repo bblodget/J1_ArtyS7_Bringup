@@ -835,120 +835,93 @@ class J1Assembler(Transformer):
         self._label_counter += 1
         return label_name
 
-    def if_op(self, items):
+    def if_then(self, items):
         """
-        Transform an IF operation.
-
-        Grammar rule:
-            if_op: IF
-
-        This method immediately emits a conditional jump (ZJMP) instruction,
-        with its jump target being unresolved. It also pushes the generated unique
-        label onto a stack for later backpatching by THEN.
-        """
-        # Expected items: [IF_token]
-        token_if = items[0]
-        label_name = self._generate_unique_label("if_false")
+        Transform an IF THEN control structure.
         
-        # Create the conditional jump instruction with the generated label.
-        # Note that we now update the source information to show "ZJMP <label>".
+        Grammar rule:
+            if_then: IF block THEN
+            
+        Because the block instructions have already been assigned addresses,
+        we first determine the starting address of the block. Then, we insert a 
+        conditional jump at that address and adjust the addresses of all block
+        instructions by incrementing them by one.
+        
+        This method generates:
+        1. A conditional jump (ZJMP) inserted before the block.
+        2. The adjusted block instructions.
+        3. A label marking the end of the IF block.
+        """
+        # items[0] is the IF token, items[1] is the block tree, items[2] is the THEN token.
+        if_token = items[0]
+        block_tree = items[1]
+        then_token = items[2]
+
+        # Generate a unique label for the false branch.
+        false_label = self._generate_unique_label("if_false")
+
+        # Process the block instructions (they already have addresses).
+        if not isinstance(block_tree, Tree):
+            raise ValueError("Block tree is not a valid tree")
+        
+        block_instructions = [] 
+        for instruction in block_tree.children:
+            if isinstance(instruction, list):
+                block_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                block_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+
+        # Determine the start address of the block.
+        # If there are instructions, use the first one's address;
+        # otherwise, use the current address from the address space.
+        if block_instructions:
+            first_instr = block_instructions[0]
+            block_start_addr = first_instr.word_addr
+        else:
+            block_start_addr = self.addr_space.get_word_address()
+
+        # Create the conditional jump instruction at the block's start address.
         cond_jump = InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
             value=JUMP_OPS["ZJMP"],
-            token=token_if,
+            token=if_token,
             filename=self.current_file,
             source_lines=self.source_lines,
-            label_name=label_name,
-            instr_text=f"ZJMP {label_name}: IF",
+            label_name=false_label,
+            instr_text=f"ZJMP {false_label}: IF",
+            word_addr=block_start_addr,
         )
-        
-        # Push the label onto the IF stack for later resolution.
-        if not hasattr(self, "if_stack"):
-            self.if_stack = []
-        self.if_stack.append(label_name)
-        
-        return cond_jump
 
-    def then_op(self, items):
-        """
-        Transform a THEN operation by backpatching the jump.
-        It pops the pending label—either the false branch label (for IF THEN)
-        or the unconditional jump label (for IF ELSE THEN)—and creates a label marker.
-        """
-        token_then = items[0]
-        if not hasattr(self, "if_stack") or not self.if_stack:
-            raise ValueError(
-                f"{self.current_file}:{token_then.line}:{token_then.column}: "
-                "THEN without matching IF or ELSE"
-            )
-        
-        label_name = self.if_stack.pop()
-        
+        # We inserted the jump instruction before the block;
+        # update the addresses of all block instructions by +1.
+        for instr in block_instructions:
+            instr.word_addr += 1
+
+        # Advance the address space since we added the JUMP instruction
+        self.addr_space.advance()
+
+        # End label points at word after last word in block
+        end_label_addr = instr.word_addr + 1
+
         then_label_instr = InstructionMetadata.from_token(
             inst_type=InstructionType.LABEL,
-            value=self.addr_space.get_word_address(),
-            token=token_then,
+            value=0,  # Labels do not carry machine code value.
+            token=then_token,
             filename=self.current_file,
             source_lines=self.source_lines,
-            instr_text=f"{label_name}: THEN",
-            label_name=label_name,
-            word_addr=self.addr_space.get_word_address(),
-        )
-        return [then_label_instr]
-
-    def else_op(self, items):
-        """
-        Transform an ELSE operation.
-
-        This method does the following:
-          - Pops the pending false branch label generated by the IF.
-          - Backpatches the false branch target to the current word address by
-            emitting a label marker (for the ELSE block).
-          - Emits an unconditional JMP instruction with a new label (to skip the ELSE
-            block when the condition is true).
-          - Pushes the new label onto the IF stack so that THEN can later resolve it.
-        """
-        token_else = items[0]
-        if not hasattr(self, "if_stack") or not self.if_stack:
-            raise ValueError(
-                f"{self.current_file}:{token_else.line}:{token_else.column}: "
-                "ELSE without matching IF"
-            )
-        
-        # Pop the false branch label from the IF clause.
-        false_label = self.if_stack.pop()
-        
-        # Generate an unconditional JMP to skip over the ELSE block.
-        new_label = self._generate_unique_label("if_end")
-        jmp_instr = InstructionMetadata.from_token(
-            inst_type=InstructionType.JUMP,
-            value=JUMP_OPS["JMP"],  # Unconditional jump opcode
-            token=token_else,
-            filename=self.current_file,
-            source_lines=self.source_lines,
-            label_name=new_label,
-            instr_text=f"JMP {new_label}: ELSE",
-        )
-        # Manually advance the word address for the jump instruction.
-        jmp_instr.word_addr = self.addr_space.advance()
-        
-        # Push the new label onto the IF control stack.
-        self.if_stack.append(new_label)
-
-        # Backpatch: Define the false branch label at the current address (start of ELSE).
-        false_label_instr = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL,
-            value=self.addr_space.get_word_address(),
-            token=token_else,
-            filename=self.current_file,
-            source_lines=self.source_lines,
-            instr_text=f"{false_label}: ELSE",
+            instr_text=f"{false_label}: THEN",
             label_name=false_label,
-            word_addr=self.addr_space.get_word_address(),
+            word_addr=end_label_addr,
         )
-        
-        # Return the two instructions generated for ELSE.
-        return [false_label_instr, jmp_instr]
+
+
+        # Return the complete sequence:
+        # 1. The conditional jump,
+        # 2. The adjusted block instructions,
+        # 3. And finally the THEN label.
+        return [cond_jump] + block_instructions + [then_label_instr]
 
 
 @click.command()

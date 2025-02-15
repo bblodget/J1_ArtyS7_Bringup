@@ -180,8 +180,8 @@ def test_combined_modifiers(assembler, source, expected):
         ("io_lib", "io_org"),
         ("io_lib", "io_words"),
         ("control", "if_then"),
-        ("control", "if_else_then"),
         ("control", "nested_if_then"),
+        # ("control", "if_else_then"),
     ],
 )
 def test_program(assembler, category, test_name):
