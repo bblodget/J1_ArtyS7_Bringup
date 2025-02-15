@@ -1,5 +1,10 @@
 # Development Log
 
+## 2025-02-15
+
+- Created new nested_if_then test case
+
+
 ## 2025-02-14
 
 - Updated IF ELSE THEN control structure implementation:
