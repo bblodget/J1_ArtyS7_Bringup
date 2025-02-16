@@ -1183,6 +1183,144 @@ class J1Assembler(Transformer):
         # Return complete sequence
         return [begin_label_instr] + block_instructions + [jump_instr]
 
+    def loop_while(self, items):
+        """
+        Transform a BEGIN ... WHILE ... REPEAT loop structure.
+        
+        Grammar rule:
+            loop_while: BEGIN block WHILE block REPEAT
+            
+        This transforms:
+            BEGIN
+                block1          ; First block executes unconditionally
+            WHILE              ; Block1 leaves test condition on stack
+                block2          ; Second block executes if condition is true
+            REPEAT             ; Jump back to BEGIN
+            next_instr
+            
+        Into:
+            +begin_label:
+            block1             ; First block code
+            ZJMP exit_label    ; If condition is false, exit loop
+            block2             ; Second block code
+            JMP begin_label    ; Jump back to start unconditionally
+            +exit_label:       ; Target for condition == false
+            next_instr
+        """
+        begin_token = items[0]    # BEGIN token
+        block1_tree = items[1]    # First block tree
+        while_token = items[2]    # WHILE token
+        block2_tree = items[3]    # Second block tree
+        repeat_token = items[4]   # REPEAT token
+        
+        # Generate unique labels for loop start and exit
+        begin_label = self._generate_unique_label("begin")
+        exit_label = self._generate_unique_label("exit")
+        
+        ##############################################################################
+        # Process block1 instructions
+        ##############################################################################
+        if not isinstance(block1_tree, Tree):
+            raise ValueError("Block1 tree is not a valid tree")
+        
+        block1_instructions = []
+        for instruction in block1_tree.children:
+            if isinstance(instruction, list):
+                block1_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                block1_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+            
+        ##############################################################################
+        # Process block2 instructions
+        ##############################################################################
+        if not isinstance(block2_tree, Tree):
+            raise ValueError("Block2 tree is not a valid tree")
+        
+        block2_instructions = []
+        for instruction in block2_tree.children:
+            if isinstance(instruction, list):
+                block2_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                block2_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+        
+        # Increment addresses of block2 instructions by 1 to make room for the ZJMP
+        for instr in block2_instructions:
+            instr.word_addr += 1
+        
+        ##############################################################################
+        # Create begin label at start of block1
+        ##############################################################################
+        begin_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=begin_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{begin_label}: BEGIN",
+            label_name=begin_label,
+            word_addr=block1_instructions[0].word_addr
+        )
+        
+        ##############################################################################
+        # Create conditional jump to exit after WHILE condition
+        ##############################################################################
+        cond_jump = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["ZJMP"],
+            token=while_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=exit_label,
+            instr_text=f"ZJMP {exit_label}: WHILE",
+            word_addr=block1_instructions[-1].word_addr + 1
+        )
+        
+        ##############################################################################
+        # Create unconditional jump back to begin at end of block2
+        ##############################################################################
+        repeat_jump = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["JMP"],
+            token=repeat_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=begin_label,
+            instr_text=f"JMP {begin_label}: REPEAT",
+            word_addr=block2_instructions[-1].word_addr + 1
+        )
+        
+        ##############################################################################
+        # Create exit label after the loop
+        ##############################################################################
+        exit_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=repeat_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{exit_label}: END-WHILE",
+            label_name=exit_label,
+            word_addr=repeat_jump.word_addr + 1
+        )
+        
+        # Advance address space for both jump instructions
+        self.addr_space.advance()  # For ZJMP
+        self.addr_space.advance()  # For JMP
+        
+        # Return complete sequence:
+        # 1. Begin label
+        # 2. Block1 instructions
+        # 3. Conditional jump to exit
+        # 4. Block2 instructions
+        # 5. Unconditional jump back to begin
+        # 6. Exit label
+        return [begin_label_instr] + block1_instructions + [cond_jump] + \
+               block2_instructions + [repeat_jump, exit_label_instr]
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))

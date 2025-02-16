@@ -205,13 +205,20 @@ block: (block_item)+
 
 // New rules for control structures
 // control_structure: if_then | if_else_then | loop_until | loop_while
-?control_structure: if_then | if_else_then | loop_until
+?control_structure: if_then | if_else_then | loop_until | loop_while
 
 if_then: IF block THEN
 if_else_then: IF block ELSE block THEN
 
 loop_until: BEGIN block UNTIL
-// loop_while: BEGIN block WHILE block REPEAT
+loop_while: BEGIN block WHILE block REPEAT
+
+// Note: We could modify the loop_while as follows:
+// loop_while: BEGIN block? WHILE block REPEAT
+// This would allow us to have an optional block before the WHILE loop.
+// This would allow c-style while loops
+// We'll stick to the traditional forth style for now.
+// If you don't want the unconditional block, you can put a noop there.
 
 //block: (statement)*
 

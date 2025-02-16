@@ -18,7 +18,9 @@ macro: xor     ( a b -- c )        T^N[d-1] ;
 macro: invert  ( a -- ~a )         ~T ;
 macro: =       ( a b -- f )        N==T[d-1] ;
 macro: <       ( a b -- f )        N<T[d-1] ;
+macro: >       ( a b -- f )        swap <     ;
 macro: u<      ( a b -- f )        Nu<T[d-1] ;
+macro: u>      ( a b -- f )        swap u<    ;
 macro: 2/      ( n -- n/2 )        T2/ ;
 macro: 2*      ( n -- n*2 )        T2* ;
 

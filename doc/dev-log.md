@@ -7,6 +7,7 @@
 - Refactored the `if_else_then` rule and method
 - Created the `loop_until` rule and method and test case
 - Created the `nested_loop_until` test case
+- Created the `loop_while` rule and method and test case
 
 
 
