@@ -197,7 +197,7 @@ call_expr: IDENT
 // Add subroutine definition rule
 subroutine_def: COLON IDENT STACK_COMMENT? block SEMICOLON
 //subroutine_body: (instruction | label)+
-block: (block_item)*
+block: (block_item)+
 
 ?block_item: instruction
         | label

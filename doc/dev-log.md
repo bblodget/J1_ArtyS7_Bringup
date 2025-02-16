@@ -4,6 +4,8 @@
 
 - Created new nested_if_then test case
 - Refactored IF THEN control structure to use new `if_then` rule
+- Refactored the `if_else_then` rule and method
+
 
 
 ## 2025-02-14

@@ -923,6 +923,195 @@ class J1Assembler(Transformer):
         # 3. And finally the THEN label.
         return [cond_jump] + block_instructions + [then_label_instr]
 
+    def if_else_then(self, items):
+        """
+        Transform an IF ELSE THEN control structure.
+        
+        Grammar rule:
+            if_else_then: IF block ELSE block THEN
+            
+        This transformation converts:
+            IF
+                true_block
+            ELSE
+                false_block
+            THEN
+            next_instr
+
+        Into:
+            +ZJMP if_false_label   ; Jump to false block if condition is false
+            true_block             ; Execute if condition was true
+            +JMP if_end_label      ; Skip over false block
+            +if_false_label:       ; Target for condition == false
+            false_block            ; Execute if condition was false
+            +if_end_label:         ; Continue with next instruction
+            next_instr
+
+        The + indicates instructions/labels we insert. Because the block 
+        instructions already have addresses assigned, we:
+        1. Insert ZJMP before true_block (adjust true_block addresses by +1)
+        2. Insert JMP after true_block
+        3. Insert if_false_label before false_block (adjust false_block addresses by +1)
+        4. Insert if_end_label after false_block
+        """
+        # Unpack tokens and block trees from the items.
+        # items[0] is the IF token.
+        # items[1] is the true block tree.
+        # items[2] is the ELSE token.
+        # items[3] is the false block tree.
+        # items[4] is the THEN token.
+        if_token = items[0]
+        true_block_tree = items[1]
+        else_token = items[2]
+        false_block_tree = items[3]
+        then_token = items[4]
+
+        # Generate unique labels for the false branch and the end of the IF ELSE structure.
+        false_label = self._generate_unique_label("if_false")
+        end_label = self._generate_unique_label("if_end")
+
+        ##############################################################################
+        # Process the TRUE block.
+        ##############################################################################
+        # Process the block instructions (they already have addresses).
+        if not isinstance(true_block_tree, Tree):
+            raise ValueError("TRUE block tree is not a valid tree")
+
+        true_instructions = [] 
+        for instruction in true_block_tree.children:
+            if isinstance(instruction, list):
+                true_instructions.extend(instruction)
+            #elif isinstance(instruction, InstructionMetadata):
+            #    true_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+
+        # Increment the addresses of all true block instructions by +1.
+        # So we can insert the conditional jump at the start of the true block.
+        for instr in true_instructions:
+            instr.word_addr += 1
+
+        ##############################################################################
+        # Process the FALSE block.
+        ##############################################################################
+        # Process the block instructions (they already have addresses).
+        if not isinstance(false_block_tree, Tree):
+            raise ValueError("FALSE block tree is not a valid tree")
+        
+        false_instructions = [] 
+        for instruction in false_block_tree.children:
+            if isinstance(instruction, list):
+                false_instructions.extend(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+
+        # Increment the address of all the false block instructions by +2.
+        # So we can insert the conditional jump at the start of the true block.
+        # And the JMP if_end_label after the true block.
+        for instr in false_instructions:
+            instr.word_addr += 2
+
+        ##############################################################################
+        # Insert ZJMP if_false before the true block.
+        ##############################################################################
+
+        # Determine the starting address of the true block.
+        if true_instructions:
+            true_start_addr = true_instructions[0].word_addr
+        else:
+            raise ValueError("True block is empty")
+
+        # Create a conditional jump (ZJMP) at the true block's start address.
+        cond_jump = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["ZJMP"],
+            token=if_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=false_label,
+            instr_text=f"ZJMP {false_label}: IF",
+            word_addr=(true_start_addr-1),
+        )
+
+        ##############################################################################
+        # Insert JMP if_end after the true block to skip the false block.
+        ##############################################################################
+
+        # Determine the ending address of the true block.
+        true_end_addr = true_instructions[-1].word_addr
+
+        # Create an unconditional jump (JMP) at the end of the true block.
+        # This will skip the false block if the condition is true.
+        uncond_jump = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["JMP"],
+            token=else_token,  # Using the ELSE token; you could also create a synthetic token.
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=end_label,
+            instr_text=f"JMP {end_label}: ELSE",
+            word_addr=(true_end_addr+1),
+        )
+
+        ##############################################################################
+        # Insert the false block label at the false block's start address.
+        ##############################################################################
+
+        # Determine the starting address of the false block.
+        if false_instructions:
+            false_start_addr = false_instructions[0].word_addr
+        else:
+            raise ValueError("False block is empty")
+
+        # Insert the false block label at the false block's start address.
+        false_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,  # Labels carry no machine-code value.
+            token=else_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{false_label}: ELSE",
+            label_name=false_label,
+            word_addr=false_start_addr,
+        )
+
+        ##############################################################################
+        # Insert the end if label after the false block.
+        ##############################################################################
+
+        # Determine the ending address of the false block.
+        false_end_addr = false_instructions[-1].word_addr
+
+        # Insert the end if label at the end of the false block.
+        end_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=then_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{end_label}: THEN",
+            label_name=end_label,
+            word_addr=(false_end_addr+1),
+        )
+
+        ##############################################################################
+        # Advance the address space to account for the two new jump instructions.
+        ##############################################################################
+        self.addr_space.advance()
+        self.addr_space.advance()
+
+
+        ##############################################################################
+        # Return the complete sequence:
+        # 1. The conditional jump (ZJMP) for the IF.
+        # 2. The adjusted true block instructions.
+        # 3. The unconditional jump (JMP) to skip the false block.
+        # 4. The false block label instruction.
+        # 5. The adjusted false block instructions.
+        # 6. The THEN label instruction.
+        ##############################################################################
+        return [cond_jump] + true_instructions + [uncond_jump, false_label_instr] + false_instructions + [end_label_instr]
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
