@@ -57,3 +57,8 @@ macro: overor  ( a b -- a a|b )    T|N ;
 macro: over+   ( a b -- a a+b )    T+N ;
 macro: overu>  ( a b -- a b>ua )   Nu<T ;
 macro: overxor ( a b -- a a^b )    T^N ;
+
+// Loop index access macros
+macro: i     ( -- n )    r@ ;            // Get innermost loop index
+macro: j     ( -- n )    r> r> r@ >r >r ;  // Get next-outer loop index
+macro: k     ( -- n )    r> r> r> r> r@ >r >r >r >r ;  // Get third-level loop index

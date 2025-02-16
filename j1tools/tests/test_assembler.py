@@ -186,6 +186,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "nested_loop_until"),
         ("control", "loop_while"),
         ("control", "do_loop"),
+        ("control", "nested_do_loop"),
     ],
 )
 def test_program(assembler, category, test_name):
