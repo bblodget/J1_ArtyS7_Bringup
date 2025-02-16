@@ -205,12 +205,12 @@ block: (block_item)+
 
 // New rules for control structures
 // control_structure: if_then | if_else_then | loop_until | loop_while
-?control_structure: if_then | if_else_then 
+?control_structure: if_then | if_else_then | loop_until
 
 if_then: IF block THEN
 if_else_then: IF block ELSE block THEN
 
-// loop_until: BEGIN block UNTIL
+loop_until: BEGIN block UNTIL
 // loop_while: BEGIN block WHILE block REPEAT
 
 //block: (statement)*

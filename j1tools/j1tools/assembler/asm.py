@@ -981,8 +981,8 @@ class J1Assembler(Transformer):
         for instruction in true_block_tree.children:
             if isinstance(instruction, list):
                 true_instructions.extend(instruction)
-            #elif isinstance(instruction, InstructionMetadata):
-            #    true_instructions.append(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                true_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
 
@@ -1002,6 +1002,8 @@ class J1Assembler(Transformer):
         for instruction in false_block_tree.children:
             if isinstance(instruction, list):
                 false_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                false_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
 
@@ -1111,6 +1113,75 @@ class J1Assembler(Transformer):
         # 6. The THEN label instruction.
         ##############################################################################
         return [cond_jump] + true_instructions + [uncond_jump, false_label_instr] + false_instructions + [end_label_instr]
+
+    def loop_until(self, items):
+        """
+        Transform a BEGIN ... UNTIL loop structure.
+        
+        Grammar rule:
+            loop_until: BEGIN block UNTIL
+            
+        This transforms:
+            BEGIN
+                block           ; Block leaves test condition on stack
+            UNTIL
+            next_instr
+            
+        Into:
+            +begin_label:
+            block              ; Block code, leaves condition on stack
+            ZJMP begin_label   ; Jump back to begin if condition is false
+            next_instr
+        """
+        begin_token = items[0]  # BEGIN token
+        block_tree = items[1]   # block tree
+        until_token = items[2]  # UNTIL token
+        
+        # Generate unique label for loop start
+        begin_label = self._generate_unique_label("begin")
+        
+        # Process block instructions
+        if not isinstance(block_tree, Tree):
+            raise ValueError("Block tree is not a valid tree")
+        
+        block_instructions = []
+        for instruction in block_tree.children:
+            if isinstance(instruction, list):
+                block_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                block_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+                
+        # Create begin label at start of block
+        begin_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=begin_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{begin_label}: BEGIN",
+            label_name=begin_label,
+            word_addr=block_instructions[0].word_addr
+        )
+        
+        # Create conditional jump back to begin
+        jump_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.JUMP,
+            value=JUMP_OPS["ZJMP"],
+            token=until_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            label_name=begin_label,
+            instr_text=f"ZJMP {begin_label}: UNTIL",
+            word_addr=block_instructions[-1].word_addr + 1
+        )
+        
+        # Advance address space for the jump instruction
+        self.addr_space.advance()
+        
+        # Return complete sequence
+        return [begin_label_instr] + block_instructions + [jump_instr]
 
 
 @click.command()

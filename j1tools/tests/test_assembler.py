@@ -182,6 +182,8 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "if_then"),
         ("control", "nested_if_then"),
         ("control", "if_else_then"),
+        ("control", "loop_until"),
+        ("control", "nested_loop_until"),
     ],
 )
 def test_program(assembler, category, test_name):
