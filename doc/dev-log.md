@@ -1,5 +1,16 @@
 # Development Log
 
+## 2025-02-16
+
+Implement DO LOOP control structure
+
+- Added DO LOOP grammar rules to j1.lark
+- Implemented do_loop method in asm.py for transforming DO LOOP constructs
+- Created test case for basic DO LOOP
+- Added documentation for DO LOOP implementation plan
+- Updated todo.md with DO LOOP implementation tasks
+- Prepared refactoring plan for future code organization
+
 ## 2025-02-15
 
 - Created new nested_if_then test case

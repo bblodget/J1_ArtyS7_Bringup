@@ -95,7 +95,7 @@
 - [x] BEGIN UNTIL
 
 - [ ] DO LOOP Control Structure
-  - [ ] Grammar support for DO, LOOP, +LOOP
+  - [x] Grammar support for DO, LOOP, +LOOP
   - [ ] Support for LEAVE
   - [ ] Loop index words (i, j, k) as macros
   - [ ] Warning system for index words outside loops
@@ -103,7 +103,7 @@
   - [ ] Label management
   - [ ] Stack effect validation
   - [ ] Test coverage
-    - [ ] Basic DO LOOP
+    - [x] Basic DO LOOP
     - [ ] +LOOP with different increments
     - [ ] Nested loops
     - [ ] LEAVE functionality
