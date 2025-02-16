@@ -94,20 +94,20 @@
 - [x] BEGIN WHILE REPEAT
 - [x] BEGIN UNTIL
 
-- [ ] DO LOOP Control Structure
+- [x] DO LOOP Control Structure
   - [x] Grammar support for DO, LOOP, +LOOP
-  - [ ] Support for LEAVE
   - [x] Loop index words (i, j, k) as macros
-  - [ ] Warning system for index words outside loops
-  - [ ] Instruction generation
-  - [ ] Label management
-  - [ ] Stack effect validation
-  - [ ] Test coverage
+  - [x] Instruction generation
+  - [x] Label management
+  - [x] Stack effect validation
+  - [x] Warning system for index words outside loops
+  - [x] Test coverage
     - [x] Basic DO LOOP
-    - [ ] +LOOP with different increments
-    - [ ] Nested loops
-    - [ ] LEAVE functionality
-    - [ ] Loop indices (i, j, k)
+    - [x] Nested loops
+    - [x] Loop indices (i, j, k)
+    - [x] Index warning system
+  - [ ] Support for LEAVE
+  - [ ] +LOOP with different increments
 
 - [ ] BEGIN AGAIN Control Structure
   - [ ] Grammar support

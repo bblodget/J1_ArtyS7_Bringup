@@ -18,6 +18,15 @@ Add loop index access macros and nested DO LOOP test case
 - Updated test_assembler.py to include nested_do_loop test
 - Added Makefile and test assembly file for nested DO LOOP
 
+Enhance DO LOOP context tracking and warning system
+
+- Implemented robust loop context tracking with depth tracking for nested DO LOOPs
+- Added comprehensive warning system for loop index words (i, j, k)
+- Updated assembler to track loop nesting and provide context-aware warnings
+- Created test case `warn_ijk` to validate loop index word usage rules
+- Modified grammar to support more granular DO LOOP processing
+
+
 ## 2025-02-15
 
 - Created new nested_if_then test case
