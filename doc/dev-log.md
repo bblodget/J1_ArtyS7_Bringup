@@ -11,6 +11,13 @@ Implement DO LOOP control structure
 - Updated todo.md with DO LOOP implementation tasks
 - Prepared refactoring plan for future code organization
 
+Add loop index access macros and nested DO LOOP test case
+
+- Introduced `i`, `j`, and `k` macros in j1_base_macros.asm for accessing loop indices
+- Created nested DO LOOP test case with multiple loop levels
+- Updated test_assembler.py to include nested_do_loop test
+- Added Makefile and test assembly file for nested DO LOOP
+
 ## 2025-02-15
 
 - Created new nested_if_then test case

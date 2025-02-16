@@ -68,20 +68,50 @@ macro: k ( -- n )    \ Get third-level loop index
     r> r> r> r> r@ >r >r >r >r ;
 ```
 
-The assembler tracks DO LOOP context and issues warnings:
+The assembler tracks DO LOOP context using the DO and LOOP operations:
 ```python
-def do_loop(self, items):
+def do_op(self, items):
+    """Process DO operation and enter loop context."""
+    self._do_loop_depth += 1
     self._in_do_loop = True
-    # ... process loop ...
-    self._in_do_loop = False
+    # ... process DO operation ...
+
+def loop_op(self, items):
+    """Process LOOP operation and exit loop context."""
+    # ... process LOOP operation ...
+    self._do_loop_depth -= 1
+    if self._do_loop_depth == 0:
+        self._in_do_loop = False
 
 def call_expr(self, items):
+    """Process word calls with loop context checking."""
     name = str(items[0])
-    if name in ['i', 'j', 'k'] and not getattr(self, '_in_do_loop', False):
-        self.logger.warning(
-            f"{self.current_file}:{items[0].line}:{items[0].column}: "
-            f"'{name}' used outside DO LOOP"
-        )
+    if name in ['i', 'j', 'k']:
+        if not self._in_do_loop:
+            self.logger.warning(
+                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"'{name}' used outside DO LOOP"
+            )
+        elif name == 'j' and self._do_loop_depth < 2:
+            self.logger.warning(
+                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"'j' used in non-nested DO LOOP"
+            )
+        elif name == 'k' and self._do_loop_depth < 3:
+            self.logger.warning(
+                f"{self.current_file}:{items[0].line}:{items[0].column}: "
+                f"'k' used in insufficiently nested DO LOOP (depth: {self._do_loop_depth})"
+            )
+```
+
+This approach:
+1. Tracks loop context at the token level using separate rules for DO and LOOP
+2. Maintains proper nesting depth for nested loops
+3. Provides appropriate warnings for:
+   - Index words used outside any loop
+   - j used without proper nesting (depth < 2)
+   - k used without proper nesting (depth < 3)
+4. Includes file, line, and column information in warnings
 ```
 
 Stack Effects for Index Words:

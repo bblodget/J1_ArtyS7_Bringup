@@ -216,7 +216,8 @@ if_else_then: IF block ELSE block THEN
 
 loop_until: BEGIN block UNTIL
 loop_while: BEGIN block WHILE block REPEAT
-do_loop: DO block (LOOP | PLUS_LOOP)
+// do_loop: DO block (LOOP | PLUS_LOOP)
+do_loop: do_op block (loop_op | plus_loop_op)
 
 // Note: We could modify the loop_while as follows:
 // loop_while: BEGIN block? WHILE block REPEAT
@@ -232,4 +233,9 @@ do_loop: DO block (LOOP | PLUS_LOOP)
 // then_op: THEN
 // else_op: ELSE
 
+
+// DO LOOP control structure
+do_op: DO
+loop_op: LOOP
+plus_loop_op: PLUS_LOOP
 

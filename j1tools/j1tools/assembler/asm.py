@@ -84,6 +84,10 @@ class J1Assembler(Transformer):
 
         self.current_section = '.code'
 
+        # Initialize DO LOOP tracking
+        self._do_loop_depth = 0
+        self._in_do_loop = False
+
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
         if self.main_file == "<unknown>":
@@ -647,9 +651,28 @@ class J1Assembler(Transformer):
         """
         token = items[0]
         name = str(token)
+
+        # Check for loop index words used outside DO LOOP
+        if name in ['i', 'j', 'k']:
+            if not self._in_do_loop:
+                self.logger.warning(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"'{name}' used outside DO LOOP"
+                )
+            elif name == 'j' and self._do_loop_depth < 2:
+                self.logger.warning(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"'j' used in non-nested DO LOOP"
+                )
+            elif name == 'k' and self._do_loop_depth < 3:
+                self.logger.warning(
+                    f"{self.current_file}:{token.line}:{token.column}: "
+                    f"'k' used in insufficiently nested DO LOOP (depth: {self._do_loop_depth})"
+                )
+
         # Check if the identifier is a defined macro
         if self.macro_processor.is_macro(name):
-            # Expand as a macro as before
+            # Expand as a macro
             return self.macro_processor.expand_macro(name, token)
         else:
             # Otherwise, treat it as a subroutine call.
@@ -1515,6 +1538,26 @@ class J1Assembler(Transformer):
         # 3. Block instructions
         # 4. Loop end instructions
         return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
+
+    def do_op(self, items):
+        """Process DO operation and enter loop context."""
+        self._do_loop_depth += 1
+        self._in_do_loop = True
+        return items[0]  # Return the DO token
+
+    def loop_op(self, items):
+        """Process LOOP operation and exit loop context."""
+        self._do_loop_depth -= 1
+        if self._do_loop_depth == 0:
+            self._in_do_loop = False
+        return items[0]  # Return the LOOP token
+
+    def plus_loop_op(self, items):
+        """Process +LOOP operation and exit loop context."""
+        self._do_loop_depth -= 1
+        if self._do_loop_depth == 0:
+            self._in_do_loop = False
+        return items[0]  # Return the +LOOP token
 
 
 @click.command()

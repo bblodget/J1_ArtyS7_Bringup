@@ -1,0 +1,10 @@
+j1asm warn_ijk.asm -o warn_ijk.hex --symbols --listing
+WARNING: warn_ijk.asm:8:5: 'i' used outside DO LOOP
+WARNING: warn_ijk.asm:10:5: 'j' used outside DO LOOP
+WARNING: warn_ijk.asm:12:5: 'k' used outside DO LOOP
+WARNING: warn_ijk.asm:19:9: 'j' used in non-nested DO LOOP
+WARNING: warn_ijk.asm:21:9: 'k' used in insufficiently nested DO LOOP (depth: 1)
+WARNING: warn_ijk.asm:32:13: 'k' used in insufficiently nested DO LOOP (depth: 2)
+INFO: Successfully wrote output to warn_ijk.hex
+INFO: Generated symbol file: warn_ijk.sym
+INFO: Generated listing file: warn_ijk.lst

@@ -187,6 +187,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "loop_while"),
         ("control", "do_loop"),
         ("control", "nested_do_loop"),
+        ("control", "warn_ijk"),
     ],
 )
 def test_program(assembler, category, test_name):
@@ -258,3 +259,44 @@ def test_basic_include_program(assembler, basic_include_files, tmp_path):
     result = assembler.get_bytecodes()
 
     assert result == expected
+
+
+def test_loop_index_warnings(tmp_path, caplog):
+    """Test warnings for i, j, k loop index words."""
+    # Setup assembler
+    assembler = J1Assembler(debug=True)
+    
+    # Get the test files
+    base_path = Path(__file__).parent / "test_files/control/warn_ijk"
+    asm_file = base_path / "warn_ijk.asm"
+    build_file = base_path / "warn_ijk.build"
+    
+    # Read source and expected build output
+    with open(asm_file, "r") as f:
+        source = f.read()
+    with open(build_file, "r") as f:
+        # Only get WARNING lines from build file
+        expected_warnings = [
+            line.strip().replace("WARNING: ", "") 
+            for line in f 
+            if line.strip() and line.startswith("WARNING")
+        ]
+    
+    # Process the file and capture log output
+    tree = assembler.parse(source, str(asm_file))
+    assembler.transform(tree)
+    
+    # Get actual warnings from caplog, strip full path to match expected
+    actual_warnings = [
+        record.message.split(str(base_path) + "/")[-1] 
+        for record in caplog.records
+        if record.levelname == "WARNING"
+    ]
+    
+    # Compare warnings
+    assert len(actual_warnings) == len(expected_warnings), \
+        f"Expected {len(expected_warnings)} warnings, got {len(actual_warnings)}"
+    
+    for expected, actual in zip(expected_warnings, actual_warnings):
+        assert expected == actual, \
+            f"Expected warning '{expected}' not found in '{actual}'"

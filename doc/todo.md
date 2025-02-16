@@ -97,7 +97,7 @@
 - [ ] DO LOOP Control Structure
   - [x] Grammar support for DO, LOOP, +LOOP
   - [ ] Support for LEAVE
-  - [ ] Loop index words (i, j, k) as macros
+  - [x] Loop index words (i, j, k) as macros
   - [ ] Warning system for index words outside loops
   - [ ] Instruction generation
   - [ ] Label management
