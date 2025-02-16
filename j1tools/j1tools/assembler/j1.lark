@@ -20,6 +20,10 @@ BEGIN.2: "BEGIN"
 UNTIL.2: "UNTIL"
 WHILE.2: "WHILE"
 REPEAT.2: "REPEAT"
+DO.2: "DO"
+LOOP.2: "LOOP"
+PLUS_LOOP.2: "+LOOP"
+LEAVE.2: "LEAVE"
 
 // Add to directive tokens
 ORG.2: "ORG"
@@ -205,13 +209,14 @@ block: (block_item)+
 
 // New rules for control structures
 // control_structure: if_then | if_else_then | loop_until | loop_while
-?control_structure: if_then | if_else_then | loop_until | loop_while
+?control_structure: if_then | if_else_then | loop_until | loop_while | do_loop
 
 if_then: IF block THEN
 if_else_then: IF block ELSE block THEN
 
 loop_until: BEGIN block UNTIL
 loop_while: BEGIN block WHILE block REPEAT
+do_loop: DO block (LOOP | PLUS_LOOP)
 
 // Note: We could modify the loop_while as follows:
 // loop_while: BEGIN block? WHILE block REPEAT

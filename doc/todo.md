@@ -92,21 +92,30 @@
   - [x] Test coverage
 - [x] IF ELSE THEN
 - [x] BEGIN WHILE REPEAT
-  - [x] Grammar support
-  - [x] Instruction generation
-  - [x] Label management
-  - [x] Test coverage
-  - [x] Stack effect validation
 - [x] BEGIN UNTIL
-  - [x] Grammar support
-  - [x] Instruction generation
-  - [x] Label management
-  - [x] Test coverage
-  - [x] Stack effect validation
-- [x] Documentation
-  - [x] Control structure examples
-  - [x] Stack effect documentation
-  - [x] Machine code mappings
+
+- [ ] DO LOOP Control Structure
+  - [ ] Grammar support for DO, LOOP, +LOOP
+  - [ ] Support for LEAVE
+  - [ ] Loop index words (i, j, k) as macros
+  - [ ] Warning system for index words outside loops
+  - [ ] Instruction generation
+  - [ ] Label management
+  - [ ] Stack effect validation
+  - [ ] Test coverage
+    - [ ] Basic DO LOOP
+    - [ ] +LOOP with different increments
+    - [ ] Nested loops
+    - [ ] LEAVE functionality
+    - [ ] Loop indices (i, j, k)
+
+- [ ] BEGIN AGAIN Control Structure
+  - [ ] Grammar support
+  - [ ] Instruction generation
+  - [ ] Label management
+  - [ ] Test coverage
+  - [ ] Documentation
+  - [ ] Stack effect validation
 
 ### Hardware Testing
 - [ ] UART Testing
@@ -193,6 +202,20 @@
   - [ ] >P(n) instruction
   - [ ] Parameter scope management
   - [ ] Assembler support
+
+### Code Organization
+- [ ] Code Refactoring
+  - [ ] Split asm.py into focused modules (see doc/refactoring.md)
+  - [ ] Create new module structure
+    - [ ] control_structures.py
+    - [ ] macro_processor.py
+    - [ ] instruction_handlers.py
+    - [ ] assembler.py
+    - [ ] constants.py
+    - [ ] __main__.py
+  - [ ] Migrate code incrementally
+  - [ ] Update tests
+  - [ ] Update documentation
 
 ## Future Enhancements
 - [ ] Forth-like Syntax

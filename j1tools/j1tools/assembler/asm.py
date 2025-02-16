@@ -1321,6 +1321,201 @@ class J1Assembler(Transformer):
         return [begin_label_instr] + block1_instructions + [cond_jump] + \
                block2_instructions + [repeat_jump, exit_label_instr]
 
+    def do_loop(self, items):
+        """
+        Transform a DO LOOP control structure.
+        
+        Grammar rule:
+            do_loop: DO block (LOOP | PLUS_LOOP)
+            
+        This transforms:
+        10 0 DO     ; limit=10, index=0
+           block    ; Loop body
+        LOOP
+
+        Into:
+
+        >r          ; Save index (0) to R stack
+        >r          ; Save limit (10) to R stack
+        +do_label:  ; Start of loop
+        block       ; Execute loop body
+        r>          ; Get limit
+        r>          ; Get index
+        1+          ; Increment index
+        2dup        ; Duplicate both for comparison
+        <           ; Compare index < limit
+        >r          ; Save new index back
+        >r          ; Save limit back
+        ZJMP do_label  ; Jump if index < limit
+        drop        ; Clean up extra copy of index
+        drop        ; Clean up extra copy of limit
+        """
+        do_token = items[0]  # DO token
+        block_tree = items[1]  # block tree
+        loop_token = items[2]  # LOOP token
+        
+        # Generate unique label for loop start
+        do_label = self._generate_unique_label("do")
+        
+        # Process block instructions
+        if not isinstance(block_tree, Tree):
+            raise ValueError("Block tree is not a valid tree")
+        
+        block_instructions = []
+        for instruction in block_tree.children:
+            if isinstance(instruction, list):
+                block_instructions.extend(instruction)
+            elif isinstance(instruction, InstructionMetadata):
+                block_instructions.append(instruction)
+            else:
+                raise ValueError("Block instruction is not a valid instruction")
+        
+        # Increment addresses of block instructions by 2 to make room for the >r >r setup
+        for instr in block_instructions:
+            instr.word_addr += 2
+        
+        # Create setup instructions (>r >r)
+        setup_instrs = [
+            # >r for index
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                token=do_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="T[T->R]  \\ Save index to R stack",
+                word_addr=block_instructions[0].word_addr - 2
+            ),
+            # >r for limit
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                token=do_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="T[T->R]  \\ Save limit to R stack",
+                word_addr=block_instructions[0].word_addr - 1
+            )
+        ]
+        
+        # Create loop start label
+        do_label_instr = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL,
+            value=0,
+            token=do_token,
+            filename=self.current_file,
+            source_lines=self.source_lines,
+            instr_text=f"{do_label}: DO",
+            label_name=do_label,
+            word_addr=block_instructions[0].word_addr
+        )
+        
+        # Create loop end instructions
+        loop_end_instrs = [
+            # r> get limit
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["rT"],  # rT operation (fixed from RT)
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="rT  \\ Get limit",
+                word_addr=block_instructions[-1].word_addr + 1
+            ),
+            # r> get index
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["rT"],  # rT operation (fixed from RT)
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="rT  \\ Get index",
+                word_addr=block_instructions[-1].word_addr + 2
+            ),
+            # 1+ increment index
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["T+1"],  # T+1 operation
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="T+1  \\ Increment index",
+                word_addr=block_instructions[-1].word_addr + 3
+            ),
+            # 2dup< (combines 2dup and < into one operation)
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["N<T"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="N<T[T->N,d+1]  \\ 2dup<",
+                word_addr=block_instructions[-1].word_addr + 4
+            ),
+            # >r save new index
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="T[T->R]  \\ Save new index back",
+                word_addr=block_instructions[-1].word_addr + 5
+            ),
+            # >r save limit
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="T[T->R]  \\ Save limit back",
+                word_addr=block_instructions[-1].word_addr + 6
+            ),
+            # ZJMP do_label
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.JUMP,
+                value=JUMP_OPS["ZJMP"],
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                label_name=do_label,
+                instr_text=f"ZJMP {do_label}  \\ Jump if index < limit",
+                word_addr=block_instructions[-1].word_addr + 7
+            ),
+            # drop (first)
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["N"],  # N operation = drop
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="N  \\ Clean up index",
+                word_addr=block_instructions[-1].word_addr + 8
+            ),
+            # drop (second)
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=ALU_OPS["N"],  # N operation = drop
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="N  \\ Clean up limit",
+                word_addr=block_instructions[-1].word_addr + 9
+            )
+        ]
+        
+        # Advance address space for all the instructions we added
+        for _ in range(2 + len(loop_end_instrs)):  # 2 setup + loop end instructions
+            self.addr_space.advance()
+        
+        # Return complete sequence:
+        # 1. Setup instructions (>r >r)
+        # 2. Loop start label
+        # 3. Block instructions
+        # 4. Loop end instructions
+        return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
