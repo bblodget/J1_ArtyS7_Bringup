@@ -77,6 +77,9 @@
         - [ ] Merge adjacent ranges
         - [ ] Consider range objects for better management
         - [ ] Add performance testing with large programs
+  - [x] Added comparison macros
+    - [x] Greater than (>)
+    - [x] Unsigned greater than (u>)
 
 ## Current Development Focus
 
@@ -88,12 +91,22 @@
   - [x] Backpatching
   - [x] Test coverage
 - [x] IF ELSE THEN
-- [ ] BEGIN UNTIL
-- [ ] BEGIN WHILE REPEAT
-- [ ] Documentation
-  - [ ] Control structure examples
-  - [ ] Stack effect documentation
-  - [ ] Machine code mappings
+- [x] BEGIN WHILE REPEAT
+  - [x] Grammar support
+  - [x] Instruction generation
+  - [x] Label management
+  - [x] Test coverage
+  - [x] Stack effect validation
+- [x] BEGIN UNTIL
+  - [x] Grammar support
+  - [x] Instruction generation
+  - [x] Label management
+  - [x] Test coverage
+  - [x] Stack effect validation
+- [x] Documentation
+  - [x] Control structure examples
+  - [x] Stack effect documentation
+  - [x] Machine code mappings
 
 ### Hardware Testing
 - [ ] UART Testing
