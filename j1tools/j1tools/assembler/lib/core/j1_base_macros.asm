@@ -62,3 +62,7 @@ macro: overxor ( a b -- a a^b )    T^N ;
 macro: i     ( -- n )    r@ ;            // Get innermost loop index
 macro: j     ( -- n )    r> r> r@ >r >r ;  // Get next-outer loop index
 macro: k     ( -- n )    r> r> r> r> r@ >r >r >r >r ;  // Get third-level loop index
+
+// Negation operation (two's complement)
+macro: neg     ( n -- -n )         ~T T+1[d-1] ;  // Invert and add 1
+
