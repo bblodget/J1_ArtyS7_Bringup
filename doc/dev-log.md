@@ -26,6 +26,15 @@ Enhance DO LOOP context tracking and warning system
 - Created test case `warn_ijk` to validate loop index word usage rules
 - Modified grammar to support more granular DO LOOP processing
 
+Implement +LOOP control structure for DO loops
+
+- Added support for DO +LOOP with variable increments
+- Implemented complex transformation handling positive and negative increments
+- Updated grammar to distinguish DO LOOP and DO +LOOP
+- Created test cases for DO +LOOP with positive and negative increments
+- Added negation macro for handling negative loop increments
+- Extended assembler to generate correct loop control flow for +LOOP
+
 
 ## 2025-02-15
 

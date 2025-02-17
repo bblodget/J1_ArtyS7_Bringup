@@ -85,15 +85,9 @@
 
 ### Control Structures
 - [x] IF THEN
-  - [x] Grammar support
-  - [x] Instruction generation
-  - [x] Label management
-  - [x] Backpatching
-  - [x] Test coverage
 - [x] IF ELSE THEN
 - [x] BEGIN WHILE REPEAT
 - [x] BEGIN UNTIL
-
 - [x] DO LOOP Control Structure
   - [x] Grammar support for DO, LOOP, +LOOP
   - [x] Loop index words (i, j, k) as macros
@@ -106,8 +100,9 @@
     - [x] Nested loops
     - [x] Loop indices (i, j, k)
     - [x] Index warning system
+    - [x] +LOOP with different increments
+    - [x] Negative increment support
   - [ ] Support for LEAVE
-  - [ ] +LOOP with different increments
 
 - [ ] BEGIN AGAIN Control Structure
   - [ ] Grammar support
@@ -163,7 +158,7 @@
 
 ### Macro System Enhancements
 - [ ] Improve listing file
-  - [ ] Show macro chain in comments. // (macro: 2dup.over) 
+  - [x] Show macro chain in comments. // (macro: 2dup.over) 
   - [ ] Provide filename somehow. Give each file a number for reference?
 - [ ] Macro Parameters
   - [ ] Parameter syntax definition
@@ -235,6 +230,6 @@
   - [ ] Add copyright notices to source files
 
 ## Notes
-- Focus on macro parameters next
+- Focus on BEGIN AGAIN implementation next
 - Consider parameter register file implementation
 - Plan for disassembler development
