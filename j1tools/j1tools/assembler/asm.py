@@ -1352,27 +1352,36 @@ class J1Assembler(Transformer):
             do_loop: DO block (LOOP | PLUS_LOOP)
             
         This transforms:
-        10 0 DO     ; limit=10, index=0
+        #10 #0 DO     ; limit=10, index=0
            block    ; Loop body
         LOOP
 
         Into:
+        ; Initialize loop parameters
+        #10             ; Push limit (10)
+        #0              ; Push initial index (0)
 
-        >r          ; Save index (0) to R stack
-        >r          ; Save limit (10) to R stack
-        +do_label:  ; Start of loop
-        block       ; Execute loop body
-        r>          ; Get limit
-        r>          ; Get index
-        1+          ; Increment index
-        2dup        ; Duplicate both for comparison
-        <           ; Compare index < limit
-        >r          ; Save new index back
-        >r          ; Save limit back
-        ZJMP do_label  ; Jump if index < limit
-        drop        ; Clean up extra copy of index
-        drop        ; Clean up extra copy of limit
+        ; Save index and limit to R stack
+        >r              ; Save index (0) to R stack
+        >r              ; Save limit (10) to R stack
+
+        ; Loop body
+        +do_label:      ; Start of loop
+        block           ; Execute loop body
+
+        ; Loop control
+        r>              ; Get limit
+        r>              ; Get index
+        1+              ; Increment index
+        over over       ; Duplicate both for comparison
+        >r              ; Save new index back
+        >r              ; Save limit back
+        <               ; Compare index < limit
+        ZJMP do_label    ; Jump if index < limit
+        drop            ; Clean up extra copy of index
+        drop            ; Clean up extra copy of limit
         """
+
         do_token = items[0]  # DO token
         block_tree = items[1]  # block tree
         loop_token = items[2]  # LOOP token
@@ -1402,21 +1411,23 @@ class J1Assembler(Transformer):
             # >r for index
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                # >r : N[T->R,r+1,d-1]
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"],
                 token=do_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="T[T->R]  \\ Save index to R stack",
+                instr_text=">r  \\ Save index to R stack",
                 word_addr=block_instructions[0].word_addr - 2
             ),
             # >r for limit
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                # >r : N[T->R,r+1,d-1]
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"],
                 token=do_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="T[T->R]  \\ Save limit to R stack",
+                instr_text=">r  \\ Save limit to R stack",
                 word_addr=block_instructions[0].word_addr - 1
             )
         ]
@@ -1438,62 +1449,89 @@ class J1Assembler(Transformer):
             # r> get limit
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["rT"],  # rT operation (fixed from RT)
+                # r> : rT[T->N,r-1,d+1]
+                # 6000
+                # 0B00
+                # 0010
+                # 000C
+                # 0001
+                # ----
+                # 6B1D
+                value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | R_EFFECTS["r-1"] | D_EFFECTS["d+1"], # r> token=loop_token,
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="rT  \\ Get limit",
+                instr_text="r>  \\ Get limit",
                 word_addr=block_instructions[-1].word_addr + 1
             ),
             # r> get index
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["rT"],  # rT operation (fixed from RT)
+                value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | R_EFFECTS["r-1"] | D_EFFECTS["d+1"], # r>
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="rT  \\ Get index",
+                instr_text="r>  \\ Get index",
                 word_addr=block_instructions[-1].word_addr + 2
             ),
             # 1+ increment index
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["T+1"],  # T+1 operation
+                value=INST_TYPES["alu"] | ALU_OPS["T+1"],  # 1+
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="T+1  \\ Increment index",
+                instr_text="1+  \\ Increment index",
                 word_addr=block_instructions[-1].word_addr + 3
             ),
-            # 2dup< (combines 2dup and < into one operation)
+            # over over duplicate both values for next iteration
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["N<T"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"], # over
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="N<T[T->N,d+1]  \\ 2dup<",
+                instr_text="over  \\ duplicate for next iteration",
                 word_addr=block_instructions[-1].word_addr + 4
+            ),
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"], # over
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="over  \\ duplicate for next iteration",
+                word_addr=block_instructions[-1].word_addr + 5
             ),
             # >r save new index
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"], # >r
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="T[T->R]  \\ Save new index back",
-                word_addr=block_instructions[-1].word_addr + 5
+                instr_text=">r  \\ Save new index back",
+                word_addr=block_instructions[-1].word_addr + 6
             ),
             # >r save limit
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["T"] | STACK_EFFECTS["T->R"],  # T->R effect
+                value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"], # >r
                 token=loop_token,
                 filename=self.current_file,
                 source_lines=self.source_lines,
-                instr_text="T[T->R]  \\ Save limit back",
-                word_addr=block_instructions[-1].word_addr + 6
+                instr_text=">r  \\ Save limit back",
+                word_addr=block_instructions[-1].word_addr + 7
+            ),
+            # Compare index < limit
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=INST_TYPES["alu"] | ALU_OPS["N<T"] | D_EFFECTS["d-1"], # <
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="<  \\ Save limit back",
+                word_addr=block_instructions[-1].word_addr + 8
             ),
             # ZJMP do_label
             InstructionMetadata.from_token(
@@ -1504,27 +1542,27 @@ class J1Assembler(Transformer):
                 source_lines=self.source_lines,
                 label_name=do_label,
                 instr_text=f"ZJMP {do_label}  \\ Jump if index < limit",
-                word_addr=block_instructions[-1].word_addr + 7
-            ),
-            # drop (first)
-            InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["N"],  # N operation = drop
-                token=loop_token,
-                filename=self.current_file,
-                source_lines=self.source_lines,
-                instr_text="N  \\ Clean up index",
-                word_addr=block_instructions[-1].word_addr + 8
-            ),
-            # drop (second)
-            InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
-                value=ALU_OPS["N"],  # N operation = drop
-                token=loop_token,
-                filename=self.current_file,
-                source_lines=self.source_lines,
-                instr_text="N  \\ Clean up limit",
                 word_addr=block_instructions[-1].word_addr + 9
+            ),
+            # rdrop (first)
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=INST_TYPES["alu"] | ALU_OPS["T"] | R_EFFECTS["r-1"], # rdrop
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="rdrop  \\ Clean up index",
+                word_addr=block_instructions[-1].word_addr + 10
+            ),
+            # rdrop (second)
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=INST_TYPES["alu"] | ALU_OPS["T"] | R_EFFECTS["r-1"], # rdrop
+                token=loop_token,
+                filename=self.current_file,
+                source_lines=self.source_lines,
+                instr_text="rdrop  \\ Clean up limit",
+                word_addr=block_instructions[-1].word_addr + 11
             )
         ]
         

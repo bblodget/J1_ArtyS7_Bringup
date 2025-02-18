@@ -5,7 +5,7 @@ include "core/j1_base_macros.asm"
 
 start:
     // Initialize loop parameters
-    #5              // Push limit (5)
+    #3              // Push limit (3)
     #0              // Push initial index (0)
 
     // Loop from 0 to 4 inclusive
