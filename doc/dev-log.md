@@ -1,5 +1,22 @@
 # Development Log
 
+## 2025-02-18
+
+- Added 1+ and 1- macros to j1_base_macros.asm
+- Added raw_loop test case to tests/test_files/control/raw_loop
+
+## 2025-02-17
+
+Add raw loop test case for basic DO LOOP implementation.
+We created this test case to help debug the DO LOOP implementation,
+which is not working in the simulator.
+
+- Created test files for a simple raw loop in j1 assembly
+- Added Makefile for compiling and debugging the test case
+- Implemented a basic DO LOOP with fixed increment and limit
+- Included hex file for the raw loop test
+
+
 ## 2025-02-16
 
 Implement DO LOOP control structure
