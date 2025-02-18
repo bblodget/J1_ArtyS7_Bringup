@@ -5,6 +5,15 @@
 - Added 1+ and 1- macros to j1_base_macros.asm
 - Added raw_loop test case to tests/test_files/control/raw_loop
 
+Refactor DO LOOP implementation with improved instruction generation
+
+- Updated DO LOOP transformation in asm.py with more precise instruction generation
+- Corrected stack and register effects for loop control instructions
+- Replaced 2dup with over over for stack manipulation
+- Adjusted test cases to use a smaller loop limit (3 instead of 5)
+- Improved instruction text and metadata for better readability
+
+
 ## 2025-02-17
 
 Add raw loop test case for basic DO LOOP implementation.
