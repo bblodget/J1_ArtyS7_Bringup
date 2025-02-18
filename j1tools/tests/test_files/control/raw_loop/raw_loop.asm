@@ -19,7 +19,7 @@ do_label:
     // Loop control
     r>             // Get limit
     r>             // Get index
-    #1 +           // Increment index
+    1+              // Increment index
     over over      // Duplicate both values for next iteration
     >r             // Save new index back
     >r             // Save limit back

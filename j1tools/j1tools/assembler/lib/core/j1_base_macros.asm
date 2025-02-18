@@ -23,6 +23,8 @@ macro: u<      ( a b -- f )        Nu<T[d-1] ;
 macro: u>      ( a b -- f )        swap u<    ;
 macro: 2/      ( n -- n/2 )        T2/ ;
 macro: 2*      ( n -- n*2 )        T2* ;
+macro: 1+      ( n -- n+1 )        T+1 ;
+macro: 1-      ( n -- n-1 )        T-1 ;
 
 // Return stack operations
 macro: >r      ( a -- R: -- a )    N[T->R,r+1,d-1] ;
