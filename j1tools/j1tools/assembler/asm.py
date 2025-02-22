@@ -680,9 +680,9 @@ class J1Assembler(Transformer):
             if word == "i":
                 return self.control_structures._generate_rstack_access(0, token)
             elif word == "j":
-                return self.control_structures._generate_rstack_access(2, token)
+                return self.control_structures._generate_rstack_access(1, token)
             else:  # k
-                return self.control_structures._generate_rstack_access(4, token)
+                return self.control_structures._generate_rstack_access(2, token)
 
         # Check if the identifier is a defined macro
         if self.macro_processor.is_macro(word):
