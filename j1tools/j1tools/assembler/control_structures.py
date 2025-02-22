@@ -310,40 +310,57 @@ class ControlStructures:
         return self._do_loop_depth
 
     def _generate_rstack_access(self, offset: int, token: Token) -> List[InstructionMetadata]:
-        """Generate instructions to access return stack at given offset."""
+        """Generate instructions to access return stack at given offset.
+        For DO LOOP, the stack layout is:
+        R: ... limit index
+        offset 0 = index (i)
+        offset 1 = limit (used for j)
+        """
         instructions = []
         
-        # Generate r> instructions to get to desired value
-        for i in range(offset + 1):
-            instructions.append(
-                InstructionMetadata.from_token(
-                    inst_type=InstructionType.BYTE_CODE,
-                    value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | R_EFFECTS["r-1"] | D_EFFECTS["d+1"],
-                    token=token,
-                    filename=self.state.current_file,
-                    source_lines=self.state.source_lines,
-                    instr_text="r>",
-                    word_addr=self.addr_space.get_word_address()
-                )
-            )
-            self.addr_space.advance()
-
-        # Get copy of desired value
+        # Get both values from R stack
         instructions.append(
             InstructionMetadata.from_token(
                 inst_type=InstructionType.BYTE_CODE,
-                value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
+                value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | R_EFFECTS["r-1"] | D_EFFECTS["d+1"],
                 token=token,
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
-                instr_text="rT[T->N,d+1]",
+                instr_text="r>  \\ Get limit",
                 word_addr=self.addr_space.get_word_address()
             )
         )
         self.addr_space.advance()
 
-        # Put values back on R stack in reverse order
-        for i in range(offset + 1):
+        instructions.append(
+            InstructionMetadata.from_token(
+                inst_type=InstructionType.BYTE_CODE,
+                value=INST_TYPES["alu"] | ALU_OPS["rT"] | STACK_EFFECTS["T->N"] | R_EFFECTS["r-1"] | D_EFFECTS["d+1"],
+                token=token,
+                filename=self.state.current_file,
+                source_lines=self.state.source_lines,
+                instr_text="r>  \\ Get index",
+                word_addr=self.addr_space.get_word_address()
+            )
+        )
+        self.addr_space.advance()
+
+        # If this is for 'i', duplicate the index value
+        if offset == 0:  # 'i' operation
+            instructions.append(
+                InstructionMetadata.from_token(
+                    inst_type=InstructionType.BYTE_CODE,
+                    value=INST_TYPES["alu"] | ALU_OPS["T"] | STACK_EFFECTS["T->N"] | D_EFFECTS["d+1"],
+                    token=token,
+                    filename=self.state.current_file,
+                    source_lines=self.state.source_lines,
+                    instr_text="dup  \\ Duplicate index for i",
+                    word_addr=self.addr_space.get_word_address()
+                )
+            )
+            self.addr_space.advance()
+
+            # Save original index back
             instructions.append(
                 InstructionMetadata.from_token(
                     inst_type=InstructionType.BYTE_CODE,
@@ -351,7 +368,63 @@ class ControlStructures:
                     token=token,
                     filename=self.state.current_file,
                     source_lines=self.state.source_lines,
-                    instr_text=">r",
+                    instr_text=">r  \\ Save index back",
+                    word_addr=self.addr_space.get_word_address()
+                )
+            )
+            self.addr_space.advance()
+
+            # Swap to get limit on top with i below
+            instructions.append(
+                InstructionMetadata.from_token(
+                    inst_type=InstructionType.BYTE_CODE,
+                    value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->N"],
+                    token=token,
+                    filename=self.state.current_file,
+                    source_lines=self.state.source_lines,
+                    instr_text="swap  \\ Bring limit to top, leaving i below",
+                    word_addr=self.addr_space.get_word_address()
+                )
+            )
+            self.addr_space.advance()
+
+            # Save limit back
+            instructions.append(
+                InstructionMetadata.from_token(
+                    inst_type=InstructionType.BYTE_CODE,
+                    value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"],
+                    token=token,
+                    filename=self.state.current_file,
+                    source_lines=self.state.source_lines,
+                    instr_text=">r  \\ Save limit back",
+                    word_addr=self.addr_space.get_word_address()
+                )
+            )
+            self.addr_space.advance()
+
+        else:
+            # For non-i operations, just restore both values
+            instructions.append(
+                InstructionMetadata.from_token(
+                    inst_type=InstructionType.BYTE_CODE,
+                    value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"],
+                    token=token,
+                    filename=self.state.current_file,
+                    source_lines=self.state.source_lines,
+                    instr_text=">r  \\ Save index back",
+                    word_addr=self.addr_space.get_word_address()
+                )
+            )
+            self.addr_space.advance()
+
+            instructions.append(
+                InstructionMetadata.from_token(
+                    inst_type=InstructionType.BYTE_CODE,
+                    value=INST_TYPES["alu"] | ALU_OPS["N"] | STACK_EFFECTS["T->R"] | R_EFFECTS["r+1"] | D_EFFECTS["d-1"],
+                    token=token,
+                    filename=self.state.current_file,
+                    source_lines=self.state.source_lines,
+                    instr_text=">r  \\ Save limit back",
                     word_addr=self.addr_space.get_word_address()
                 )
             )
