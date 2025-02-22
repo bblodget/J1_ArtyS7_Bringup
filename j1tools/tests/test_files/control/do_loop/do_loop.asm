@@ -1,7 +1,7 @@
 ORG #$0000
 JMP start
 
-include "core/j1_base_macros.asm"
+include "platform/j1_16kb_dualport_macros.asm"
 
 start:
     // Initialize loop parameters
