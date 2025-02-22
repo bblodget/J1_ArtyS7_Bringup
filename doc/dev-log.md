@@ -59,6 +59,27 @@ Add test cases for DO LOOP index operations
 - Extended test_assembler.py to include new test cases for raw_i_loop and do_i_loop
 - Expanded test coverage for DO LOOP index handling and manipulation
 
+Refactor nested DO LOOP index access with improved stack manipulation
+
+- Updated _generate_rstack_access method to handle nested DO LOOP index retrieval
+- Adjusted index offsets for 'j' and 'k' to correctly access nested loop indices
+- Implemented more robust stack restoration for multiple nested loop levels
+- Improved comments explaining the return stack layout for nested DO LOOPs
+
+Add raw_nested_do_loop test case for multi-level loop index handling
+
+- Created Makefile for raw_nested_do_loop test case
+- Implemented raw_nested_do_loop.asm demonstrating manual stack manipulation for nested DO LOOPs
+- Added hex file for compiled assembly code
+- Showcases complex return stack management for accessing indices of multiple nested loops
+
+Update nested_do_loop test case with improved index comments
+
+- Clarified loop index comments in nested_do_loop.asm
+- Updated corresponding hex file to reflect minor assembly changes
+- Explicitly labeled indices K, J, and I for better readability
+
+
 
 
 ## 2025-02-19
