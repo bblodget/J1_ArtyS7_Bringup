@@ -86,7 +86,9 @@ Optimize nested DO LOOP index restoration logic
 - Added more precise instruction generation for saving and restoring loop indices
 - Enhanced readability of stack management code with multi-line value assignments
 
+Add documentation for fast loop construct in Forth
 
+- Created doc/times_next.md documenting the fast loop construct
 
 
 ## 2025-02-19
