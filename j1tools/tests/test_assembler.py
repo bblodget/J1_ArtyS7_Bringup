@@ -192,6 +192,8 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "do_plus_loop"),
         ("control", "do_neg_loop"),
         ("control", "raw_loop"),
+        ("control", "raw_i_loop"),
+        ("control", "do_i_loop"),
     ],
 )
 def test_program(assembler, category, test_name):
