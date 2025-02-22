@@ -2,6 +2,7 @@ import pytest
 from j1tools.assembler.asm import J1Assembler
 from lark.exceptions import VisitError
 from pathlib import Path
+import logging
 
 
 @pytest.fixture
@@ -266,8 +267,8 @@ def test_basic_include_program(assembler, basic_include_files, tmp_path):
 
 def test_loop_index_warnings(tmp_path, caplog):
     """Test warnings for i, j, k loop index words."""
-    # Setup assembler
-    assembler = J1Assembler(debug=True)
+    # Setup assembler with debug OFF
+    assembler = J1Assembler(debug=False)
     
     # Get the test files
     base_path = Path(__file__).parent / "test_files/control/warn_ijk"
@@ -284,6 +285,9 @@ def test_loop_index_warnings(tmp_path, caplog):
             for line in f 
             if line.strip() and line.startswith("WARNING")
         ]
+    
+    # Set logging level to WARNING to capture only warnings
+    caplog.set_level(logging.WARNING)
     
     # Process the file and capture log output
     tree = assembler.parse(source, str(asm_file))
