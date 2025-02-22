@@ -29,6 +29,37 @@ Improve loop index warning test case logging
 - Set logging level to WARNING to capture only warning messages
 - Disabled debug mode in J1Assembler for more focused warning testing
 
+Refactor DO LOOP index access with improved stack manipulation
+
+- Enhanced _generate_rstack_access method in control_structures.py
+- Implemented more precise handling of loop index and limit retrieval
+- Added detailed comments explaining stack layout for DO LOOP operations
+- Improved instruction generation for 'i' and other loop index operations
+- Ensured correct stack and return stack state preservation
+
+
+Add raw_i_loop test case for DO LOOP index operations
+
+- Created Makefile for raw_i_loop test case
+- Implemented raw_i_loop.asm demonstrating low-level DO LOOP index handling
+- Added hex file for compiled assembly code
+- Showcases manual stack and return stack manipulation for loop index
+
+Add do_i_loop test case for DO LOOP index operations
+
+- Created Makefile for do_i_loop test case
+- Implemented do_i_loop.asm demonstrating basic DO LOOP index handling
+- Added hex file for compiled assembly code
+- Uses platform-specific dual-port macro library
+- Showcases simple loop index retrieval and discard operation
+
+
+Add test cases for DO LOOP index operations
+
+- Extended test_assembler.py to include new test cases for raw_i_loop and do_i_loop
+- Expanded test coverage for DO LOOP index handling and manipulation
+
+
 
 ## 2025-02-19
 
