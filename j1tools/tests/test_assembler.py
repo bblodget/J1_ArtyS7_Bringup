@@ -187,6 +187,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "nested_loop_until"),
         ("control", "loop_while"),
         ("control", "do_loop"),
+        ("control", "raw_nested_do_loop"),
         ("control", "nested_do_loop"),
         ("control", "warn_ijk"),
         ("control", "do_plus_loop"),
