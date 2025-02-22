@@ -79,6 +79,13 @@ Update nested_do_loop test case with improved index comments
 - Updated corresponding hex file to reflect minor assembly changes
 - Explicitly labeled indices K, J, and I for better readability
 
+Optimize nested DO LOOP index restoration logic
+
+- Refactored index restoration for innermost loops with special case handling
+- Improved stack manipulation for complex nested loop scenarios
+- Added more precise instruction generation for saving and restoring loop indices
+- Enhanced readability of stack management code with multi-line value assignments
+
 
 
 
