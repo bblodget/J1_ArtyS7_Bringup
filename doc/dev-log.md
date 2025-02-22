@@ -1,5 +1,46 @@
 # Development Log
 
+## 2025-02-22
+
+Refactor DO LOOP handling with dedicated control structures module
+
+- Created new `control_structures.py` to encapsulate DO LOOP logic
+- Extracted loop context tracking and instruction generation from `asm.py`
+- Introduced `ControlStructures` class to manage loop state and generate instructions
+- Added methods for tracking loop depth, generating unique labels, and handling loop index words
+- Improved modularity and separation of concerns in assembler implementation
+
+Remove 1+ and 1- macros from base macro library
+
+- Deleted 1+ and 1- macros from j1_base_macros.asm
+- Simplified base macro definitions by removing simple increment/decrement operations
+
+These are in the extended instruction set.
+
+Update do_loop test case to use dual-port macros
+
+- Switched include from base macros to platform-specific dual-port macros
+- Maintains test case structure while using more appropriate macro library
+
+
+Improve loop index warning test case logging
+
+- Modified test_loop_index_warnings to use explicit logging configuration
+- Set logging level to WARNING to capture only warning messages
+- Disabled debug mode in J1Assembler for more focused warning testing
+
+
+## 2025-02-19
+
+Attempted to move control structure methods into a separate control_structures.py file.
+So far this is not working.  Probably need to revert and try again.
+
+It turns out that the 1+ macro is an extended macro, so I removed
+it from the j1_base_macros.asm it is already in the extended_macros.asm file.
+I wonder if I can check during do_loop to see if 1+ is defined and use that
+macro if so, use #1 +
+
+
 ## 2025-02-18
 
 - Added 1+ and 1- macros to j1_base_macros.asm
