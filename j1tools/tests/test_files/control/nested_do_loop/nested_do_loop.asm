@@ -17,11 +17,11 @@ start:
             #0      // Push initial index (0)
             DO
                 // Access loop indices
-                k               // Get outer loop index (0,1,2)
+                k               // Get K outer loop index (0,1,2)
                 drop           // Discard for this test
-                j               // Get middle loop index (0,1)
+                j               // Get J middle loop index (0,1)
                 drop           // Discard for this test
-                i               // Get inner loop index (0,1,2,3)
+                i               // Get I inner loop index (0,1,2,3)
                 drop           // Discard for this test
                 noop           // Do nothing else in loop body
             LOOP
