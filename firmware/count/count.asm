@@ -35,7 +35,7 @@ start:
     key drop        // FIXME: we need to implement key? in simulator
 
     // Initialize loop parameters
-    #2             // Push limit (10)
+    #9             // Push limit (9)
     #0              // Push initial index (0)
 
     // Loop from 0 to 9 inclusive
