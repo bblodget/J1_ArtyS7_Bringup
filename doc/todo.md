@@ -80,6 +80,15 @@
   - [x] Added comparison macros
     - [x] Greater than (>)
     - [x] Unsigned greater than (u>)
+  - [ ] Fix subroutine return instruction
+    - [ ] Make ; generate T[RET,r-1] instead of RET
+    - [ ] Update grammar to handle bare ; correctly
+    - [ ] Test coverage for return stack handling
+  - [ ] Include file improvements
+    - [ ] Add include guard detection
+    - [ ] Track already included files
+    - [ ] Prevent duplicate includes
+    - [ ] Test with circular includes
 
 ## Current Development Focus
 
@@ -117,6 +126,7 @@
   - [ ] Hardware timing verification
   - [ ] Multi-byte transmission test
   - [ ] Add realistic UART status simulation
+  - [ ] Implement key? in simulator
   - [ ] Test with actual hardware
 
 ### Standard Library Development
