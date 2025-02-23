@@ -7,6 +7,14 @@ Adjust count firmware example loop limit
     - Modified count.asm to use limit 9 instead of 10
     - Simplified loop range to print "Hello 0" through "Hello 9"
 
+Add J1 Monitor System documentation and firmware
+
+- Created comprehensive documentation for J1 Monitor System in doc/monitor.md
+- Implemented initial monitor firmware with basic interrupt and command handling
+- Added Makefile and assembly source for monitor and interrupt test firmware
+- Documented memory layout, boot sequence, and system operation details
+- Created firmware/interrupt_test directory with interrupt test firmware
+
 ## 2025-02-22
 
 Refactor DO LOOP handling with dedicated control structures module
