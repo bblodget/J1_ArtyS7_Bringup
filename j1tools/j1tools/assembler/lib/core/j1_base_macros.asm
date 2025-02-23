@@ -32,7 +32,7 @@ macro: rdrop   ( -- R: a -- )      T[r-1] ;
 
 // I/O operations
 macro: io@     ( addr -- val )     io[T][IORD] ;
-macro: io!     ( val addr -- )     T[N->io[T],d-1] ;
+macro: io!     ( val addr -- )     3OS[N->io[T],d-2] ;
 
 // Status and control
 macro: depth   ( -- n )            status[T->N,d+1] ;

@@ -1,7 +1,7 @@
 // Terminal I/O Library for J1 Processor
 // Implements basic UART communication primitives
 
-include "core/j1_base_macros.asm"
+// include "core/j1_base_macros.asm"
 
 // FIXME: We should not have to jump to start here
 // Need to figure out a better way to handle this

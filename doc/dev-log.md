@@ -90,6 +90,13 @@ Add documentation for fast loop construct in Forth
 
 - Created doc/times_next.md documenting the fast loop construct
 
+Add count firmware example with simple number printing
+
+- Created count.asm demonstrating basic loop and terminal I/O
+- Implemented a program that prints "Hello 0" through "Hello 9"
+- Added corresponding Makefile and hex file for compilation
+- Updated j1tools macros with minor I/O operation adjustments
+
 
 ## 2025-02-19
 
