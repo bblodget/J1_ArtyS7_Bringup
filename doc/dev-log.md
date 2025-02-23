@@ -1,5 +1,12 @@
 # Development Log
 
+## 2025-02-23
+
+Adjust count firmware example loop limit
+
+    - Modified count.asm to use limit 9 instead of 10
+    - Simplified loop range to print "Hello 0" through "Hello 9"
+
 ## 2025-02-22
 
 Refactor DO LOOP handling with dedicated control structures module
