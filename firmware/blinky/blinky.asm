@@ -50,14 +50,24 @@ include "io/terminal_io.asm"
     exit
     ;
 
+delay:
+    // Outer loop: 183 iterations
+    #100 #0 DO
+        #$7FF0 #0 DO
+            // Inner loop body (empty for maximum speed)
+            noop
+        LOOP
+    LOOP
+    exit
+
 start:
     init_led        // Configure PORTA13 as output
 
 main_loop:
     led_on          // Turn LED on
     print_on        // Print "LED ON" message
-    key drop        // Wait for keypress and discard the key value
+    delay           // Wait for delay instead of keypress
     led_off         // Turn LED off
     print_off       // Print "LED OFF" message
-    key drop        // Wait for keypress and discard the key value
+    delay           // Wait for delay instead of keypress
     JMP main_loop   // Repeat forever
