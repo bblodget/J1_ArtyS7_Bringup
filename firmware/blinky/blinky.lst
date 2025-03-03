@@ -39,99 +39,99 @@ BYTE     WORD     CODE            #:col    SOURCE
 003c     001e     6b1d           67:5      rT[T->N,r-1,d+1]                //  (macro: r>)
 003e     001f     4011           67:8      CALL emit                       //  Send second char
 0040     0020     608c           68:5      T[RET,r-1]                      //  (macro: exit)
-0042     0021     ----           11:3    init_led:                         //  
-0042     0021     8001           13:5      #$0001                          //  Set porta_dir[0] to 1 (output)
-0044     0022     8004           14:5      #4                              //  Write to porta_dir
-0046     0023     7842           14:8      3OS[N->io[T],d-2]               //  (macro: io!)
-0048     0024     608c           15:5      T[RET,r-1]                      //  (macro: exit)
-004a     0025     ----           18:3    led_on:                           //  
-004a     0025     8001           19:5      #$0001                          //  Bit 13 mask (set bit 13)
-004c     0026     8002           20:5      #2                              //  Write back to porta_out
-004e     0027     7842           20:8      3OS[N->io[T],d-2]               //  (macro: io!)
-0050     0028     608c           21:5      T[RET,r-1]                      //  (macro: exit)
-0052     0029     ----           24:3    led_off:                          //  
-0052     0029     8000           25:5      #$0000                          //  Bit 13 mask (clear bit 13)
-0054     002a     8002           26:5      #2                              //  Write back to porta_out
-0056     002b     7842           26:8      3OS[N->io[T],d-2]               //  (macro: io!)
-0058     002c     608c           27:5      T[RET,r-1]                      //  (macro: exit)
-005a     002d     ----           30:3    print_on:                         //  
-005a     002d     804c           31:5      #$4C                            //  L
-005c     002e     4011           31:10     CALL emit                       //  L
-005e     002f     8045           32:5      #$45                            //  E
-0060     0030     4011           32:10     CALL emit                       //  E
-0062     0031     8044           33:5      #$44                            //  D
-0064     0032     4011           33:10     CALL emit                       //  D
-0066     0033     8020           34:5      #$20                            //  space
-0068     0034     4011           34:10     CALL emit                       //  space
-006a     0035     804f           35:5      #$4F                            //  O
-006c     0036     4011           35:10     CALL emit                       //  O
-006e     0037     804e           36:5      #$4E                            //  N
-0070     0038     4011           36:10     CALL emit                       //  N
-0072     0039     8020           37:5      #$20                            //  space
-0074     003a     4011           37:10     CALL emit                       //  space
-0076     003b     800a           38:5      #$0A                            //  Newline
-0078     003c     4011           38:10     CALL emit                       //  Newline
-007a     003d     608c           39:5      T[RET,r-1]                      //  (macro: exit)
-007c     003e     ----           42:3    print_off:                        //  
-007c     003e     804c           43:5      #$4C                            //  L
-007e     003f     4011           43:10     CALL emit                       //  L
-0080     0040     8045           44:5      #$45                            //  E
-0082     0041     4011           44:10     CALL emit                       //  E
-0084     0042     8044           45:5      #$44                            //  D
-0086     0043     4011           45:10     CALL emit                       //  D
-0088     0044     8020           46:5      #$20                            //  space
-008a     0045     4011           46:10     CALL emit                       //  space
-008c     0046     804f           47:5      #$4F                            //  O
-008e     0047     4011           47:10     CALL emit                       //  O
-0090     0048     8046           48:5      #$46                            //  F
-0092     0049     4011           48:10     CALL emit                       //  F
-0094     004a     8046           49:5      #$46                            //  F
-0096     004b     4011           49:10     CALL emit                       //  F
-0098     004c     800a           50:5      #$0A                            //  Newline
-009a     004d     4011           50:10     CALL emit                       //  Newline
-009c     004e     608c           51:5      T[RET,r-1]                      //  (macro: exit)
-009e     004f     ----           54:1    delay:                            //  
-009e     004f     8064           56:5      #100                            //  
-00a0     0050     8000           56:10     #0                              //  
-00a2     0051     6127           56:13     >r  \ Save index to R stack     //  
-00a4     0052     6127           56:13     >r  \ Save limit to R stack     //  
-00a6     0053     ----           56:13   do_1: DO                          //  
-00a6     0053     fff0           57:9      #$7FF0                          //  
-00a8     0054     8000           57:16     #0                              //  
-00aa     0055     6127           57:19     >r  \ Save index to R stack     //  
-00ac     0056     6127           57:19     >r  \ Save limit to R stack     //  
-00ae     0057     ----           57:19   do_0: DO                          //  
-00ae     0057     6000           59:13     T                               //  (macro: noop)
-00b0     0058     6b1d           60:9      r>  \ Get limit                 //  
-00b2     0059     6b1d           60:9      r>  \ Get index                 //  
-00b4     005a     7600           60:9      1+  \ Increment index           //  
-00b6     005b     6111           60:9      over  \ duplicate for next iteration  //  
-00b8     005c     6111           60:9      over  \ duplicate for next iteration  //  
-00ba     005d     6127           60:9      >r  \ Save new index back       //  
-00bc     005e     6127           60:9      >r  \ Save limit back           //  
-00be     005f     6803           60:9      <  \ Compare index < limit      //  
-00c0     0060     2057           60:9      ZJMP do_0  \ Jump if index < limit  //  
-00c2     0061     600c           60:9      rdrop  \ Clean up index         //  
-00c4     0062     600c           60:9      rdrop  \ Clean up limit         //  
-00c6     0063     6b1d           61:5      r>  \ Get limit                 //  
-00c8     0064     6b1d           61:5      r>  \ Get index                 //  
-00ca     0065     7600           61:5      1+  \ Increment index           //  
-00cc     0066     6111           61:5      over  \ duplicate for next iteration  //  
-00ce     0067     6111           61:5      over  \ duplicate for next iteration  //  
-00d0     0068     6127           61:5      >r  \ Save new index back       //  
-00d2     0069     6127           61:5      >r  \ Save limit back           //  
-00d4     006a     6803           61:5      <  \ Compare index < limit      //  
-00d6     006b     2053           61:5      ZJMP do_1  \ Jump if index < limit  //  
-00d8     006c     600c           61:5      rdrop  \ Clean up index         //  
-00da     006d     600c           61:5      rdrop  \ Clean up limit         //  
-00dc     006e     608c           62:5      T[RET,r-1]                      //  (macro: exit)
-00de     006f     ----           64:1    start:                            //  
-00de     006f     4021           65:5      CALL init_led                   //  Configure PORTA13 as output
-00e0     0070     ----           67:1    main_loop:                        //  
-00e0     0070     4025           68:5      CALL led_on                     //  Turn LED on
-00e2     0071     402d           69:5      CALL print_on                   //  Print "LED ON" message
-00e4     0072     404f           70:5      CALL delay                      //  Wait for delay instead of keypress
-00e6     0073     4029           71:5      CALL led_off                    //  Turn LED off
-00e8     0074     403e           72:5      CALL print_off                  //  Print "LED OFF" message
-00ea     0075     404f           73:5      CALL delay                      //  Wait for delay instead of keypress
-00ec     0076     0070           74:5      JMP main_loop                   //  Repeat forever
+0042     0021     ----           10:3    init_led:                         //  
+0042     0021     8001           12:5      #$0001                          //  Set porta_dir[0] to 1 (output)
+0044     0022     8004           13:5      #4                              //  Write to porta_dir
+0046     0023     7842           13:8      3OS[N->io[T],d-2]               //  (macro: io!)
+0048     0024     608c           14:5      T[RET,r-1]                      //  (macro: exit)
+004a     0025     ----           17:3    led_on:                           //  
+004a     0025     8001           18:5      #$0001                          //  Bit 13 mask (set bit 13)
+004c     0026     8002           19:5      #2                              //  Write back to porta_out
+004e     0027     7842           19:8      3OS[N->io[T],d-2]               //  (macro: io!)
+0050     0028     608c           20:5      T[RET,r-1]                      //  (macro: exit)
+0052     0029     ----           23:3    led_off:                          //  
+0052     0029     8000           24:5      #$0000                          //  Bit 13 mask (clear bit 13)
+0054     002a     8002           25:5      #2                              //  Write back to porta_out
+0056     002b     7842           25:8      3OS[N->io[T],d-2]               //  (macro: io!)
+0058     002c     608c           26:5      T[RET,r-1]                      //  (macro: exit)
+005a     002d     ----           29:3    print_on:                         //  
+005a     002d     804c           30:5      #$4C                            //  L
+005c     002e     4011           30:10     CALL emit                       //  L
+005e     002f     8045           31:5      #$45                            //  E
+0060     0030     4011           31:10     CALL emit                       //  E
+0062     0031     8044           32:5      #$44                            //  D
+0064     0032     4011           32:10     CALL emit                       //  D
+0066     0033     8020           33:5      #$20                            //  space
+0068     0034     4011           33:10     CALL emit                       //  space
+006a     0035     804f           34:5      #$4F                            //  O
+006c     0036     4011           34:10     CALL emit                       //  O
+006e     0037     804e           35:5      #$4E                            //  N
+0070     0038     4011           35:10     CALL emit                       //  N
+0072     0039     8020           36:5      #$20                            //  space
+0074     003a     4011           36:10     CALL emit                       //  space
+0076     003b     800a           37:5      #$0A                            //  Newline
+0078     003c     4011           37:10     CALL emit                       //  Newline
+007a     003d     608c           38:5      T[RET,r-1]                      //  (macro: exit)
+007c     003e     ----           41:3    print_off:                        //  
+007c     003e     804c           42:5      #$4C                            //  L
+007e     003f     4011           42:10     CALL emit                       //  L
+0080     0040     8045           43:5      #$45                            //  E
+0082     0041     4011           43:10     CALL emit                       //  E
+0084     0042     8044           44:5      #$44                            //  D
+0086     0043     4011           44:10     CALL emit                       //  D
+0088     0044     8020           45:5      #$20                            //  space
+008a     0045     4011           45:10     CALL emit                       //  space
+008c     0046     804f           46:5      #$4F                            //  O
+008e     0047     4011           46:10     CALL emit                       //  O
+0090     0048     8046           47:5      #$46                            //  F
+0092     0049     4011           47:10     CALL emit                       //  F
+0094     004a     8046           48:5      #$46                            //  F
+0096     004b     4011           48:10     CALL emit                       //  F
+0098     004c     800a           49:5      #$0A                            //  Newline
+009a     004d     4011           49:10     CALL emit                       //  Newline
+009c     004e     608c           50:5      T[RET,r-1]                      //  (macro: exit)
+009e     004f     ----           53:1    delay:                            //  
+009e     004f     8064           55:5      #100                            //  
+00a0     0050     8000           55:10     #0                              //  
+00a2     0051     6127           55:13     >r  \ Save index to R stack     //  
+00a4     0052     6127           55:13     >r  \ Save limit to R stack     //  
+00a6     0053     ----           55:13   do_1: DO                          //  
+00a6     0053     fff0           56:9      #$7FF0                          //  
+00a8     0054     8000           56:16     #0                              //  
+00aa     0055     6127           56:19     >r  \ Save index to R stack     //  
+00ac     0056     6127           56:19     >r  \ Save limit to R stack     //  
+00ae     0057     ----           56:19   do_0: DO                          //  
+00ae     0057     6000           58:13     T                               //  (macro: noop)
+00b0     0058     6b1d           59:9      r>  \ Get limit                 //  
+00b2     0059     6b1d           59:9      r>  \ Get index                 //  
+00b4     005a     7600           59:9      1+  \ Increment index           //  
+00b6     005b     6111           59:9      over  \ duplicate for next iteration  //  
+00b8     005c     6111           59:9      over  \ duplicate for next iteration  //  
+00ba     005d     6127           59:9      >r  \ Save new index back       //  
+00bc     005e     6127           59:9      >r  \ Save limit back           //  
+00be     005f     6803           59:9      <  \ Compare index < limit      //  
+00c0     0060     2057           59:9      ZJMP do_0  \ Jump if index < limit  //  
+00c2     0061     600c           59:9      rdrop  \ Clean up index         //  
+00c4     0062     600c           59:9      rdrop  \ Clean up limit         //  
+00c6     0063     6b1d           60:5      r>  \ Get limit                 //  
+00c8     0064     6b1d           60:5      r>  \ Get index                 //  
+00ca     0065     7600           60:5      1+  \ Increment index           //  
+00cc     0066     6111           60:5      over  \ duplicate for next iteration  //  
+00ce     0067     6111           60:5      over  \ duplicate for next iteration  //  
+00d0     0068     6127           60:5      >r  \ Save new index back       //  
+00d2     0069     6127           60:5      >r  \ Save limit back           //  
+00d4     006a     6803           60:5      <  \ Compare index < limit      //  
+00d6     006b     2053           60:5      ZJMP do_1  \ Jump if index < limit  //  
+00d8     006c     600c           60:5      rdrop  \ Clean up index         //  
+00da     006d     600c           60:5      rdrop  \ Clean up limit         //  
+00dc     006e     608c           61:5      T[RET,r-1]                      //  (macro: exit)
+00de     006f     ----           63:1    start:                            //  
+00de     006f     4021           64:5      CALL init_led                   //  Configure PORTA13 as output
+00e0     0070     ----           66:1    main_loop:                        //  
+00e0     0070     4025           67:5      CALL led_on                     //  Turn LED on
+00e2     0071     402d           68:5      CALL print_on                   //  Print "LED ON" message
+00e4     0072     404f           69:5      CALL delay                      //  Wait for delay instead of keypress
+00e6     0073     4029           70:5      CALL led_off                    //  Turn LED off
+00e8     0074     403e           71:5      CALL print_off                  //  Print "LED OFF" message
+00ea     0075     404f           72:5      CALL delay                      //  Wait for delay instead of keypress
+00ec     0076     0070           73:5      JMP main_loop                   //  Repeat forever
