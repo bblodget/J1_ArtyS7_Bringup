@@ -1,0 +1,90 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0033            8:1      JMP start                       //  
+0002     0001     ----           25:3    uartstat:                         //  
+0002     0001     a000           26:5      #$2000                          //  (macro: UART_STATUS_REG)
+0004     0002     6d50           26:21     io[T][IORD]                     //  (macro: io@)
+0006     0003     6300           26:25     T&N                             //  (macro: overand)
+0008     0004     6703           26:33     N==T[d-1]                       //  (macro: =)
+000a     0005     608c           26:35     T[RET,r-1]                      //  (macro: exit)
+000c     0006     ----           30:3    emit?:                            //  
+000c     0006     6000           31:5      T                               //  (macro: pause)
+000e     0007     8001           32:5      #1                              //  Push transmit ready mask
+0010     0008     a000           33:5      #$2000                          //  (macro: UART_STATUS_REG)
+0012     0009     6d50           33:21     io[T][IORD]                     //  (macro: io@)
+0014     000a     6300           34:5      T&N                             //  (macro: overand)
+0016     000b     6703           35:5      N==T[d-1]                       //  (macro: =)
+0018     000c     608c           36:5      T[RET,r-1]                      //  (macro: exit)
+001a     000d     ----           40:3    key?:                             //  
+001a     000d     6000           41:5      T                               //  (macro: pause)
+001c     000e     8002           42:5      #2                              //  Push receive ready mask
+001e     000f     4001           43:5      CALL uartstat                   //  Check UART status
+0020     0010     608c           44:5      T[RET,r-1]                      //  (macro: exit)
+0022     0011     ----           48:3    emit:                             //  
+0022     0011     4006           49:5      CALL emit?                      //  Check if ready to transmit
+0024     0012     2011           50:5      ZJMP emit                       //  If not ready, keep waiting
+0026     0013     9000           51:5      #$1000                          //  (macro: UART_DATA_REG)
+0028     0014     7842           51:19     3OS[N->io[T],d-2]               //  (macro: io!)
+002a     0015     608c           52:5      T[RET,r-1]                      //  (macro: exit)
+002c     0016     ----           56:3    key:                              //  
+002c     0016     400d           57:5      CALL key?                       //  Check if character available
+002e     0017     2016           58:5      ZJMP key                        //  If no character, keep waiting
+0030     0018     9000           59:5      #$1000                          //  (macro: UART_DATA_REG)
+0032     0019     6d50           59:19     io[T][IORD]                     //  (macro: io@)
+0034     001a     608c           60:5      T[RET,r-1]                      //  (macro: exit)
+0036     001b     ----           64:3    2emit:                            //  
+0036     001b     6110           65:5      N[T->N]                         //  (macro: swap)
+0038     001c     6127           65:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+003a     001d     4011           66:5      CALL emit                       //  Send first char
+003c     001e     6b1d           67:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+003e     001f     4011           67:8      CALL emit                       //  Send second char
+0040     0020     608c           68:5      T[RET,r-1]                      //  (macro: exit)
+0042     0021     ----           13:3    print_hello:                      //  
+0042     0021     8048           16:5      #$48                            //  H
+0044     0022     4011           16:10     CALL emit                       //  H
+0046     0023     8065           17:5      #$65                            //  e
+0048     0024     4011           17:10     CALL emit                       //  e
+004a     0025     806c           18:5      #$6C                            //  l
+004c     0026     4011           18:10     CALL emit                       //  l
+004e     0027     806c           19:5      #$6C                            //  l
+0050     0028     4011           19:10     CALL emit                       //  l
+0052     0029     806f           20:5      #$6F                            //  o
+0054     002a     4011           20:10     CALL emit                       //  o
+0056     002b     8020           21:5      #$20                            //  space
+0058     002c     4011           21:10     CALL emit                       //  space
+005a     002d     8030           24:5      #$30                            //  n + 30, Convert to ASCII by adding '0' (0x30)
+005c     002e     6203           24:10     T+N[d-1]                        //  (macro: +)
+005e     002f     4011           25:5      CALL emit                       //  Print the number
+0060     0030     800a           28:5      #$0A                            //  Newline
+0062     0031     4011           28:10     CALL emit                       //  Newline
+0064     0032     608c           29:5      T[RET,r-1]                      //  (macro: exit)
+0066     0033     ----           32:1    start:                            //  
+0066     0033     4016           34:5      CALL key                        //  FIXME: we need to implement key? in simulator
+0068     0034     6103           34:9      N[d-1]                          //  (macro: drop)
+006a     0035     8009           37:5      #9                              //  Push limit (9)
+006c     0036     8000           38:5      #0                              //  Push initial index (0)
+006e     0037     6127           41:5      >r  \ Save index to R stack     //  
+0070     0038     6127           41:5      >r  \ Save limit to R stack     //  
+0072     0039     ----           41:5    do_0: DO                          //  
+0072     0039     6b1d           42:9      r>  \ Get limit pair 0          //  
+0074     003a     6b1d           42:9      r>  \ Get index pair 0          //  
+0076     003b     6011           42:9      dup  \ Duplicate i index for use  //  
+0078     003c     6127           42:9      >r  \ Save index back           //  
+007a     003d     6110           42:9      swap  \ Bring limit to top, leaving i below  //  
+007c     003e     6127           42:9      >r  \ Save limit back           //  
+007e     003f     4021           42:11     CALL print_hello                //  
+0080     0040     6b1d           43:5      r>  \ Get limit                 //  
+0082     0041     6b1d           43:5      r>  \ Get index                 //  
+0084     0042     7600           43:5      1+  \ Increment index           //  
+0086     0043     6111           43:5      over  \ duplicate for next iteration  //  
+0088     0044     6111           43:5      over  \ duplicate for next iteration  //  
+008a     0045     6127           43:5      >r  \ Save new index back       //  
+008c     0046     6127           43:5      >r  \ Save limit back           //  
+008e     0047     6803           43:5      <  \ Compare index < limit      //  
+0090     0048     2039           43:5      ZJMP do_0  \ Jump if index < limit  //  
+0092     0049     600c           43:5      rdrop  \ Clean up index         //  
+0094     004a     600c           43:5      rdrop  \ Clean up limit         //  
+0096     004b     4033           45:5      CALL start                      //  
+0098     004c     ----           47:1    wait_forever:                     //  
+0098     004c     6000           48:5      T                               //  (macro: noop)
+009a     004d     004c           49:5      JMP wait_forever                //  

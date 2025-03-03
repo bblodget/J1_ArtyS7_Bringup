@@ -8,7 +8,6 @@ ORG #$0000
 JMP start
 
 include "core/j1_base_macros.asm"      // Base J1 operations
-include "core/j1_extended_macros.asm"   // HX8K extended operations
 include "io/terminal_io.asm"
 
 : print_hello ( n -- )
