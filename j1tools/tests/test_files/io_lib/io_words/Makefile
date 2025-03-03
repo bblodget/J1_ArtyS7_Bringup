@@ -15,3 +15,9 @@ clean:
 	rm -f $(PROGRAM).sym
 	rm -f $(PROGRAM).lst
 	rm -f aout.*
+
+cleanall:
+	rm -f $(PROGRAM).hex
+	rm -f $(PROGRAM).sym
+	rm -f $(PROGRAM).lst
+	rm -f aout.*
