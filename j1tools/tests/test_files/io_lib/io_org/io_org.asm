@@ -1,6 +1,7 @@
 ORG #$0000
 JMP start
 
+include "core/j1_base_macros.asm"
 include "io/terminal_io.asm"
 
 start:
