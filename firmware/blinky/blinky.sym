@@ -1,0 +1,16 @@
+0001 uartstat
+0006 emit?
+000d key?
+0011 emit
+0016 key
+001b 2emit
+0021 init_led
+0025 led_on
+0029 led_off
+002d print_on
+003e print_off
+004f delay
+0053 do_1
+0057 do_0
+006f start
+0070 main_loop

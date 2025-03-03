@@ -1,28 +1,12 @@
-// Blinks LED on PORTA13
+// Tinyfpga-bx Blinky
+// Blinks LED on PORTA_01 (pin 14)
 
 ORG #$0000
 JMP start
 
-ORG #$0001
-vector:
-    // JMP irq        // Interrupt vector
-    T[fDINT]        // Disable interrupts
-    #$0000                          //  Bit 13 mask (clear bit 13)
-    #2                              //  Write back to porta_out
-    3OS[N->io[T],d-2]               //  (macro: io!)
-    #$49 emit  // I
-    #$52 emit  // R
-    #$51 emit  // Q
-    #$0A emit  // Newline
-    T[RET,r-1]                      //  (macro: exit)
-
-
 include "core/j1_base_macros.asm"      // Base J1 operations
+include "core/j1_extended_macros.asm"   // HX8K extended operations
 include "io/terminal_io.asm"
-
-// Memory access macro for quickstore
-// macro: @       ( addr -- x )           #$4000 or >r ;
-// macro: !       ( x addr -- )           3OS[N->[T],d-2] ;
 
 : init_led ( -- )
     // Set outputs
@@ -43,29 +27,49 @@ include "io/terminal_io.asm"
     exit
     ;
 
-: print_irq ( -- )
-    #$49 emit  // I
-    #$52 emit  // R
-    #$51 emit  // Q
+: print_on ( -- )
+    #$4C emit  // L
+    #$45 emit  // E
+    #$44 emit  // D
+    #$20 emit  // space
+    #$4F emit  // O
+    #$4E emit  // N
+    #$20 emit  // space
     #$0A emit  // Newline
     exit
     ;
 
+: print_off ( -- )
+    #$4C emit  // L
+    #$45 emit  // E
+    #$44 emit  // D
+    #$20 emit  // space
+    #$4F emit  // O
+    #$46 emit  // F
+    #$46 emit  // F
+    #$0A emit  // Newline
+    exit
+    ;
+
+delay:
+    // Outer loop: 183 iterations
+    #100 #0 DO
+        #$7FF0 #0 DO
+            // Inner loop body (empty for maximum speed)
+            noop
+        LOOP
+    LOOP
+    exit
+
 start:
     init_led        // Configure PORTA13 as output
-    led_on          // Turn LED on initially
-
-    // Put big number in ticks register to force an interrupt soon
-    #11 invert #$4000 io!   // Write -10 to ticks register
-
-    eint            // Enable interrupts
 
 main_loop:
-    // #$4000 io@ drop // Read ticks register (address 0x4000)
-    noop
+    led_on          // Turn LED on
+    print_on        // Print "LED ON" message
+    delay           // Wait for delay instead of keypress
+    led_off         // Turn LED off
+    print_off       // Print "LED OFF" message
+    delay           // Wait for delay instead of keypress
     JMP main_loop   // Repeat forever
 
-irq: 
-    print_irq       // Print "IRQ" to terminal
-    led_off         // Turn LED off in interrupt
-    exit
