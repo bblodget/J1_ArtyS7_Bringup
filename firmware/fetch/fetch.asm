@@ -13,7 +13,6 @@ include "core/j1_base_macros.asm"      // Base J1 operations
 include "io/terminal_io.asm"
 
 // Memory access macro for quickstore
-//macro: @       ( addr -- x )           #$4000 or >r exit ;
 macro: !       ( x addr -- )           3OS[N->[T],d-2] ;
 
 @:       

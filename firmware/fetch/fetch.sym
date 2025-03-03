@@ -1,0 +1,10 @@
+0008 uartstat
+000d emit?
+0014 key?
+0018 emit
+001d key
+0022 2emit
+0028 @
+002c start
+0035 return_here
+003a main_loop
