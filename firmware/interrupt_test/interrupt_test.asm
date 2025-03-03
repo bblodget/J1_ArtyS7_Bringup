@@ -83,6 +83,7 @@ print_start:
 start:
     // Wait for keypress
     key drop
+
     print_start
     led_init
     led_on
@@ -93,37 +94,17 @@ init:
     #0 IRQ_COUNT1 !
     eint               // Enable interrupts
 main_loop:
-    IRQ_COUNT1 @ #2 > IF
-        dint    // disable interrupts
+    IRQ_COUNT0 @ #183 > IF
+        #0 IRQ_COUNT0 !
         led_toggle
         print_toggle
-        JMP init
     THEN
     JMP main_loop
 
-
 // Interrupt handler - toggles LED
 irq_handler:
-    dint                    // Disable interrupts
-    
-    // Emit a character to confirm we're in the handler
-    #$41 emit              // 'A' - to show we entered the handler
-    
     // Increment IRQ_COUNT0
     IRQ_COUNT0 @           // Fetch current count
     #1 +                   // Increment
-    dup                    // Duplicate for comparison
     IRQ_COUNT0 !           // Store back
-    
-    // Check if we've reached the threshold
-    #20 >               // Compare with threshold
-    IF
-        #$42 emit          // 'B' - to show we entered the IF block
-        IRQ_COUNT1 @       // Fetch IRQ_COUNT1
-        #1 +               // Increment
-        IRQ_COUNT1 !       // Store back
-        #0 IRQ_COUNT0 !    // Reset IRQ_COUNT0
-    THEN
-    
-    #$43 emit              // 'C' - to show we're exiting the handler
     exit
