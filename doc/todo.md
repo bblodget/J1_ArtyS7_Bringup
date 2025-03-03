@@ -89,6 +89,10 @@
     - [ ] Track already included files
     - [ ] Prevent duplicate includes
     - [ ] Test with circular includes
+  - [x] Architecture Flag Support
+    - [x] Document architecture variants (fetch_type, alu_ops)
+    - [x] Create framework for configuration options
+    - [x] Document assembly directives for flags
 
 ## Current Development Focus
 
@@ -122,12 +126,22 @@
   - [ ] Stack effect validation
 
 ### Hardware Testing
-- [ ] UART Testing
-  - [ ] Hardware timing verification
-  - [ ] Multi-byte transmission test
-  - [ ] Add realistic UART status simulation
-  - [ ] Implement key? in simulator
-  - [ ] Test with actual hardware
+- [x] UART Testing
+  - [x] Hardware timing verification
+  - [x] Multi-byte transmission test
+  - [x] Add realistic UART status simulation
+  - [x] Implement key? in simulator
+  - [x] Test with actual hardware
+- [x] Interrupt System
+  - [x] Interrupt Handler
+    - [x] Test ticks overflow interrupt
+    - [x] Implement basic interrupt service routine
+    - [x] Add interrupt vector table
+    - [x] Document interrupt handling
+  - [ ] Advanced interrupt features
+    - [ ] Multiple interrupt sources
+    - [ ] Priority handling
+    - [ ] Nested interrupts
 
 ### Standard Library Development
 - [ ] Core Word Library
@@ -144,13 +158,6 @@
     - [ ] Return stack operations
     - [x] I/O operations
     - [ ] Status operations
-
-### Interrupt System
-- [ ] Interrupt Handler
-  - [ ] Test ticks overflow interrupt
-  - [ ] Implement basic interrupt service routine
-  - [ ] Add interrupt vector table
-  - [ ] Document interrupt handling
 
 ### CLI Enhancements
 - [x] Test Organization
@@ -201,12 +208,28 @@
   - [ ] Usage reports
   - [ ] Symbol cross-references
   - [ ] Memory maps
+- [x] Memory Fetch Operations
+  - [x] Implement @ fetch as subroutine
+  - [x] Test with actual hardware
+  - [x] Document fetch behavior
 
 ### Hardware Features
 - [ ] Parameter Register File
   - [ ] >P(n) instruction
   - [ ] Parameter scope management
   - [ ] Assembler support
+- [x] LED Control
+  - [x] Basic on/off functionality
+  - [x] Toggle with timing control
+  - [x] Integration with interrupt system
+
+### Architecture Support
+- [ ] J1 Architecture Variants
+  - [x] Document architecture flags
+  - [ ] Implement architecture flag directives
+  - [ ] Add configuration constants
+  - [ ] Support conditional assembly
+  - [ ] Test with different configurations
 
 ### Code Organization
 - [ ] Code Refactoring
@@ -232,6 +255,8 @@
 - [ ] Advanced Memory Features
   - [ ] Memory initialization
   - [ ] Section placement controls
+- [ ] Improved J1 architecture support diffs
+  - [ ] Add compile flag for architecture
 
 ## Project Management
 - [ ] Licensing
@@ -239,7 +264,14 @@
   - [ ] Create LICENSE file
   - [ ] Add copyright notices to source files
 
+## Bug Fixes
+- [ ] Issue with control structures in subroutines
+- [ ] Need to check for include files more than once
+
 ## Notes
 - Focus on BEGIN AGAIN implementation next
 - Consider parameter register file implementation
 - Plan for disassembler development
+- Focus on implementing architecture flag directives next
+- Consider adding more examples for interrupt handling
+- Document memory fetch patterns for different architectures

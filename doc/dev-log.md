@@ -1,5 +1,75 @@
 # Development Log
 
+## 2025-03-03
+
+Add documentation for J1 architecture configuration flags
+
+- Created comprehensive documentation for J1 architecture variants in doc/j1_arch_flags.md
+- Documented supported configuration options:
+  - fetch_type: quickstore vs dualport memory access patterns
+  - alu_ops: extended vs original ALU operation sets
+- Explained usage of architecture flags in assembly code
+- Provided implementation details for different configuration options
+
+Add interrupt test firmware with LED and UART signaling
+
+- Implemented interrupt handler that increments a counter
+- Created main loop that toggles LED and prints message when counter reaches threshold
+- Added UART communication routines for character I/O
+- Included LED control functions for initialization, on/off, and toggling
+
+Implement fetch firmware with UART I/O and basic memory fetch
+
+- Added fetch.asm with UART communication routines
+- Created a simple fetch routine that reads a memory address
+- Generated hex, listing, and symbol files for the firmware
+
+Simplify firmware dependencies across multiple examples
+
+- Removed HX8K extended macros from count firmware
+- Removed extended macros from blinky firmware
+- Maintained existing functionality while simplifying dependencies
+- Added listing and symbol files for better documentation
+
+Refactor blinky firmware for TinyFPGA-BX
+
+- Updated blinky to use PORTA_01 (pin 14) for LED control
+- Added print messages for LED on/off states
+- Implemented delay loop for LED blinking
+- Removed interrupt-related code
+
+Enhance test files with proper includes and Makefile improvements
+
+- Added j1_base_macros.asm includes to io_words and io_org test files
+- Added cleanall targets to Makefiles for comprehensive cleanup
+- Fixed IO operations in test files
+
+## 2025-03-02
+
+Document interrupt handling and memory fetch operations
+
+- Added documentation on interrupt behavior and implementation
+- Documented findings about the @ fetch command
+- Captured key insights from implementation experiments
+
+Implement and refine LED blinking with timer control
+
+- Created working LED toggle with 0.5 second interval
+- Implemented first working version of interrupt-driven LED control
+- Refined timing and control logic
+
+Develop memory fetch functionality
+
+- Implemented @ fetch as a working subroutine
+- Created example of working fetch operation
+- Documented successful memory access patterns
+
+Implement interrupt vector handling
+
+- Created working interrupt vector implementation
+- Added slow blinking LED example using interrupts
+- Developed first version of blinky firmware for TinyFPGA
+
 ## 2025-02-23
 
 Adjust count firmware example loop limit
