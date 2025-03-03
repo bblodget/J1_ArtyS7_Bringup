@@ -13,8 +13,12 @@ include "core/j1_base_macros.asm"      // Base J1 operations
 include "io/terminal_io.asm"
 
 // Memory access macro for quickstore
-macro: @       ( addr -- x )           #$4000 or >r exit ;
+//macro: @       ( addr -- x )           #$4000 or >r exit ;
 macro: !       ( x addr -- )           3OS[N->[T],d-2] ;
+
+@:       
+    // ( addr -- x )
+    #$4000 or >r exit
 
 start:
     // wait for keypress
@@ -23,17 +27,11 @@ start:
     // Save 8 into IRQ_COUNT0
     #8 IRQ_COUNT0 !
 
-    #$6c >r  // Push return address
+    #$43 emit  // 'C' - to show we got here
+    IRQ_COUNT0 @     // Address to fetch from
 
-    IRQ_COUNT0     // Address to fetch from
-    #$4000 or  // Set bit 14
-    >r         // Push fetch address
-    // Print something before exit
-    #$41 emit  // 'A' - to show we got here
-    exit       // Trigger fetch
-    
 return_here:    // this is byte address 6a
-    #$42 emit  // 'B' - to show fetch worked
+    #$44 emit  // 'D' - to show fetch worked
     // Print value of IRQ_COUNT0
     #$30 +         // n + 30, Convert to ASCII by adding '0' (0x30)
     emit
