@@ -1,0 +1,128 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0053            5:1      JMP start                       //  Boot vector
+0002     0001     006b            8:1      JMP irq_handler                 //  Interrupt vector
+0010     0008     ----           25:3    uartstat:                         //  
+0010     0008     a000           26:5      #$2000                          //  (macro: UART_STATUS_REG)
+0012     0009     6d50           26:21     io[T][IORD]                     //  (macro: io@)
+0014     000a     6300           26:25     T&N                             //  (macro: overand)
+0016     000b     6703           26:33     N==T[d-1]                       //  (macro: =)
+0018     000c     608c           26:35     T[RET,r-1]                      //  (macro: exit)
+001a     000d     ----           30:3    emit?:                            //  
+001a     000d     6000           31:5      T                               //  (macro: pause)
+001c     000e     8001           32:5      #1                              //  Push transmit ready mask
+001e     000f     a000           33:5      #$2000                          //  (macro: UART_STATUS_REG)
+0020     0010     6d50           33:21     io[T][IORD]                     //  (macro: io@)
+0022     0011     6300           34:5      T&N                             //  (macro: overand)
+0024     0012     6703           35:5      N==T[d-1]                       //  (macro: =)
+0026     0013     608c           36:5      T[RET,r-1]                      //  (macro: exit)
+0028     0014     ----           40:3    key?:                             //  
+0028     0014     6000           41:5      T                               //  (macro: pause)
+002a     0015     8002           42:5      #2                              //  Push receive ready mask
+002c     0016     4008           43:5      CALL uartstat                   //  Check UART status
+002e     0017     608c           44:5      T[RET,r-1]                      //  (macro: exit)
+0030     0018     ----           48:3    emit:                             //  
+0030     0018     400d           49:5      CALL emit?                      //  Check if ready to transmit
+0032     0019     2018           50:5      ZJMP emit                       //  If not ready, keep waiting
+0034     001a     9000           51:5      #$1000                          //  (macro: UART_DATA_REG)
+0036     001b     7842           51:19     3OS[N->io[T],d-2]               //  (macro: io!)
+0038     001c     608c           52:5      T[RET,r-1]                      //  (macro: exit)
+003a     001d     ----           56:3    key:                              //  
+003a     001d     4014           57:5      CALL key?                       //  Check if character available
+003c     001e     201d           58:5      ZJMP key                        //  If no character, keep waiting
+003e     001f     9000           59:5      #$1000                          //  (macro: UART_DATA_REG)
+0040     0020     6d50           59:19     io[T][IORD]                     //  (macro: io@)
+0042     0021     608c           60:5      T[RET,r-1]                      //  (macro: exit)
+0044     0022     ----           64:3    2emit:                            //  
+0044     0022     6110           65:5      N[T->N]                         //  (macro: swap)
+0046     0023     6127           65:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+0048     0024     4018           66:5      CALL emit                       //  Send first char
+004a     0025     6b1d           67:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+004c     0026     4018           67:8      CALL emit                       //  Send second char
+004e     0027     608c           68:5      T[RET,r-1]                      //  (macro: exit)
+0050     0028     ----           40:1    @:                                //  
+0050     0028     c000           42:5      #$4000                          //  
+0052     0029     6403           42:12     T|N[d-1]                        //  (macro: or)
+0054     002a     6127           42:15     N[T->R,r+1,d-1]                 //  (macro: >r)
+0056     002b     608c           42:18     T[RET,r-1]                      //  (macro: exit)
+0058     002c     ----           44:1    led_init:                         //  
+0058     002c     8001           46:5      #$0001                          //  Set porta_dir[0] to 1 (output)
+005a     002d     8004           47:5      #$0004                          //  (macro: PORTA_DIR)
+005c     002e     7842           47:15     3OS[N->io[T],d-2]               //  (macro: io!)
+005e     002f     608c           48:5      T[RET,r-1]                      //  (macro: exit)
+0060     0030     ----           50:1    led_on:                           //  
+0060     0030     8001           51:5      #$0001                          //  Bit 13 mask (set bit 13)
+0062     0031     8002           52:5      #$0002                          //  (macro: PORTA_OUT)
+0064     0032     7842           52:15     3OS[N->io[T],d-2]               //  (macro: io!)
+0066     0033     608c           53:5      T[RET,r-1]                      //  (macro: exit)
+0068     0034     ----           55:1    led_off:                          //  
+0068     0034     8000           56:5      #$0000                          //  Bit 13 mask (clear bit 13)
+006a     0035     8002           57:5      #$0002                          //  (macro: PORTA_OUT)
+006c     0036     7842           57:15     3OS[N->io[T],d-2]               //  (macro: io!)
+006e     0037     608c           58:5      T[RET,r-1]                      //  (macro: exit)
+0070     0038     ----           60:1    led_toggle:                       //  
+0070     0038     8002           61:5      #$0002                          //  (macro: PORTA_OUT)
+0072     0039     6d50           61:15     io[T][IORD]                     //  (macro: io@)
+0074     003a     8001           62:5      #1                              //  Toggle the LED
+0076     003b     6503           62:8      T^N[d-1]                        //  (macro: xor)
+0078     003c     8002           63:5      #$0002                          //  (macro: PORTA_OUT)
+007a     003d     7842           63:15     3OS[N->io[T],d-2]               //  (macro: io!)
+007c     003e     608c           64:5      T[RET,r-1]                      //  (macro: exit)
+007e     003f     ----           66:1    print_toggle:                     //  
+007e     003f     8054           67:5      #$54                            //  T
+0080     0040     4018           67:10     CALL emit                       //  T
+0082     0041     804f           68:5      #$4F                            //  O
+0084     0042     4018           68:10     CALL emit                       //  O
+0086     0043     800a           69:5      #$0A                            //  Newline
+0088     0044     4018           69:10     CALL emit                       //  Newline
+008a     0045     608c           70:5      T[RET,r-1]                      //  (macro: exit)
+008c     0046     ----           72:1    print_start:                      //  
+008c     0046     8053           73:5      #$53                            //  S
+008e     0047     4018           73:10     CALL emit                       //  S
+0090     0048     8074           74:5      #$74                            //  t
+0092     0049     4018           74:10     CALL emit                       //  t
+0094     004a     8061           75:5      #$61                            //  a
+0096     004b     4018           75:10     CALL emit                       //  a
+0098     004c     8072           76:5      #$72                            //  r
+009a     004d     4018           76:10     CALL emit                       //  r
+009c     004e     8074           77:5      #$74                            //  t
+009e     004f     4018           77:10     CALL emit                       //  t
+00a0     0050     800a           78:5      #$0A                            //  Newline
+00a2     0051     4018           78:10     CALL emit                       //  Newline
+00a4     0052     608c           79:5      T[RET,r-1]                      //  (macro: exit)
+00a6     0053     ----           83:1    start:                            //  
+00a6     0053     401d           85:5      CALL key                        //  
+00a8     0054     6103           85:9      N[d-1]                          //  (macro: drop)
+00aa     0055     4046           87:5      CALL print_start                //  
+00ac     0056     402c           88:5      CALL led_init                   //  
+00ae     0057     4030           89:5      CALL led_on                     //  
+00b0     0058     ----           92:1    init:                             //  
+00b0     0058     8000           93:5      #0                              //  
+00b2     0059     8004           93:8      #$0004                          //  (macro: IRQ_COUNT0)
+00b4     005a     7832           93:19     3OS[N->[T],d-2]                 //  (macro: !)
+00b6     005b     8000           94:5      #0                              //  
+00b8     005c     8006           94:8      #$0006                          //  (macro: IRQ_COUNT1)
+00ba     005d     7832           94:19     3OS[N->[T],d-2]                 //  (macro: !)
+00bc     005e     6070           95:5      T[fEINT]                        //  (macro: eint)
+00be     005f     ----           96:1    main_loop:                        //  
+00be     005f     8004           97:5      #$0004                          //  (macro: IRQ_COUNT0)
+00c0     0060     4028           97:16     CALL @                          //  
+00c2     0061     80b7           97:18     #183                            //  
+00c4     0062     6110           97:23     N[T->N]                         //  (macro: >)
+00c6     0063     6803           97:23     N<T[d-1]                        //  (macro: >)
+00c8     0064     206a           97:25     ZJMP if_false_0: IF             //  
+00ca     0065     8000           98:9      #0                              //  
+00cc     0066     8004           98:12     #$0004                          //  (macro: IRQ_COUNT0)
+00ce     0067     7832           98:23     3OS[N->[T],d-2]                 //  (macro: !)
+00d0     0068     4038           99:9      CALL led_toggle                 //  
+00d2     0069     403f          100:9      CALL print_toggle               //  
+00d4     006a     ----          101:5    if_false_0: THEN                  //  
+00d4     006a     005f          102:5      JMP main_loop                   //  
+00d6     006b     ----          105:1    irq_handler:                      //  
+00d6     006b     8004          107:5      #$0004                          //  (macro: IRQ_COUNT0)
+00d8     006c     4028          107:16     CALL @                          //  Fetch current count
+00da     006d     8001          108:5      #1                              //  Increment
+00dc     006e     6203          108:8      T+N[d-1]                        //  (macro: +)
+00de     006f     8004          109:5      #$0004                          //  (macro: IRQ_COUNT0)
+00e0     0070     7832          109:16     3OS[N->[T],d-2]                 //  (macro: !)
+00e2     0071     608c          110:5      T[RET,r-1]                      //  (macro: exit)
