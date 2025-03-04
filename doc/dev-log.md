@@ -1,5 +1,19 @@
 # Development Log
 
+## 2025-03-04
+
+TODO:
+- See if I can replicate the control structure issue in a subroutine problem
+- Refactor subroutines to be syntax sugar for labels
+- Define word ; to be synonym for exit
+- Think of a marker for ending macros, maybe ;; or macro_end;
+- Check in *.sym and *.lst files for the test files.
+
+Done:
+- Created a new git branch called refactor/sub
+- Add firmware directories to the test_assembler.py file
+
+
 ## 2025-03-03
 
 Add documentation for J1 architecture configuration flags

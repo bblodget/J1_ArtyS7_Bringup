@@ -195,12 +195,19 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "raw_loop"),
         ("control", "raw_i_loop"),
         ("control", "do_i_loop"),
+        ("firmware", "blinky"),
+        ("firmware", "count"),
+        ("firmware", "fetch"),
+        ("firmware", "interrupt_test"),
     ],
 )
 def test_program(assembler, category, test_name):
     """Generic test runner for assembly programs."""
     # Construct path to test files
-    base_path = Path(__file__).parent / "test_files" / category / test_name
+    if category == "firmware":
+        base_path = Path(__file__).parent.parent.parent / "firmware" / test_name
+    else:
+        base_path = Path(__file__).parent / "test_files" / category / test_name
     asm_file = base_path / f"{test_name}.asm"
     hex_file = base_path / f"{test_name}.hex"
 
