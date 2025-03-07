@@ -369,11 +369,14 @@ class J1Assembler(Transformer):
     def label(self, items: List[Token]) -> InstructionMetadata:
         """Convert label rule into InstructionMetadata."""
         self.logger.debug(f"\nLabel items: {items}")
-        token = items[0]  # This is the IDENT token
-        label_name = str(token)
 
-        # Create instruction text with colon
-        instr_text = f"{label_name}:"
+        # Forth-style subroutine definition: COLON IDENT
+        if len(items) == 2 and items[0].type == "COLON" and items[1].type == "IDENT":
+            token = items[1]  # This is the IDENT token
+            label_name = str(token)
+            instr_text = f":{label_name}"
+        else:
+            raise ValueError(f"Unexpected label format: {items}")
 
         # Get allocation address
         addr = self.addr_space.get_word_address()
@@ -775,77 +778,6 @@ class J1Assembler(Transformer):
         for entry in reversed(self.state.include_stack):
             trace.append(f"Included from {entry.filename}:{entry.line_number}")
         return "\n".join(trace)
-
-    def subroutine_def(self, items):
-        """Handle Forth-style subroutine definitions."""
-        colon_token = items[0]  # COLON token
-        name_token = items[1]  # IDENT token
-        subroutine_name = str(name_token)
-
-        # Get stack effect comment if present
-        stack_effect = ""
-        for item in items:
-            if isinstance(item, Token) and item.type == "STACK_COMMENT":
-                stack_effect = f" {str(item)}"
-                break
-
-        # Process the body instructions
-        body_instructions = []
-        for item in items:
-            if isinstance(item, Tree):  # This is the instruction list (subroutine_body)
-                self.logger.debug("\nProcessing subroutine body: ")
-                children = item.children
-                self.logger.debug(f"Children: {children}")
-                # Flatten nested lists of instructions
-                for child in children:
-                    if isinstance(child, list):
-                        # Do not reassign word_addr here; the instruction already got an address
-                        body_instructions.append(child[0])
-                    else:
-                        body_instructions.append(child)
-
-        # Add RET instruction at the end if not already present
-        if not body_instructions or not self._is_return_instruction(body_instructions[-1]):
-            ret_token = name_token  # Reuse the name token for location info
-            ret_inst = InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
-                value=0x0080,  # RET instruction value
-                token=ret_token,
-                filename=self.state.current_file,
-                source_lines=self.state.source_lines,
-                instr_text="RET",
-                word_addr=self.addr_space.advance(),  # Only for the RET, as it is not set yet
-            )
-            body_instructions.append(ret_inst)
-
-        # Use the word address of the first instruction in the body as the subroutine label address.
-        if body_instructions:
-            start_addr = body_instructions[0].word_addr
-        else:
-            start_addr = self.addr_space.get_word_address()
-
-        # Create a label for the subroutine at the beginning address
-        label_metadata = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL,
-            value=0,
-            token=name_token,
-            filename=self.state.current_file,
-            source_lines=self.state.source_lines,
-            instr_text=f"{subroutine_name}:",
-            label_name=subroutine_name,
-            word_addr=start_addr,
-        )
-
-        # Return the label and all body instructions in order
-        return [label_metadata] + body_instructions
-
-    def _is_return_instruction(self, inst):
-        """Check if an instruction is a return instruction."""
-        return (
-            isinstance(inst, InstructionMetadata)
-            and inst.type == InstructionType.BYTE_CODE
-            and (inst.value & 0x0080) == 0x0080
-        )  # Check for RET bit
 
     def org_directive(self, items):
         """Handle ORG directive with word address"""

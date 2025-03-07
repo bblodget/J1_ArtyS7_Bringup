@@ -8,6 +8,10 @@
 COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
 
+// Add stack effect comment support
+STACK_COMMENT: /\([^)]*\)/
+%ignore STACK_COMMENT
+
 // Numbers and identifiers
 HEX: /#\$[0-9a-fA-F]+/
 DECIMAL: /#-?[0-9]+/
@@ -29,7 +33,7 @@ LEAVE.2: "LEAVE"
 ORG.2: "ORG"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
-IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~>]+/
+IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
@@ -42,13 +46,10 @@ COMMA: ","
 
 // Macro tokens
 MACRO.2: "macro:"
-SEMICOLON: ";"
+ENDMACRO.2: "endmacro"
 
 // Include directive
 INCLUDE.2: "include"
-
-// Add stack effect comment support
-STACK_COMMENT: /\([^)]*\)/
 
 // Basic ALU Operations
 T: "T"
@@ -109,14 +110,14 @@ R_MINUS_2: "r-2"
 ?start: program
 program: (statement | org_directive)*
 // statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
-statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
+statement: label | instruction | macro_def | include_stmt | control_structure
 org_directive: ORG number
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
 
 // Add label rule
-label: IDENT COLON
+label: COLON IDENT
 
 // Numbers and references
 number: HEX | DECIMAL
@@ -191,21 +192,12 @@ return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 // BYTE: "BYTE"
 
 // Add new rules for macros
-macro_def: MACRO IDENT STACK_COMMENT? macro_body SEMICOLON
+macro_def: MACRO IDENT STACK_COMMENT? macro_body ENDMACRO
 macro_body: instruction+
 
 // call_expr: an identifier that is interpreted as a macro call if defined,
 // otherwise it is assembled as a CALL instruction.
 call_expr: IDENT
-
-// Add subroutine definition rule
-subroutine_def: COLON IDENT STACK_COMMENT? block SEMICOLON
-//subroutine_body: (instruction | label)+
-block: (block_item)+
-
-?block_item: instruction
-        | label
-        | control_structure
 
 // New rules for control structures
 // control_structure: if_then | if_else_then | loop_until | loop_while
@@ -228,6 +220,11 @@ do_plus_loop: do_op block plus_loop_op
 // If you don't want the unconditional block, you can put a noop there.
 
 //block: (statement)*
+block: (block_item)+
+
+?block_item: instruction
+        | label
+        | control_structure
 
 // New rules for control operations as standalone instructions
 // if_op: IF
