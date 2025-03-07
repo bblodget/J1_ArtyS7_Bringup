@@ -11,20 +11,17 @@ include "io/terminal_io.asm"
     // Set outputs
     #$0001          // Set porta_dir[0] to 1 (output)
     #4 io!          // Write to porta_dir
-    exit
-    ;
+;
 
 : led_on ( -- )
     #$0001          // Bit 13 mask (set bit 13)
     #2 io!          // Write back to porta_out
-    exit
-    ;
+;
 
 : led_off ( -- )
     #$0000          // Bit 13 mask (clear bit 13)
     #2 io!          // Write back to porta_out
-    exit
-    ;
+;
 
 : print_on ( -- )
     #$4C emit  // L
@@ -35,8 +32,7 @@ include "io/terminal_io.asm"
     #$4E emit  // N
     #$20 emit  // space
     #$0A emit  // Newline
-    exit
-    ;
+;
 
 : print_off ( -- )
     #$4C emit  // L
@@ -47,10 +43,9 @@ include "io/terminal_io.asm"
     #$46 emit  // F
     #$46 emit  // F
     #$0A emit  // Newline
-    exit
-    ;
+;
 
-delay:
+: delay
     // Outer loop: 183 iterations
     #100 #0 DO
         #$7FF0 #0 DO
@@ -60,10 +55,10 @@ delay:
     LOOP
     exit
 
-start:
+: start
     init_led        // Configure PORTA13 as output
 
-main_loop:
+: main_loop
     led_on          // Turn LED on
     print_on        // Print "LED ON" message
     delay           // Wait for delay instead of keypress
