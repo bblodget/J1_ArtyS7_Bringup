@@ -26,10 +26,9 @@ include "io/terminal_io.asm"
     
     // Print newline
     #$0A emit  // Newline
-    exit
     ;   // ; by itself generates RET not T[RET,r-1] FIXME
 
-start:
+: start
     // Wait for keypress
     key drop        // FIXME: we need to implement key? in simulator
 
@@ -44,6 +43,6 @@ start:
 
     start
 
-wait_forever:
+: wait_forever
     noop
     JMP wait_forever
