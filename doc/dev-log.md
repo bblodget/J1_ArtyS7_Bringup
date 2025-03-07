@@ -1,5 +1,11 @@
 # Development Log
 
+## 2025-03-05
+
+TODO:
+- I should only support the forth style label syntax
+- I need to have a label be IDENT COLON but not ; COLON
+
 ## 2025-03-04
 
 TODO:

@@ -78,11 +78,11 @@ def test_stack_deltas(assembler, source, expected):
 def test_jump_instructions(assembler):
     """Test jump instructions with label resolution."""
     source = """
-    start:
+    : start
         JMP end
-    middle:
+    : middle
         ZJMP start
-    end:
+    : end
         CALL middle
     """
     tree = assembler.parse(source)
@@ -127,8 +127,8 @@ def test_undefined_label(assembler):
 def test_duplicate_label(assembler):
     """Test duplicate label handling."""
     source = """
-    label: T
-    label: N
+    : label T
+    : label N
     """
     with pytest.raises((ValueError, VisitError)) as exc_info:
         assembler.transform(assembler.parse(source))

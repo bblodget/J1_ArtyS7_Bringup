@@ -9,21 +9,21 @@
 // JMP start
 
 // UART Register Addresses
-macro: UART_STATUS_REG ( -- addr ) #$2000 ;
-macro: UART_DATA_REG   ( -- addr ) #$1000 ;
+macro: UART_STATUS_REG ( -- addr ) #$2000 endmacro
+macro: UART_DATA_REG   ( -- addr ) #$1000 endmacro
 
 // Basic utility macros
 macro: nop ( -- )
     noop
-;
+endmacro
 
 macro: pause ( -- )
     nop
-;
+endmacro
 
 // UART Status Check
 : uartstat ( mask -- flag )
-    UART_STATUS_REG io@ overand = exit
+    UART_STATUS_REG io@ overand = 
 ;
 
 // Check if UART is ready to transmit
@@ -33,7 +33,6 @@ macro: pause ( -- )
     UART_STATUS_REG io@  // Get UART status
     overand              // Duplicate status
     =                   // Compare result
-    exit
 ;
 
 // Check if UART has received data
@@ -41,7 +40,6 @@ macro: pause ( -- )
     pause
     #2                  // Push receive ready mask
     uartstat      // Check UART status
-    exit
 ;
 
 // Send a character to UART
@@ -49,7 +47,6 @@ macro: pause ( -- )
     emit?              // Check if ready to transmit
     ZJMP emit     // If not ready, keep waiting
     UART_DATA_REG io!  // Send character
-    exit
 ;
 
 // Read a character from UART
@@ -57,7 +54,6 @@ macro: pause ( -- )
     key?              // Check if character available
     ZJMP key         // If no character, keep waiting
     UART_DATA_REG io@ // Read character
-    exit
 ;
 
 // Send two characters to UART
@@ -65,5 +61,4 @@ macro: pause ( -- )
     swap >r            // Save second char
     emit               // Send first char
     r> emit           // Send second char
-    exit
 ;
