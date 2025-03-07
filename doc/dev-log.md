@@ -2,6 +2,15 @@
 
 ## 2025-03-05
 
+Done:
+  - Finished refactoring code to use new label syntax
+  - New label syntax use forth : word syntax
+  - All test pass!
+  - Define word ; to be synonym for exit
+  - Use endmacro as the end of a macro instead of ;
+
+## 2025-03-05
+
 TODO:
 - I should only support the forth style label syntax
 - I need to have a label be IDENT COLON but not ; COLON

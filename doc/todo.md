@@ -80,10 +80,10 @@
   - [x] Added comparison macros
     - [x] Greater than (>)
     - [x] Unsigned greater than (u>)
-  - [ ] Fix subroutine return instruction
-    - [ ] Make ; generate T[RET,r-1] instead of RET
-    - [ ] Update grammar to handle bare ; correctly
-    - [ ] Test coverage for return stack handling
+  - [x] Fix subroutine return instruction
+    - [x] Make ; generate T[RET,r-1] instead of RET
+    - [x] Update grammar to handle bare ; correctly
+    - [x] Test coverage for return stack handling
   - [ ] Include file improvements
     - [ ] Add include guard detection
     - [ ] Track already included files
