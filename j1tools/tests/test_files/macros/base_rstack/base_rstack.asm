@@ -1,7 +1,7 @@
 // Test return stack operations
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Test return stack operations
     #42          // Stack: 42
     >r           // Stack: empty, R: 42
@@ -14,6 +14,6 @@ start:
     drop         // Stack: 1
     drop         // Stack: empty
 
-done:
+: done
     noop
     JMP done

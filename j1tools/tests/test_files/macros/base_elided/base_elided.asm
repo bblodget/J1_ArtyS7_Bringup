@@ -1,7 +1,7 @@
 // Test Basic elided words
 include "core/j1_base_macros.asm"
 
-start:
+: start
     #5 #3        // Stack: 5 3
     2dupand      // Stack: 5 3 1
     drop         // Stack: 5 3
@@ -20,6 +20,6 @@ start:
     2dupxor      // Stack: 5 3 6
     drop         // Stack: 5 3
 
-done:
+: done
     noop
     JMP done

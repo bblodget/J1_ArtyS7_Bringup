@@ -1,7 +1,7 @@
 // Test I/O operations
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Test UART write (0x1000)
     #$48         // Stack: 0x48 ('H' in ASCII)
     #$1000       // Stack: 0x48 0x1000 (UART address)
@@ -24,6 +24,6 @@ start:
     invert       // Stack: status rx_data ticks 0x8000 (by inverting 0x7FFF)
     io@          // Stack: status rx_data ticks cycles
 
-done:
+: done
     noop
     JMP done
