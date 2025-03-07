@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Test nested IF THEN with a true outer condition.
     #1              // Outer condition: true.
     IF
@@ -30,7 +30,7 @@ start:
     THEN
     drop            // Drop the false condition.
 
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

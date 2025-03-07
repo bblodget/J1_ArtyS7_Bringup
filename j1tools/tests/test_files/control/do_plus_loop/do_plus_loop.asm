@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Initialize loop parameters
     #10             // Push limit (10)
     #0              // Push initial index (0)
@@ -15,7 +15,7 @@ start:
         #2          // Push increment value (2)
     +LOOP           // Add increment to index and continue if < limit
     
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

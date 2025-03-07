@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Test using i, j, k outside any loop
     i               // Should warn: used outside DO LOOP
     drop
@@ -48,7 +48,7 @@ start:
         LOOP
     LOOP
     
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

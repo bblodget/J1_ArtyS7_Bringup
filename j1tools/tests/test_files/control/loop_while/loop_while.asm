@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Initialize counter
     #5              // Push initial counter value
 
@@ -17,7 +17,7 @@ start:
     
     drop           // Clean up the final counter
 
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

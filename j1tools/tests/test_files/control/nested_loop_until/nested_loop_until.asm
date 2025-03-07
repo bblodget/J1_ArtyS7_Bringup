@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Initialize outer counter
     #3              // Push outer loop counter (3)
 
@@ -26,7 +26,7 @@ start:
     
     drop          // Clean up outer loop's zero
 
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

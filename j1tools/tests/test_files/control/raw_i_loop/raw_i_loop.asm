@@ -3,7 +3,7 @@ JMP start
 
 include "platform/j1_16kb_dualport_macros.asm"
 
-start:
+: start
     // Initialize loop parameters
     #3              // Push limit (3)
     #0              // Push initial index (0)
@@ -12,7 +12,7 @@ start:
     >r              // Save index (0) to R stack
     >r              // Save limit (3) to R stack
 
-do_label:
+: do_label
     // Loop body - demonstrate i operation
     r>              // Get limit
     r>              // Get index
@@ -32,7 +32,7 @@ do_label:
     <               // Compare index < limit
     ZJMP do_label  // Jump if index < limit
     
-wait_forever:
+: wait_forever
     noop
     JMP wait_forever
 

@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Outer loop: 0 to 2
     #3              // Push limit (3)
     #0              // Push initial index (0)
@@ -28,7 +28,7 @@ start:
         LOOP
     LOOP
     
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 

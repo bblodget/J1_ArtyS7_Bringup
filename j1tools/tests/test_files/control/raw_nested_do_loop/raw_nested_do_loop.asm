@@ -3,28 +3,28 @@ JMP start
 
 include "platform/j1_16kb_dualport_macros.asm"
 
-start:
+: start
     // Outer loop (k): 0 to 2
     #3              // Push limit (3)
     #0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (3) to R stack
 
-k_loop:
+: k_loop
     // Middle loop (j): 0 to 1
     #2              // Push limit (2)
     #0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (2) to R stack
 
-j_loop:
+: j_loop
     // Inner loop (i): 0 to 3
     #4              // Push limit (4)
     #0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (4) to R stack
 
-i_loop:
+: i_loop
     // Access k (outer loop index)
     r>              // Get i limit
     r>              // Get i index
@@ -106,7 +106,7 @@ i_loop:
     rdrop           // Clean up outer loop limit
     rdrop           // Clean up outer loop index
 
-wait_forever:
+: wait_forever
     noop
     JMP wait_forever
 

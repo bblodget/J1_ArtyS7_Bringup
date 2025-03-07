@@ -3,7 +3,7 @@ JMP start
 
 include "core/j1_base_macros.asm"
 
-start:
+: start
     // Test IF ELSE THEN with a true condition.
     #1              // Push a nonzero (true) condition.
     IF
@@ -22,7 +22,7 @@ start:
     THEN
     drop           // Clean up by dropping the condition.
 
-wait_forever:
+: wait_forever
      noop
      JMP wait_forever
 
