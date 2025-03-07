@@ -265,8 +265,8 @@
   - [ ] Add copyright notices to source files
 
 ## Bug Fixes
-- [ ] Issue with control structures in subroutines
-  - [ ] I think we can make subroutines just syntax sugar for a label
+- [x] Issue with control structures in subroutines
+  - [x] I think we can make subroutines just syntax sugar for a label
 - [ ] Need to check for include files more than once
 
 ## Notes
