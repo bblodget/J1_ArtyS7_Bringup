@@ -1,7 +1,7 @@
 // Test nested includes and complex macros
 include "math/math_words.asm"
 
-start:
+: start
     #5 #3        // Push 5 and 3
     2dup         // Stack: 5 3 5 3
     plus         // Stack: 5 3 8
@@ -9,6 +9,6 @@ start:
     drop         // Stack: 5 8
     JMP done     // Jump to end
 
-done:
+: done
     noop
     JMP done

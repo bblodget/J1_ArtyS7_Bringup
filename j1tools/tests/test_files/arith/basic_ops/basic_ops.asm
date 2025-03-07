@@ -1,6 +1,6 @@
-first:
+: first
     #5
-second:
+: second
     #$2A
     T
     T[d+0]
