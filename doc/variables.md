@@ -193,6 +193,19 @@ You can use byte-level operations with VARIABLE declarations as well:
 VARIABLE ascii_str 'H'c, 'i'c, '!'c, 0c,  // Stores "Hi!" as bytes
 ```
 
+### Mixing Word and Byte Operations
+
+You can mix word and byte operations within the same memory initialization:
+
+```
+VARIABLE mixed 42,    // First a word (42)
+             'A'c,    // Then a byte ('A')
+             'B'c,    // Another byte ('B')
+             99,      // Then another word (99)
+```
+
+This flexibility allows you to create compact data structures with different-sized fields. Note that when mixing byte and word operations, be mindful of address alignment - accessing words at odd byte addresses may be inefficient on some processors.
+
 ### Endianness
 
 The J1 processor uses little-endian byte order. When a 16-bit word (e.g., $ABCD) is stored in memory:
@@ -301,8 +314,10 @@ Under the hood, these directives are implemented as follows:
 6. `STRING name "text"` expands to:
    ```
    macro: name ( -- addr ) #$MEMORY_ADDR endmacro
-   lengthc, 'c1'c, 'c2'c, 'c3'c, ... // Where each character is stored as a byte
+   // Store the length byte, followed by each character as individual bytes
+   13c, 'H'c, 'e'c, 'l'c, 'l'c, 'o'c, ... // For example, with "Hello, world!"
    ```
+   Note that the STRING directive automatically calculates the length of the provided text string.
 
 ## Comparison with Traditional Forth
 
