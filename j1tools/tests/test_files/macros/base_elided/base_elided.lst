@@ -21,4 +21,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0022     0011     6103           21:5      N[d-1]                          //  (macro: drop)
 0024     0012     ----           23:3    :done                             //  
 0024     0012     6000           24:5      T                               //  (macro: noop)
-0026     0013     0012           25:5      JMP done                        //  
+0026     0013     0012           25:5      JMP 'done                       //  

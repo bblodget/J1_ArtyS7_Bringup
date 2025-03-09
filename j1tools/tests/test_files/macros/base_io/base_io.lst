@@ -15,4 +15,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0016     000b     6d50           25:5      io[T][IORD]                     //  (macro: io@)
 0018     000c     ----           27:3    :done                             //  
 0018     000c     6000           28:5      T                               //  (macro: noop)
-001a     000d     000c           29:5      JMP done                        //  
+001a     000d     000c           29:5      JMP 'done                       //  

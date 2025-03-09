@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0021            2:1      JMP start                       //  
+0000     0000     0021            2:1      JMP 'start                      //  
 0002     0001     ----           25:3    :uartstat                         //  
 0002     0001     a000           26:5      #$2000                          //  (macro: UART_STATUS_REG)
 0004     0002     6d50           26:21     io[T][IORD]                     //  (macro: io@)
@@ -22,13 +22,13 @@ BYTE     WORD     CODE            #:col    SOURCE
 0020     0010     608c           43:1      T[RET,r-1]                      //  (macro: ;)
 0022     0011     ----           46:3    :emit                             //  
 0022     0011     4006           47:5      CALL emit?                      //  Check if ready to transmit
-0024     0012     2011           48:5      ZJMP emit                       //  If not ready, keep waiting
+0024     0012     2011           48:5      ZJMP 'emit                      //  If not ready, keep waiting
 0026     0013     9000           49:5      #$1000                          //  (macro: UART_DATA_REG)
 0028     0014     7842           49:19     3OS[N->io[T],d-2]               //  (macro: io!)
 002a     0015     608c           50:1      T[RET,r-1]                      //  (macro: ;)
 002c     0016     ----           53:3    :key                              //  
 002c     0016     400d           54:5      CALL key?                       //  Check if character available
-002e     0017     2016           55:5      ZJMP key                        //  If no character, keep waiting
+002e     0017     2016           55:5      ZJMP 'key                       //  If no character, keep waiting
 0030     0018     9000           56:5      #$1000                          //  (macro: UART_DATA_REG)
 0032     0019     6d50           56:19     io[T][IORD]                     //  (macro: io@)
 0034     001a     608c           57:1      T[RET,r-1]                      //  (macro: ;)
@@ -46,4 +46,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0048     0024     4011           10:10     CALL emit                       //  Send newline (ASCII 0x0A)
 004a     0025     ----           12:3    :wait_forever                     //  
 004a     0025     6000           13:6      T                               //  (macro: noop)
-004c     0026     0025           14:6      JMP wait_forever                //  
+004c     0026     0025           14:6      JMP 'wait_forever               //  

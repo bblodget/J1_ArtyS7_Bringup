@@ -25,7 +25,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 002a     0015     7900           40:5      mem[T]                          //  (macro: @)
 002c     0016     8067           41:5      #103                            //  Stack: 1234 1234 1234 5678 103
 002e     0017     7900           42:5      mem[T]                          //  (macro: @)
-0030     0018     0020           43:5      JMP done                        //  Jump to done
+0030     0018     0020           43:5      JMP 'done                       //  Jump to done
 0040     0020     ----           46:3    :done                             //  
 0040     0020     6000           47:5      T                               //  (macro: noop)
-0042     0021     0020           48:5      JMP done                        //  Loop forever
+0042     0021     0020           48:5      JMP 'done                       //  Loop forever

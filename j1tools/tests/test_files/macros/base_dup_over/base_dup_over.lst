@@ -15,4 +15,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0016     000b     6500           15:5      T^N                             //  (macro: overxor)
 0018     000c     ----           17:3    :done                             //  
 0018     000c     6000           18:5      T                               //  (macro: noop)
-001a     000d     000c           19:5      JMP done                        //  
+001a     000d     000c           19:5      JMP 'done                       //  

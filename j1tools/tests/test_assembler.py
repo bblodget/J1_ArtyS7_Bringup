@@ -175,10 +175,6 @@ def test_combined_modifiers(assembler, source, expected):
         ("macros", "base_io"),
         ("macros", "base_rstack"),
         ("macros", "base_status"),
-        # Note: terminal_io is not valid anymore, because removed jumpt to start
-        # from the io/terminal_io.asm file.
-        # ("io_lib", "terminal_io"), 
-        # io_org uses ORG directive and JMP to start in main asm file.
         ("io_lib", "io_org"),
         ("io_lib", "io_words"),
         ("control", "if_then"),

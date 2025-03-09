@@ -6,4 +6,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0004     0002     6070            9:5      T[fEINT]                        //  (macro: eint)
 0006     0003     ----           11:3    :done                             //  
 0006     0003     6000           12:5      T                               //  (macro: noop)
-0008     0004     0003           13:5      JMP done                        //  
+0008     0004     0003           13:5      JMP 'done                       //  

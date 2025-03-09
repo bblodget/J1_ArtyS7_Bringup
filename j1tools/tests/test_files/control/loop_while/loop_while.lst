@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     8005            8:5      #5                              //  Push initial counter value
 0004     0002     ----           11:5    begin_0: BEGIN                    //  
@@ -16,4 +16,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0014     000a     6103           18:5      N[d-1]                          //  (macro: drop)
 0016     000b     ----           20:3    :wait_forever                     //  
 0016     000b     6000           21:6      T                               //  (macro: noop)
-0018     000c     000b           22:6      JMP wait_forever                //  
+0018     000c     000b           22:6      JMP 'wait_forever               //  

@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     8003            8:5      #3                              //  Push limit (3)
 0004     0002     8000            9:5      #0                              //  Push initial index (0)
@@ -16,7 +16,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 0016     000b     6127           24:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0018     000c     6127           25:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 001a     000d     6803           26:5      N<T[d-1]                        //  (macro: <)
-001c     000e     2005           27:5      ZJMP do_label                   //  Jump if index < limit
+001c     000e     2005           27:5      ZJMP 'do_label                  //  Jump if index < limit
 001e     000f     ----           29:3    :wait_forever                     //  
 001e     000f     6000           30:5      T                               //  (macro: noop)
-0020     0010     000f           31:5      JMP wait_forever                //  
+0020     0010     000f           31:5      JMP 'wait_forever               //  

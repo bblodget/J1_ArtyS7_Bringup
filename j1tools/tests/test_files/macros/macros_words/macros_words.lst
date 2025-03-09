@@ -5,7 +5,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 0002     0001     800a            9:9      #10                             //  
 0004     0002     6011           10:5      T[T->N,d+1]                     //  (macro: dup)
 0006     0003     6103           11:5      N[d-1]                          //  (macro: drop)
-0008     0004     0005           12:5      JMP wait_forever                //  Jump to end of program
+0008     0004     0005           12:5      JMP 'wait_forever               //  Jump to end of program
 000a     0005     ----           14:3    :wait_forever                     //  
 000a     0005     6000           15:5      T[d+0]                          //  (macro: noop)
-000c     0006     0005           16:5      JMP wait_forever                //  Loop forever
+000c     0006     0005           16:5      JMP 'wait_forever               //  Loop forever

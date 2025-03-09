@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     8003            8:5      #3                              //  Push limit (3)
 0004     0002     8000            9:5      #0                              //  Push initial index (0)
@@ -64,7 +64,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 0072     0039     6127           78:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0074     003a     6127           79:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0076     003b     6803           80:5      N<T[d-1]                        //  (macro: <)
-0078     003c     200d           81:5      ZJMP i_loop                     //  Jump if index < limit
+0078     003c     200d           81:5      ZJMP 'i_loop                    //  Jump if index < limit
 007a     003d     600c           82:5      T[r-1]                          //  (macro: rdrop)
 007c     003e     600c           83:5      T[r-1]                          //  (macro: rdrop)
 007e     003f     6b1d           86:5      rT[T->N,r-1,d+1]                //  (macro: r>)
@@ -75,7 +75,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 0088     0044     6127           90:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 008a     0045     6127           91:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 008c     0046     6803           92:5      N<T[d-1]                        //  (macro: <)
-008e     0047     2009           93:5      ZJMP j_loop                     //  Jump if index < limit
+008e     0047     2009           93:5      ZJMP 'j_loop                    //  Jump if index < limit
 0090     0048     600c           94:5      T[r-1]                          //  (macro: rdrop)
 0092     0049     600c           95:5      T[r-1]                          //  (macro: rdrop)
 0094     004a     6b1d           98:5      rT[T->N,r-1,d+1]                //  (macro: r>)
@@ -86,9 +86,9 @@ BYTE     WORD     CODE            #:col    SOURCE
 009e     004f     6127          102:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 00a0     0050     6127          103:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 00a2     0051     6803          104:5      N<T[d-1]                        //  (macro: <)
-00a4     0052     2005          105:5      ZJMP k_loop                     //  Jump if index < limit
+00a4     0052     2005          105:5      ZJMP 'k_loop                    //  Jump if index < limit
 00a6     0053     600c          106:5      T[r-1]                          //  (macro: rdrop)
 00a8     0054     600c          107:5      T[r-1]                          //  (macro: rdrop)
 00aa     0055     ----          109:3    :wait_forever                     //  
 00aa     0055     6000          110:5      T                               //  (macro: noop)
-00ac     0056     0055          111:5      JMP wait_forever                //  
+00ac     0056     0055          111:5      JMP 'wait_forever               //  

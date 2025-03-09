@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     6b1d            8:5      r>  \ Get limit pair 0          //  Should warn: used outside DO LOOP
 0004     0002     6b1d            8:5      r>  \ Get index pair 0          //  Should warn: used outside DO LOOP
@@ -264,4 +264,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 01fc     00fe     600c           49:5      rdrop  \ Clean up limit         //  
 01fe     00ff     ----           51:3    :wait_forever                     //  
 01fe     00ff     6000           52:6      T                               //  (macro: noop)
-0200     0100     00ff           53:6      JMP wait_forever                //  
+0200     0100     00ff           53:6      JMP 'wait_forever               //  

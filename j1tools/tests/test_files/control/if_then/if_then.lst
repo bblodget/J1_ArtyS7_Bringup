@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     8001            8:5      #1                              //  Push a nonzero (true) condition.
 0004     0002     2004            9:5      ZJMP if_false_0: IF             //  
@@ -14,4 +14,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0010     0008     6103           19:5      N[d-1]                          //  (macro: drop)
 0012     0009     ----           21:3    :wait_forever                     //  
 0012     0009     6000           22:6      T                               //  (macro: noop)
-0014     000a     0009           23:6      JMP wait_forever                //  
+0014     000a     0009           23:6      JMP 'wait_forever               //  

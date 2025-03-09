@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0001            2:1      JMP start                       //  
+0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
 0002     0001     800a            8:5      #10                             //  Push limit (10)
 0004     0002     8000            9:5      #0                              //  Push initial index (0)
@@ -25,4 +25,4 @@ BYTE     WORD     CODE            #:col    SOURCE
 0026     0013     0100           16:5      N  \ Clean up limit             //  Add increment to index and continue if < limit
 002a     0015     ----           18:3    :wait_forever                     //  
 002a     0015     6000           19:6      T                               //  (macro: noop)
-002c     0016     0015           20:6      JMP wait_forever                //  
+002c     0016     0015           20:6      JMP 'wait_forever               //  

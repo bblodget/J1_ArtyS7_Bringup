@@ -8,7 +8,7 @@ BYTE     WORD     CODE            #:col    SOURCE
 0008     0004     6203            7:5      T+N[d-1]                        //  (macro: plus) ALU add operation (T+N)
 000a     0005     6110            8:5      N[T->N]                         //  (macro: swap)
 000c     0006     6103            9:5      N[d-1]                          //  (macro: drop)
-000e     0007     0008           10:5      JMP done                        //  Jump to end
+000e     0007     0008           10:5      JMP 'done                       //  Jump to end
 0010     0008     ----           12:3    :done                             //  
 0010     0008     6000           13:5      T[d+0]                          //  (macro: noop)
-0012     0009     0008           14:5      JMP done                        //  
+0012     0009     0008           14:5      JMP 'done                       //  

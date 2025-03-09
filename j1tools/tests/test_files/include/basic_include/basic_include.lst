@@ -1,6 +1,6 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     0005            2:1      JMP start                       //  
+0000     0000     0005            2:1      JMP 'start                      //  
 0002     0001     ----            7:3    :add_nums                         //  Note the colon after label
 0002     0001     6203            8:5      T+N[d-1]                        //  Add top two stack items
 0004     0002     6024            9:5      T[T->R,r+1]                     //  Save result to return stack (push, don't overwrite)
@@ -9,9 +9,9 @@ BYTE     WORD     CODE            #:col    SOURCE
 000a     0005     ----            6:3    :start                            //  
 000a     0005     802a            8:5      #$2A                            //  Push hex 2A (decimal 42) and decimal 10
 000c     0006     800a            8:10     #10                             //  Push hex 2A (decimal 42) and decimal 10
-000e     0007     4001            9:5      CALL add_nums                   //  Call our addition subroutine
+000e     0007     4001            9:5      CALL 'add_nums                  //  Call our addition subroutine
 0010     0008     6103           10:5      N[d-1]                          //  DROP the result
-0012     0009     000a           11:5      JMP wait_forever                //  Jump to end of program
+0012     0009     000a           11:5      JMP 'wait_forever               //  Jump to end of program
 0014     000a     ----           13:3    :wait_forever                     //  
 0014     000a     6000           14:6      T[d+0]                          //  (macro: noop)
-0016     000b     000a           15:6      JMP wait_forever                //  
+0016     000b     000a           15:6      JMP 'wait_forever               //  
