@@ -3,7 +3,7 @@ include "core/j1_base_macros.asm"
 include "core/j1_dualport_macros.asm"
 
 // Test program start
-ORG #$0000
+ORG $0000
 : start
     // Test basic memory operations
     #1234        // Stack: 1234 (test data)
@@ -42,7 +42,7 @@ ORG #$0000
     @            // Stack: 1234 1234 1234 5678 5678 (should be 5678)
     JMP done     // Jump to done
 
-ORG #$0020
+ORG $0020
 : done
     noop
     JMP done     // Loop forever

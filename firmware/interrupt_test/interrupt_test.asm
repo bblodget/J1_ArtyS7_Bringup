@@ -1,10 +1,10 @@
 // Basic Interrupt Test
 // Toggles LED on each interrupt
 
-ORG #$0000
+ORG $0000
 JMP start                // Boot vector
 
-ORG #$0001             // word addresss 1, but byte address 2
+ORG $0001             // word addresss 1, but byte address 2
 JMP irq_handler        // Interrupt vector
 
 
@@ -12,7 +12,7 @@ JMP irq_handler        // Interrupt vector
 macro: IRQ_COUNT0 ( -- ) #$0004 endmacro
 macro: IRQ_COUNT1 ( -- ) #$0006 endmacro
 
-ORG #$0008             // Give some space for the variables above
+ORG $0008             // Give some space for the variables above
 include "core/j1_base_macros.asm"
 include "io/terminal_io.asm"
 

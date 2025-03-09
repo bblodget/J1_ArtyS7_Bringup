@@ -1,4 +1,4 @@
-ORG #$8000
+ORG $8000
 JMP start
 
 include "io_ports.asm"

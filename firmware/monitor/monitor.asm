@@ -1,10 +1,10 @@
 // J1 Monitor System
 // Provides live coding environment with monitor and user program threads
 
-ORG #$0000
+ORG $0000
 JMP monitor_init        // Boot vector jumps to monitor initialization
 
-ORG #$0002
+ORG $0002
 JMP irq_handler        // Interrupt vector
 
 include "core/j1_base_macros.asm"      
@@ -13,7 +13,7 @@ include "io/terminal_io.asm"
 
 // Monitor system variables (high memory)
 // These are at fixed locations in high memory
-ORG #$7F0              // Reserve last 16 words for system variables
+ORG $7F0              // Reserve last 16 words for system variables
 : user_dsp     #0 ;    // User data stack pointer save
 : user_rsp     #0 ;    // User return stack pointer save
 : user_pc      #0 ;    // User program counter save

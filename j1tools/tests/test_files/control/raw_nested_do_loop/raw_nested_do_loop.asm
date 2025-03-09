@@ -1,4 +1,4 @@
-ORG #$0000
+ORG $0000
 JMP start
 
 include "platform/j1_16kb_dualport_macros.asm"

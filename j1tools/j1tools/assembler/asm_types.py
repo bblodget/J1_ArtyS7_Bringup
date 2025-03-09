@@ -19,6 +19,7 @@ class InstructionType(Enum):
     ALU = auto()
     SUBROUTINE_DEF = auto()
     DIRECTIVE = auto()  # For ORG statements
+    NUMBER = auto()     # For raw numbers (no # prefix)
 
 
 @dataclass

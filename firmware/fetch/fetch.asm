@@ -1,6 +1,6 @@
 // Fetch test program
 
-ORG #$0000
+ORG $0000
 JMP start
 
 // word address 2, byte address 4
@@ -8,7 +8,7 @@ macro: IRQ_COUNT0 ( -- ) #$0004 endmacro
 macro: IRQ_COUNT1 ( -- ) #$0006 endmacro
 
 
-ORG #$0008
+ORG $0008
 include "core/j1_base_macros.asm"      // Base J1 operations
 include "io/terminal_io.asm"
 

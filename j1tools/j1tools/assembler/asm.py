@@ -392,10 +392,11 @@ class J1Assembler(Transformer):
             word_addr=addr,
         )
 
-    def number(self, items: List[Token]) -> InstructionMetadata:
-        """Convert number tokens to their machine code representation."""
+    def stack_number(self, items: List[Token]) -> InstructionMetadata:
+        """Convert stack number tokens (with # prefix) to their machine code representation."""
         token = items[0]
-        if token.type == "HEX":
+        if token.type == "STACK_HEX":
+            # Remove the #$ prefix to get the raw hex number
             value = int(str(token)[2:], 16)
             if value > 0x7FFF:
                 raise ValueError(
@@ -403,16 +404,27 @@ class J1Assembler(Transformer):
                     f"Hex number {value} out of range (0 to $7FFF)"
                 )
             machine_code = value | 0x8000
-            return InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
+            
+            # Create metadata with safe source line handling
+            try:
+                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+            except IndexError:
+                source_line = ""
+                
+            return InstructionMetadata(
+                type=InstructionType.BYTE_CODE,
                 value=machine_code,
                 token=token,
                 filename=self.state.current_file,
-                source_lines=self.state.source_lines,
+                line=token.line if hasattr(token, 'line') else 0,
+                column=token.column if hasattr(token, 'column') else 0,
+                source_line=source_line,
                 instr_text=str(token),  # Use token string directly
                 num_value=value,
+                word_addr=self.addr_space.get_word_address(),
             )
-        elif token.type == "DECIMAL":
+        elif token.type == "STACK_DECIMAL":
+            # Remove the # prefix to get the raw decimal number
             value = int(str(token)[1:], 10)
             if value < 0:
                 raise ValueError(
@@ -428,17 +440,67 @@ class J1Assembler(Transformer):
                 # ]
             machine_code = 0x8000 | value
 
-            return InstructionMetadata.from_token(
-                inst_type=InstructionType.BYTE_CODE,
+            # Create metadata with safe source line handling
+            try:
+                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+            except IndexError:
+                source_line = ""
+                
+            return InstructionMetadata(
+                type=InstructionType.BYTE_CODE,
                 value=machine_code,
                 token=token,
                 filename=self.state.current_file,
-                source_lines=self.state.source_lines,
+                line=token.line if hasattr(token, 'line') else 0,
+                column=token.column if hasattr(token, 'column') else 0,
+                source_line=source_line,
                 instr_text=str(token),  # Use token string directly
                 num_value=value,
+                word_addr=self.addr_space.get_word_address(),
             )
         else:
-            raise ValueError(f"Unknown number format: {token}")
+            raise ValueError(f"Unknown token type: {token.type}")
+
+    def raw_number(self, items: List[Token]) -> InstructionMetadata:
+        """Convert raw number tokens (without # prefix) to their numerical value."""
+        token = items[0]
+        if token.type == "RAW_HEX":
+            # Remove the $ prefix to get the raw hex number
+            value = int(str(token)[1:], 16)
+            if value > 0xFFFF:
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Hex number {value} out of range (0 to $FFFF)"
+                )
+        elif token.type == "RAW_DECIMAL":
+            # Parse the decimal number directly
+            value = int(str(token), 10)
+            if value < -32768 or value > 65535:
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Decimal number {value} out of range (-32768 to 65535)"
+                )
+        else:
+            raise ValueError(f"Unknown token type: {token.type}")
+            
+        # Raw numbers don't become instructions, they're just values
+        # Create metadata with safe source line handling
+        try:
+            source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+        except IndexError:
+            source_line = ""
+            
+        return InstructionMetadata(
+            type=InstructionType.NUMBER,  # This is a raw number value, not an instruction
+            value=value & 0xFFFF,  # Ensure 16-bit value
+            token=token,
+            filename=self.state.current_file,
+            line=token.line if hasattr(token, 'line') else 0,
+            column=token.column if hasattr(token, 'column') else 0,
+            source_line=source_line,
+            instr_text=str(token),  # Use token string directly
+            num_value=value,
+        )
 
     def basic_alu(self, items: List[Token]) -> Token:
         """Convert basic_alu rule into its token."""
@@ -781,18 +843,26 @@ class J1Assembler(Transformer):
 
     def org_directive(self, items):
         """Handle ORG directive with word address"""
-        number = items[1]
+        number = items[1]  # This should be raw_number now
         
         address = number.num_value & 0xFFFF  # Ensure 16-bit
         self.addr_space.set_org(address)
         
+        # Create metadata with safe source line handling
+        try:
+            source_line = self.state.source_lines[number.token.line - 1] if number.token.line > 0 and number.token.line <= len(self.state.source_lines) else ""
+        except IndexError:
+            source_line = ""
+            
         # Create metadata for listing
-        return InstructionMetadata.from_token(
-            inst_type=InstructionType.DIRECTIVE,
+        return InstructionMetadata(
+            type=InstructionType.DIRECTIVE,
             value=address,
             token=number.token,
             filename=self.state.current_file,
-            source_lines=self.state.source_lines,
+            line=number.token.line if hasattr(number.token, 'line') else 0,
+            column=number.token.column if hasattr(number.token, 'column') else 0,
+            source_line=source_line,
             instr_text=f"ORG {number.instr_text}",
         )
 

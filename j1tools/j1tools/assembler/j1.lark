@@ -13,8 +13,10 @@ STACK_COMMENT: /\([^)]*\)/
 %ignore STACK_COMMENT
 
 // Numbers and identifiers
-HEX: /#\$[0-9a-fA-F]+/
-DECIMAL: /#-?[0-9]+/
+STACK_HEX: /#\$[0-9a-fA-F]+/
+STACK_DECIMAL: /#-?[0-9]+/
+RAW_HEX: /\$[0-9a-fA-F]+/
+RAW_DECIMAL: /-?[0-9]+/
 
 // Control Structure Keywords (added with higher priority)
 IF.2: "IF"
@@ -111,7 +113,7 @@ R_MINUS_2: "r-2"
 program: (statement | org_directive)*
 // statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
 statement: label | instruction | macro_def | include_stmt | control_structure
-org_directive: ORG number
+org_directive: ORG raw_number
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
@@ -120,11 +122,12 @@ include_stmt: INCLUDE STRING
 label: COLON IDENT
 
 // Numbers and references
-number: HEX | DECIMAL
+stack_number: STACK_HEX | STACK_DECIMAL
+raw_number: RAW_HEX | RAW_DECIMAL
 labelref: IDENT
 
 // Instructions
-instruction: number            // Literal
+instruction: stack_number     // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
           | call_expr         // Macro or subroutine invocation
