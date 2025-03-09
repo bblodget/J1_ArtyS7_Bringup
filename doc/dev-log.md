@@ -1,5 +1,17 @@
 # Development Log
 
+## 2025-03-08
+
+Enhanced J1 Assembler with improved memory operations and documentation:
+- Added comprehensive documentation for memory, variables, character literals, and string handling
+- Implemented memory initialization support with comma syntax (e.g., `10,`) in the assembler
+- Updated the parser to handle raw number formats without # prefix
+- Added support for the ORG directive with raw number parsing
+- Created test cases for memory initialization functionality
+- Standardized Makefiles across all test directories
+- Modified .gitignore to preserve .lst and .sym files in test directories
+- Temporarily removed constants_basic test pending CONSTANT directive implementation
+
 ## 2025-03-05
 
 Done:
