@@ -1,5 +1,17 @@
 # Development Log
 
+## 2025-03-09
+
+Enhanced J1 Assembler with consistent label reference syntax and improved build tooling:
+- Modified the grammar to enforce tick syntax for label references (e.g., `JMP 'label` instead of `JMP label`)
+- Updated `labelref` implementation in the assembler to properly handle the tick notation
+- Modified listing output to consistently show tick syntax for jump operations
+- Created and ran a script to convert all existing test files to use the new tick syntax
+- Created a new utility `rebuild_make` that recursively finds directories with Makefiles and runs `make cleanall` followed by `make`
+- Added the utility to the package's entry points for easy access from anywhere
+- Added comprehensive documentation and help options for the new utility
+- Simplified rebuilding test outputs after grammar changes
+
 ## 2025-03-08
 
 Enhanced J1 Assembler with improved memory operations and documentation:
