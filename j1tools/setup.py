@@ -20,6 +20,7 @@ setup(
             "hex2coe=j1tools.memory.memory:main",
             "hex2mif=j1tools.memory.memory:main",
             "mif2mem=j1tools.memory.memory:main",
+            "rebuild_make=j1tools.utils.rebuild_make:main",
         ],
     },
     author="Brandon Blodget",
