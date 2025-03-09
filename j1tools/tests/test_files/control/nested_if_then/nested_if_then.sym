@@ -1,0 +1,6 @@
+0001 start
+0006 if_false_0
+0009 if_false_1
+000a if_false_2
+000e if_false_3
+000f wait_forever

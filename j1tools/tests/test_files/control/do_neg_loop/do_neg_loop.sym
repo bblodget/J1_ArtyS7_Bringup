@@ -1,0 +1,6 @@
+0001 start
+0005 do_0
+0010 skip_swap_1
+001d do_2
+0028 skip_swap_3
+002f wait_forever

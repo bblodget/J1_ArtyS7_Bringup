@@ -1,0 +1,55 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8000            8:5      #0                              //  Push limit (0)
+0004     0002     800a            9:5      #10                             //  Push initial index (10)
+0006     0003     0020           10:5      T[T->R]  \ Save index to R stack  //  
+0008     0004     0020           10:5      T[T->R]  \ Save limit to R stack  //  
+000a     0005     ----           10:5    do_0: DO                          //  
+000a     0005     6000           12:9      T                               //  (macro: noop)
+000c     0006     8002           13:9      #2                              //  Push 2 and negate it to get -2
+000e     0007     6600           13:12     ~T                              //  (macro: neg) Invert and add 1
+0010     0008     7603           13:12     T+1[d-1]                        //  (macro: neg) Invert and add 1
+0012     0009     0b00           14:5      rT  \ Get limit                 //  Add increment to index and continue if > limit
+0014     000a     0b00           14:5      rT  \ Get index                 //  Add increment to index and continue if > limit
+0016     000b     0200           14:5      T+N  \ Add increment to index   //  Add increment to index and continue if > limit
+0018     000c     0011           14:5      T[T->N,d+1]  \ Duplicate increment  //  Add increment to index and continue if > limit
+001a     000d     0800           14:5      N<T  \ Check if increment < 0   //  Add increment to index and continue if > limit
+001c     000e     2010           14:5      ZJMP skip_swap_1  \ Skip swap if increment >= 0  //  Add increment to index and continue if > limit
+001e     000f     0110           14:5      N[T->N]  \ Swap if increment negative  //  Add increment to index and continue if > limit
+0020     0010     ----           14:5    skip_swap_1:                      //  Add increment to index and continue if > limit
+0020     0010     0811           14:5      N<T[T->N,d+1]  \ 2dup<          //  Add increment to index and continue if > limit
+0022     0011     0020           14:5      T[T->R]  \ Save new index back  //  Add increment to index and continue if > limit
+0024     0012     0020           14:5      T[T->R]  \ Save limit back      //  Add increment to index and continue if > limit
+0026     0013     2005           14:5      ZJMP do_0  \ Jump if comparison true  //  Add increment to index and continue if > limit
+0028     0014     0100           14:5      N  \ Clean up index             //  Add increment to index and continue if > limit
+002a     0015     0100           14:5      N  \ Clean up limit             //  Add increment to index and continue if > limit
+002e     0017     8005           17:5      #5                              //  Push 5 and negate it to get -5 (limit)
+0030     0018     6600           17:8      ~T                              //  (macro: neg) Invert and add 1
+0032     0019     7603           17:8      T+1[d-1]                        //  (macro: neg) Invert and add 1
+0034     001a     8005           18:5      #5                              //  Push initial index (5)
+0036     001b     0020           19:5      T[T->R]  \ Save index to R stack  //  
+0038     001c     0020           19:5      T[T->R]  \ Save limit to R stack  //  
+003a     001d     ----           19:5    do_2: DO                          //  
+003a     001d     6000           20:9      T                               //  (macro: noop)
+003c     001e     8001           21:9      #1                              //  Push 1 and negate it to get -1
+003e     001f     6600           21:12     ~T                              //  (macro: neg) Invert and add 1
+0040     0020     7603           21:12     T+1[d-1]                        //  (macro: neg) Invert and add 1
+0042     0021     0b00           22:5      rT  \ Get limit                 //  Add increment to index and continue if > limit
+0044     0022     0b00           22:5      rT  \ Get index                 //  Add increment to index and continue if > limit
+0046     0023     0200           22:5      T+N  \ Add increment to index   //  Add increment to index and continue if > limit
+0048     0024     0011           22:5      T[T->N,d+1]  \ Duplicate increment  //  Add increment to index and continue if > limit
+004a     0025     0800           22:5      N<T  \ Check if increment < 0   //  Add increment to index and continue if > limit
+004c     0026     2028           22:5      ZJMP skip_swap_3  \ Skip swap if increment >= 0  //  Add increment to index and continue if > limit
+004e     0027     0110           22:5      N[T->N]  \ Swap if increment negative  //  Add increment to index and continue if > limit
+0050     0028     ----           22:5    skip_swap_3:                      //  Add increment to index and continue if > limit
+0050     0028     0811           22:5      N<T[T->N,d+1]  \ 2dup<          //  Add increment to index and continue if > limit
+0052     0029     0020           22:5      T[T->R]  \ Save new index back  //  Add increment to index and continue if > limit
+0054     002a     0020           22:5      T[T->R]  \ Save limit back      //  Add increment to index and continue if > limit
+0056     002b     201d           22:5      ZJMP do_2  \ Jump if comparison true  //  Add increment to index and continue if > limit
+0058     002c     0100           22:5      N  \ Clean up index             //  Add increment to index and continue if > limit
+005a     002d     0100           22:5      N  \ Clean up limit             //  Add increment to index and continue if > limit
+005e     002f     ----           24:3    :wait_forever                     //  
+005e     002f     6000           25:6      T                               //  (macro: noop)
+0060     0030     002f           26:6      JMP wait_forever                //  

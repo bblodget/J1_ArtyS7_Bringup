@@ -1,0 +1,16 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     ----            5:3    :start                            //  Note forth style label
+0000     0000     802a            6:5      #$2A                            //  Push hex 2A (decimal 42) and decimal 10
+0002     0001     800a            6:10     #10                             //  Push hex 2A (decimal 42) and decimal 10
+0004     0002     4005            7:5      CALL add_nums                   //  Call our addition subroutine
+0006     0003     6103            8:5      N[d-1]                          //  DROP the result
+0008     0004     0009            9:5      JMP wait_forever                //  Jump to end of program
+000a     0005     ----           11:3    :add_nums                         //  Note the colon after label
+000a     0005     6203           12:5      T+N[d-1]                        //  Add top two stack items
+000c     0006     6024           13:5      T[T->R,r+1]                     //  Save result to return stack (push, don't overwrite)
+000e     0007     600c           14:5      T[r-1]                          //  Pop our saved value to T
+0010     0008     608c           15:5      T[RET,r-1]                      //  Return to caller
+0012     0009     ----           17:3    :wait_forever                     //  
+0012     0009     6000           18:5      T[d+0]                          //  NOOP
+0014     000a     0009           19:5      JMP wait_forever                //  Loop forever

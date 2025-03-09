@@ -1,0 +1,21 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8003            8:5      #3                              //  Push outer loop counter (3)
+0004     0002     ----           11:5    begin_1: BEGIN                    //  
+0004     0002     8004           13:9      #4                              //  Push inner loop counter (4)
+0006     0003     ----           16:9    begin_0: BEGIN                    //  
+0006     0003     8001           17:13     #1                              //  Decrement inner counter
+0008     0004     6c03           17:16     N-T[d-1]                        //  (macro: -)
+000a     0005     6011           18:13     T[T->N,d+1]                     //  (macro: dup)
+000c     0006     2003           19:9      ZJMP begin_0: UNTIL             //  Inner loop continues while non-zero
+000e     0007     6103           21:9      N[d-1]                          //  (macro: drop)
+0010     0008     8001           23:9      #1                              //  Decrement outer counter
+0012     0009     6c03           23:12     N-T[d-1]                        //  (macro: -)
+0014     000a     6011           24:9      T[T->N,d+1]                     //  (macro: dup)
+0016     000b     2002           25:5      ZJMP begin_1: UNTIL             //  Outer loop continues while non-zero
+0018     000c     6103           27:5      N[d-1]                          //  (macro: drop)
+001a     000d     ----           29:3    :wait_forever                     //  
+001a     000d     6000           30:6      T                               //  (macro: noop)
+001c     000e     000d           31:6      JMP wait_forever                //  

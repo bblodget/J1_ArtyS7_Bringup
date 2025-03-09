@@ -1,0 +1,23 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8001            8:5      #1                              //  Push a nonzero (true) condition.
+0004     0002     2005            9:5      ZJMP if_false_0: IF             //  
+0006     0003     6011           10:9      T[T->N,d+1]                     //  (macro: dup)
+0008     0004     0006           11:5      JMP if_end_1: ELSE              //  
+000a     0005     ----           11:5    if_false_0: ELSE                  //  
+000a     0005     6103           12:9      N[d-1]                          //  (macro: drop)
+000c     0006     ----           13:5    if_end_1: THEN                    //  
+000c     0006     6103           14:5      N[d-1]                          //  (macro: drop)
+000e     0007     8000           17:5      #0                              //  Push zero (false) condition.
+0010     0008     200b           18:5      ZJMP if_false_2: IF             //  
+0012     0009     6011           19:9      T[T->N,d+1]                     //  (macro: dup)
+0014     000a     000c           20:5      JMP if_end_3: ELSE              //  
+0016     000b     ----           20:5    if_false_2: ELSE                  //  
+0016     000b     6103           21:9      N[d-1]                          //  (macro: drop)
+0018     000c     ----           22:5    if_end_3: THEN                    //  
+0018     000c     6103           23:5      N[d-1]                          //  (macro: drop)
+001a     000d     ----           25:3    :wait_forever                     //  
+001a     000d     6000           26:6      T                               //  (macro: noop)
+001c     000e     000d           27:6      JMP wait_forever                //  

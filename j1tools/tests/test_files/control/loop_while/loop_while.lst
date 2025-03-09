@@ -1,0 +1,19 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8005            8:5      #5                              //  Push initial counter value
+0004     0002     ----           11:5    begin_0: BEGIN                    //  
+0004     0002     6011           12:9      T[T->N,d+1]                     //  (macro: dup)
+0006     0003     8000           13:9      #0                              //  Test if counter > 0 (leaves flag for WHILE)
+0008     0004     6110           13:12     N[T->N]                         //  (macro: >)
+000a     0005     6803           13:12     N<T[d-1]                        //  (macro: >)
+000c     0006     200a           14:5      ZJMP exit_1: WHILE              //  
+000e     0007     8001           15:9      #1                              //  Decrement counter
+0010     0008     6c03           15:12     N-T[d-1]                        //  (macro: -)
+0012     0009     0002           16:5      JMP begin_0: REPEAT             //  
+0014     000a     ----           16:5    exit_1: END-WHILE                 //  
+0014     000a     6103           18:5      N[d-1]                          //  (macro: drop)
+0016     000b     ----           20:3    :wait_forever                     //  
+0016     000b     6000           21:6      T                               //  (macro: noop)
+0018     000c     000b           22:6      JMP wait_forever                //  

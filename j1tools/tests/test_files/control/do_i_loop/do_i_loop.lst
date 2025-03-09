@@ -1,0 +1,30 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8003            8:5      #3                              //  Push limit (3)
+0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0006     0003     6127           12:5      >r  \ Save index to R stack     //  
+0008     0004     6127           12:5      >r  \ Save limit to R stack     //  
+000a     0005     ----           12:5    do_0: DO                          //  
+000a     0005     6b1d           13:9      r>  \ Get limit pair 0          //  Get outer loop index (0,1,2)
+000c     0006     6b1d           13:9      r>  \ Get index pair 0          //  Get outer loop index (0,1,2)
+000e     0007     6011           13:9      dup  \ Duplicate i index for use  //  Get outer loop index (0,1,2)
+0010     0008     6127           13:9      >r  \ Save index back           //  Get outer loop index (0,1,2)
+0012     0009     6110           13:9      swap  \ Bring limit to top, leaving i below  //  Get outer loop index (0,1,2)
+0014     000a     6127           13:9      >r  \ Save limit back           //  Get outer loop index (0,1,2)
+0016     000b     6103           14:9      N[d-1]                          //  (macro: drop)
+0018     000c     6b1d           15:5      r>  \ Get limit                 //  
+001a     000d     6b1d           15:5      r>  \ Get index                 //  
+001c     000e     7600           15:5      1+  \ Increment index           //  
+001e     000f     6111           15:5      over  \ duplicate for next iteration  //  
+0020     0010     6111           15:5      over  \ duplicate for next iteration  //  
+0022     0011     6127           15:5      >r  \ Save new index back       //  
+0024     0012     6127           15:5      >r  \ Save limit back           //  
+0026     0013     6803           15:5      <  \ Compare index < limit      //  
+0028     0014     2005           15:5      ZJMP do_0  \ Jump if index < limit  //  
+002a     0015     600c           15:5      rdrop  \ Clean up index         //  
+002c     0016     600c           15:5      rdrop  \ Clean up limit         //  
+002e     0017     ----           17:3    :wait_forever                     //  
+002e     0017     6000           18:6      T                               //  (macro: noop)
+0030     0018     0017           19:6      JMP wait_forever                //  

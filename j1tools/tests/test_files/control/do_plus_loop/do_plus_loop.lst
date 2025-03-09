@@ -1,0 +1,28 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     800a            8:5      #10                             //  Push limit (10)
+0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0006     0003     0020           12:5      T[T->R]  \ Save index to R stack  //  
+0008     0004     0020           12:5      T[T->R]  \ Save limit to R stack  //  
+000a     0005     ----           12:5    do_0: DO                          //  
+000a     0005     6000           14:9      T                               //  (macro: noop)
+000c     0006     8002           15:9      #2                              //  Push increment value (2)
+000e     0007     0b00           16:5      rT  \ Get limit                 //  Add increment to index and continue if < limit
+0010     0008     0b00           16:5      rT  \ Get index                 //  Add increment to index and continue if < limit
+0012     0009     0200           16:5      T+N  \ Add increment to index   //  Add increment to index and continue if < limit
+0014     000a     0011           16:5      T[T->N,d+1]  \ Duplicate increment  //  Add increment to index and continue if < limit
+0016     000b     0800           16:5      N<T  \ Check if increment < 0   //  Add increment to index and continue if < limit
+0018     000c     200e           16:5      ZJMP skip_swap_1  \ Skip swap if increment >= 0  //  Add increment to index and continue if < limit
+001a     000d     0110           16:5      N[T->N]  \ Swap if increment negative  //  Add increment to index and continue if < limit
+001c     000e     ----           16:5    skip_swap_1:                      //  Add increment to index and continue if < limit
+001c     000e     0811           16:5      N<T[T->N,d+1]  \ 2dup<          //  Add increment to index and continue if < limit
+001e     000f     0020           16:5      T[T->R]  \ Save new index back  //  Add increment to index and continue if < limit
+0020     0010     0020           16:5      T[T->R]  \ Save limit back      //  Add increment to index and continue if < limit
+0022     0011     2005           16:5      ZJMP do_0  \ Jump if comparison true  //  Add increment to index and continue if < limit
+0024     0012     0100           16:5      N  \ Clean up index             //  Add increment to index and continue if < limit
+0026     0013     0100           16:5      N  \ Clean up limit             //  Add increment to index and continue if < limit
+002a     0015     ----           18:3    :wait_forever                     //  
+002a     0015     6000           19:6      T                               //  (macro: noop)
+002c     0016     0015           20:6      JMP wait_forever                //  

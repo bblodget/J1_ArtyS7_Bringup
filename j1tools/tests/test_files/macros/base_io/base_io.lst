@@ -1,0 +1,18 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     ----            4:3    :start                            //  
+0000     0000     8048            6:5      #$48                            //  Stack: 0x48 ('H' in ASCII)
+0002     0001     9000            7:5      #$1000                          //  Stack: 0x48 0x1000 (UART address)
+0004     0002     7842            8:5      3OS[N->io[T],d-2]               //  (macro: io!)
+0006     0003     a000           11:5      #$2000                          //  Stack: 0x2000 (MISC_IN_ADDR)
+0008     0004     6d50           12:5      io[T][IORD]                     //  (macro: io@)
+000a     0005     9000           15:5      #$1000                          //  Stack: status 0x1000
+000c     0006     6d50           16:5      io[T][IORD]                     //  (macro: io@)
+000e     0007     c000           19:5      #$4000                          //  Stack: status rx_data 0x4000
+0010     0008     6d50           20:5      io[T][IORD]                     //  (macro: io@)
+0012     0009     ffff           23:5      #$7FFF                          //  Stack: status rx_data ticks 0x7FFF
+0014     000a     6600           24:5      ~T                              //  (macro: invert)
+0016     000b     6d50           25:5      io[T][IORD]                     //  (macro: io@)
+0018     000c     ----           27:3    :done                             //  
+0018     000c     6000           28:5      T                               //  (macro: noop)
+001a     000d     000c           29:5      JMP done                        //  

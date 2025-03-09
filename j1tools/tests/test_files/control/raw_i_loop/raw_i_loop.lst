@@ -1,0 +1,28 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8003            8:5      #3                              //  Push limit (3)
+0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0006     0003     6127           12:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+0008     0004     6127           13:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+000a     0005     ----           15:3    :do_label                         //  
+000a     0005     6b1d           17:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+000c     0006     6b1d           18:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+000e     0007     6011           19:5      T[T->N,d+1]                     //  (macro: dup)
+0010     0008     6127           20:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+0012     0009     6110           21:5      N[T->N]                         //  (macro: swap)
+0014     000a     6127           22:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+0016     000b     6103           23:5      N[d-1]                          //  (macro: drop)
+0018     000c     6b1d           26:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+001a     000d     6b1d           27:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+001c     000e     7600           28:5      T+1                             //  (macro: 1+)
+001e     000f     6111           29:5      N[T->N,d+1]                     //  (macro: over)
+0020     0010     6111           29:10     N[T->N,d+1]                     //  (macro: over)
+0022     0011     6127           30:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+0024     0012     6127           31:5      N[T->R,r+1,d-1]                 //  (macro: >r)
+0026     0013     6803           32:5      N<T[d-1]                        //  (macro: <)
+0028     0014     2005           33:5      ZJMP do_label                   //  Jump if index < limit
+002a     0015     ----           35:3    :wait_forever                     //  
+002a     0015     6000           36:5      T                               //  (macro: noop)
+002c     0016     0015           37:5      JMP wait_forever                //  

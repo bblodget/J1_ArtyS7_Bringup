@@ -1,0 +1,25 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8001            8:5      #1                              //  Outer condition: true.
+0004     0002     200a            9:5      ZJMP if_false_2: IF             //  
+0006     0003     8001           11:9      #1                              //  Inner condition (true).
+0008     0004     2006           12:9      ZJMP if_false_0: IF             //  
+000a     0005     6011           13:13     T[T->N,d+1]                     //  (macro: dup)
+000c     0006     ----           14:9    if_false_0: THEN                  //  
+000c     0006     8000           17:9      #0                              //  Inner condition (false).
+000e     0007     2009           18:9      ZJMP if_false_1: IF             //  
+0010     0008     6011           19:13     T[T->N,d+1]                     //  (macro: dup)
+0012     0009     ----           20:9    if_false_1: THEN                  //  
+0012     0009     6103           22:9      N[d-1]                          //  (macro: drop)
+0014     000a     ----           23:5    if_false_2: THEN                  //  
+0014     000a     6103           24:5      N[d-1]                          //  (macro: drop)
+0016     000b     8000           27:5      #0                              //  Outer condition: false.
+0018     000c     200e           28:5      ZJMP if_false_3: IF             //  
+001a     000d     6011           29:9      T[T->N,d+1]                     //  (macro: dup)
+001c     000e     ----           30:5    if_false_3: THEN                  //  
+001c     000e     6103           31:5      N[d-1]                          //  (macro: drop)
+001e     000f     ----           33:3    :wait_forever                     //  
+001e     000f     6000           34:6      T                               //  (macro: noop)
+0020     0010     000f           35:6      JMP wait_forever                //  

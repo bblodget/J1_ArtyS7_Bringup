@@ -1,0 +1,267 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     6b1d            8:5      r>  \ Get limit pair 0          //  Should warn: used outside DO LOOP
+0004     0002     6b1d            8:5      r>  \ Get index pair 0          //  Should warn: used outside DO LOOP
+0006     0003     6011            8:5      dup  \ Duplicate i index for use  //  Should warn: used outside DO LOOP
+0008     0004     6127            8:5      >r  \ Save index back           //  Should warn: used outside DO LOOP
+000a     0005     6110            8:5      swap  \ Bring limit to top, leaving i below  //  Should warn: used outside DO LOOP
+000c     0006     6127            8:5      >r  \ Save limit back           //  Should warn: used outside DO LOOP
+000e     0007     6103            9:5      N[d-1]                          //  (macro: drop)
+0010     0008     6b1d           10:5      r>  \ Get limit pair 0          //  Should warn: used outside DO LOOP
+0012     0009     6b1d           10:5      r>  \ Get index pair 0          //  Should warn: used outside DO LOOP
+0014     000a     6b1d           10:5      r>  \ Get limit pair 1          //  Should warn: used outside DO LOOP
+0016     000b     6b1d           10:5      r>  \ Get index pair 1          //  Should warn: used outside DO LOOP
+0018     000c     6011           10:5      dup  \ Duplicate j index for use  //  Should warn: used outside DO LOOP
+001a     000d     6127           10:5      >r  \ Restore index             //  Should warn: used outside DO LOOP
+001c     000e     6110           10:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+001e     000f     6127           10:5      >r  \ Restore limit             //  Should warn: used outside DO LOOP
+0020     0010     6110           10:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+0022     0011     6127           10:5      >r  \ Restore index             //  Should warn: used outside DO LOOP
+0024     0012     6110           10:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+0026     0013     6127           10:5      >r  \ Restore limit             //  Should warn: used outside DO LOOP
+0028     0014     6110           10:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+002a     0015     6103           11:5      N[d-1]                          //  (macro: drop)
+002c     0016     6b1d           12:5      r>  \ Get limit pair 0          //  Should warn: used outside DO LOOP
+002e     0017     6b1d           12:5      r>  \ Get index pair 0          //  Should warn: used outside DO LOOP
+0030     0018     6b1d           12:5      r>  \ Get limit pair 1          //  Should warn: used outside DO LOOP
+0032     0019     6b1d           12:5      r>  \ Get index pair 1          //  Should warn: used outside DO LOOP
+0034     001a     6b1d           12:5      r>  \ Get limit pair 2          //  Should warn: used outside DO LOOP
+0036     001b     6b1d           12:5      r>  \ Get index pair 2          //  Should warn: used outside DO LOOP
+0038     001c     6011           12:5      dup  \ Duplicate k index for use  //  Should warn: used outside DO LOOP
+003a     001d     6127           12:5      >r  \ Restore index             //  Should warn: used outside DO LOOP
+003c     001e     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+003e     001f     6127           12:5      >r  \ Restore limit             //  Should warn: used outside DO LOOP
+0040     0020     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+0042     0021     6127           12:5      >r  \ Restore index             //  Should warn: used outside DO LOOP
+0044     0022     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+0046     0023     6127           12:5      >r  \ Restore limit             //  Should warn: used outside DO LOOP
+0048     0024     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+004a     0025     6127           12:5      >r  \ Restore index             //  Should warn: used outside DO LOOP
+004c     0026     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+004e     0027     6127           12:5      >r  \ Restore limit             //  Should warn: used outside DO LOOP
+0050     0028     6110           12:5      swap  \ Bring next value to top  //  Should warn: used outside DO LOOP
+0052     0029     6103           13:5      N[d-1]                          //  (macro: drop)
+0054     002a     8003           16:5      #3                              //  
+0056     002b     8000           16:8      #0                              //  
+0058     002c     6127           16:11     >r  \ Save index to R stack     //  
+005a     002d     6127           16:11     >r  \ Save limit to R stack     //  
+005c     002e     ----           16:11   do_0: DO                          //  
+005c     002e     6b1d           17:9      r>  \ Get limit pair 0          //  OK - innermost loop index
+005e     002f     6b1d           17:9      r>  \ Get index pair 0          //  OK - innermost loop index
+0060     0030     6011           17:9      dup  \ Duplicate i index for use  //  OK - innermost loop index
+0062     0031     6127           17:9      >r  \ Save index back           //  OK - innermost loop index
+0064     0032     6110           17:9      swap  \ Bring limit to top, leaving i below  //  OK - innermost loop index
+0066     0033     6127           17:9      >r  \ Save limit back           //  OK - innermost loop index
+0068     0034     6103           18:9      N[d-1]                          //  (macro: drop)
+006a     0035     6b1d           19:9      r>  \ Get limit pair 0          //  Should warn: used in non-nested DO LOOP
+006c     0036     6b1d           19:9      r>  \ Get index pair 0          //  Should warn: used in non-nested DO LOOP
+006e     0037     6b1d           19:9      r>  \ Get limit pair 1          //  Should warn: used in non-nested DO LOOP
+0070     0038     6b1d           19:9      r>  \ Get index pair 1          //  Should warn: used in non-nested DO LOOP
+0072     0039     6011           19:9      dup  \ Duplicate j index for use  //  Should warn: used in non-nested DO LOOP
+0074     003a     6127           19:9      >r  \ Restore index             //  Should warn: used in non-nested DO LOOP
+0076     003b     6110           19:9      swap  \ Bring next value to top  //  Should warn: used in non-nested DO LOOP
+0078     003c     6127           19:9      >r  \ Restore limit             //  Should warn: used in non-nested DO LOOP
+007a     003d     6110           19:9      swap  \ Bring next value to top  //  Should warn: used in non-nested DO LOOP
+007c     003e     6127           19:9      >r  \ Restore index             //  Should warn: used in non-nested DO LOOP
+007e     003f     6110           19:9      swap  \ Bring next value to top  //  Should warn: used in non-nested DO LOOP
+0080     0040     6127           19:9      >r  \ Restore limit             //  Should warn: used in non-nested DO LOOP
+0082     0041     6110           19:9      swap  \ Bring next value to top  //  Should warn: used in non-nested DO LOOP
+0084     0042     6103           20:9      N[d-1]                          //  (macro: drop)
+0086     0043     6b1d           21:9      r>  \ Get limit pair 0          //  Should warn: insufficient nesting
+0088     0044     6b1d           21:9      r>  \ Get index pair 0          //  Should warn: insufficient nesting
+008a     0045     6b1d           21:9      r>  \ Get limit pair 1          //  Should warn: insufficient nesting
+008c     0046     6b1d           21:9      r>  \ Get index pair 1          //  Should warn: insufficient nesting
+008e     0047     6b1d           21:9      r>  \ Get limit pair 2          //  Should warn: insufficient nesting
+0090     0048     6b1d           21:9      r>  \ Get index pair 2          //  Should warn: insufficient nesting
+0092     0049     6011           21:9      dup  \ Duplicate k index for use  //  Should warn: insufficient nesting
+0094     004a     6127           21:9      >r  \ Restore index             //  Should warn: insufficient nesting
+0096     004b     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0098     004c     6127           21:9      >r  \ Restore limit             //  Should warn: insufficient nesting
+009a     004d     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+009c     004e     6127           21:9      >r  \ Restore index             //  Should warn: insufficient nesting
+009e     004f     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+00a0     0050     6127           21:9      >r  \ Restore limit             //  Should warn: insufficient nesting
+00a2     0051     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+00a4     0052     6127           21:9      >r  \ Restore index             //  Should warn: insufficient nesting
+00a6     0053     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+00a8     0054     6127           21:9      >r  \ Restore limit             //  Should warn: insufficient nesting
+00aa     0055     6110           21:9      swap  \ Bring next value to top  //  Should warn: insufficient nesting
+00ac     0056     6103           22:9      N[d-1]                          //  (macro: drop)
+00ae     0057     6b1d           23:5      r>  \ Get limit                 //  
+00b0     0058     6b1d           23:5      r>  \ Get index                 //  
+00b2     0059     7600           23:5      1+  \ Increment index           //  
+00b4     005a     6111           23:5      over  \ duplicate for next iteration  //  
+00b6     005b     6111           23:5      over  \ duplicate for next iteration  //  
+00b8     005c     6127           23:5      >r  \ Save new index back       //  
+00ba     005d     6127           23:5      >r  \ Save limit back           //  
+00bc     005e     6803           23:5      <  \ Compare index < limit      //  
+00be     005f     202e           23:5      ZJMP do_0  \ Jump if index < limit  //  
+00c0     0060     600c           23:5      rdrop  \ Clean up index         //  
+00c2     0061     600c           23:5      rdrop  \ Clean up limit         //  
+00c4     0062     8003           26:5      #3                              //  
+00c6     0063     8000           26:8      #0                              //  
+00c8     0064     6127           26:11     >r  \ Save index to R stack     //  
+00ca     0065     6127           26:11     >r  \ Save limit to R stack     //  
+00cc     0066     ----           26:11   do_2: DO                          //  
+00cc     0066     8002           27:9      #2                              //  
+00ce     0067     8000           27:12     #0                              //  
+00d0     0068     6127           27:15     >r  \ Save index to R stack     //  
+00d2     0069     6127           27:15     >r  \ Save limit to R stack     //  
+00d4     006a     ----           27:15   do_1: DO                          //  
+00d4     006a     6b1d           28:13     r>  \ Get limit pair 0          //  OK - innermost loop index
+00d6     006b     6b1d           28:13     r>  \ Get index pair 0          //  OK - innermost loop index
+00d8     006c     6011           28:13     dup  \ Duplicate i index for use  //  OK - innermost loop index
+00da     006d     6127           28:13     >r  \ Save index back           //  OK - innermost loop index
+00dc     006e     6110           28:13     swap  \ Bring limit to top, leaving i below  //  OK - innermost loop index
+00de     006f     6127           28:13     >r  \ Save limit back           //  OK - innermost loop index
+00e0     0070     6103           29:13     N[d-1]                          //  (macro: drop)
+00e2     0071     6b1d           30:13     r>  \ Get limit pair 0          //  OK - outer loop index
+00e4     0072     6b1d           30:13     r>  \ Get index pair 0          //  OK - outer loop index
+00e6     0073     6b1d           30:13     r>  \ Get limit pair 1          //  OK - outer loop index
+00e8     0074     6b1d           30:13     r>  \ Get index pair 1          //  OK - outer loop index
+00ea     0075     6011           30:13     dup  \ Duplicate j index for use  //  OK - outer loop index
+00ec     0076     6127           30:13     >r  \ Restore index             //  OK - outer loop index
+00ee     0077     6110           30:13     swap  \ Bring next value to top  //  OK - outer loop index
+00f0     0078     6127           30:13     >r  \ Restore limit             //  OK - outer loop index
+00f2     0079     6110           30:13     swap  \ Bring next value to top  //  OK - outer loop index
+00f4     007a     6127           30:13     >r  \ Restore index             //  OK - outer loop index
+00f6     007b     6110           30:13     swap  \ Bring next value to top  //  OK - outer loop index
+00f8     007c     6127           30:13     >r  \ Restore limit             //  OK - outer loop index
+00fa     007d     6110           30:13     swap  \ Bring next value to top  //  OK - outer loop index
+00fc     007e     6103           31:13     N[d-1]                          //  (macro: drop)
+00fe     007f     6b1d           32:13     r>  \ Get limit pair 0          //  Should warn: insufficient nesting
+0100     0080     6b1d           32:13     r>  \ Get index pair 0          //  Should warn: insufficient nesting
+0102     0081     6b1d           32:13     r>  \ Get limit pair 1          //  Should warn: insufficient nesting
+0104     0082     6b1d           32:13     r>  \ Get index pair 1          //  Should warn: insufficient nesting
+0106     0083     6b1d           32:13     r>  \ Get limit pair 2          //  Should warn: insufficient nesting
+0108     0084     6b1d           32:13     r>  \ Get index pair 2          //  Should warn: insufficient nesting
+010a     0085     6011           32:13     dup  \ Duplicate k index for use  //  Should warn: insufficient nesting
+010c     0086     6127           32:13     >r  \ Restore index             //  Should warn: insufficient nesting
+010e     0087     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0110     0088     6127           32:13     >r  \ Restore limit             //  Should warn: insufficient nesting
+0112     0089     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0114     008a     6127           32:13     >r  \ Restore index             //  Should warn: insufficient nesting
+0116     008b     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0118     008c     6127           32:13     >r  \ Restore limit             //  Should warn: insufficient nesting
+011a     008d     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+011c     008e     6127           32:13     >r  \ Restore index             //  Should warn: insufficient nesting
+011e     008f     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0120     0090     6127           32:13     >r  \ Restore limit             //  Should warn: insufficient nesting
+0122     0091     6110           32:13     swap  \ Bring next value to top  //  Should warn: insufficient nesting
+0124     0092     6103           33:13     N[d-1]                          //  (macro: drop)
+0126     0093     6b1d           34:9      r>  \ Get limit                 //  
+0128     0094     6b1d           34:9      r>  \ Get index                 //  
+012a     0095     7600           34:9      1+  \ Increment index           //  
+012c     0096     6111           34:9      over  \ duplicate for next iteration  //  
+012e     0097     6111           34:9      over  \ duplicate for next iteration  //  
+0130     0098     6127           34:9      >r  \ Save new index back       //  
+0132     0099     6127           34:9      >r  \ Save limit back           //  
+0134     009a     6803           34:9      <  \ Compare index < limit      //  
+0136     009b     206a           34:9      ZJMP do_1  \ Jump if index < limit  //  
+0138     009c     600c           34:9      rdrop  \ Clean up index         //  
+013a     009d     600c           34:9      rdrop  \ Clean up limit         //  
+013c     009e     6b1d           35:5      r>  \ Get limit                 //  
+013e     009f     6b1d           35:5      r>  \ Get index                 //  
+0140     00a0     7600           35:5      1+  \ Increment index           //  
+0142     00a1     6111           35:5      over  \ duplicate for next iteration  //  
+0144     00a2     6111           35:5      over  \ duplicate for next iteration  //  
+0146     00a3     6127           35:5      >r  \ Save new index back       //  
+0148     00a4     6127           35:5      >r  \ Save limit back           //  
+014a     00a5     6803           35:5      <  \ Compare index < limit      //  
+014c     00a6     2066           35:5      ZJMP do_2  \ Jump if index < limit  //  
+014e     00a7     600c           35:5      rdrop  \ Clean up index         //  
+0150     00a8     600c           35:5      rdrop  \ Clean up limit         //  
+0152     00a9     8003           38:5      #3                              //  
+0154     00aa     8000           38:8      #0                              //  
+0156     00ab     6127           38:11     >r  \ Save index to R stack     //  
+0158     00ac     6127           38:11     >r  \ Save limit to R stack     //  
+015a     00ad     ----           38:11   do_5: DO                          //  
+015a     00ad     8002           39:9      #2                              //  
+015c     00ae     8000           39:12     #0                              //  
+015e     00af     6127           39:15     >r  \ Save index to R stack     //  
+0160     00b0     6127           39:15     >r  \ Save limit to R stack     //  
+0162     00b1     ----           39:15   do_4: DO                          //  
+0162     00b1     8004           40:13     #4                              //  
+0164     00b2     8000           40:16     #0                              //  
+0166     00b3     6127           40:19     >r  \ Save index to R stack     //  
+0168     00b4     6127           40:19     >r  \ Save limit to R stack     //  
+016a     00b5     ----           40:19   do_3: DO                          //  
+016a     00b5     6b1d           41:17     r>  \ Get limit pair 0          //  OK - outermost loop index
+016c     00b6     6b1d           41:17     r>  \ Get index pair 0          //  OK - outermost loop index
+016e     00b7     6b1d           41:17     r>  \ Get limit pair 1          //  OK - outermost loop index
+0170     00b8     6b1d           41:17     r>  \ Get index pair 1          //  OK - outermost loop index
+0172     00b9     6b1d           41:17     r>  \ Get limit pair 2          //  OK - outermost loop index
+0174     00ba     6b1d           41:17     r>  \ Get index pair 2          //  OK - outermost loop index
+0176     00bb     6011           41:17     dup  \ Duplicate k index for use  //  OK - outermost loop index
+0178     00bc     6127           41:17     >r  \ Restore index             //  OK - outermost loop index
+017a     00bd     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+017c     00be     6127           41:17     >r  \ Restore limit             //  OK - outermost loop index
+017e     00bf     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+0180     00c0     6127           41:17     >r  \ Restore index             //  OK - outermost loop index
+0182     00c1     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+0184     00c2     6127           41:17     >r  \ Restore limit             //  OK - outermost loop index
+0186     00c3     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+0188     00c4     6127           41:17     >r  \ Restore index             //  OK - outermost loop index
+018a     00c5     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+018c     00c6     6127           41:17     >r  \ Restore limit             //  OK - outermost loop index
+018e     00c7     6110           41:17     swap  \ Bring next value to top  //  OK - outermost loop index
+0190     00c8     6103           42:17     N[d-1]                          //  (macro: drop)
+0192     00c9     6b1d           43:17     r>  \ Get limit pair 0          //  OK - middle loop index
+0194     00ca     6b1d           43:17     r>  \ Get index pair 0          //  OK - middle loop index
+0196     00cb     6b1d           43:17     r>  \ Get limit pair 1          //  OK - middle loop index
+0198     00cc     6b1d           43:17     r>  \ Get index pair 1          //  OK - middle loop index
+019a     00cd     6011           43:17     dup  \ Duplicate j index for use  //  OK - middle loop index
+019c     00ce     6127           43:17     >r  \ Restore index             //  OK - middle loop index
+019e     00cf     6110           43:17     swap  \ Bring next value to top  //  OK - middle loop index
+01a0     00d0     6127           43:17     >r  \ Restore limit             //  OK - middle loop index
+01a2     00d1     6110           43:17     swap  \ Bring next value to top  //  OK - middle loop index
+01a4     00d2     6127           43:17     >r  \ Restore index             //  OK - middle loop index
+01a6     00d3     6110           43:17     swap  \ Bring next value to top  //  OK - middle loop index
+01a8     00d4     6127           43:17     >r  \ Restore limit             //  OK - middle loop index
+01aa     00d5     6110           43:17     swap  \ Bring next value to top  //  OK - middle loop index
+01ac     00d6     6103           44:17     N[d-1]                          //  (macro: drop)
+01ae     00d7     6b1d           45:17     r>  \ Get limit pair 0          //  OK - innermost loop index
+01b0     00d8     6b1d           45:17     r>  \ Get index pair 0          //  OK - innermost loop index
+01b2     00d9     6011           45:17     dup  \ Duplicate i index for use  //  OK - innermost loop index
+01b4     00da     6127           45:17     >r  \ Save index back           //  OK - innermost loop index
+01b6     00db     6110           45:17     swap  \ Bring limit to top, leaving i below  //  OK - innermost loop index
+01b8     00dc     6127           45:17     >r  \ Save limit back           //  OK - innermost loop index
+01ba     00dd     6103           46:17     N[d-1]                          //  (macro: drop)
+01bc     00de     6b1d           47:13     r>  \ Get limit                 //  
+01be     00df     6b1d           47:13     r>  \ Get index                 //  
+01c0     00e0     7600           47:13     1+  \ Increment index           //  
+01c2     00e1     6111           47:13     over  \ duplicate for next iteration  //  
+01c4     00e2     6111           47:13     over  \ duplicate for next iteration  //  
+01c6     00e3     6127           47:13     >r  \ Save new index back       //  
+01c8     00e4     6127           47:13     >r  \ Save limit back           //  
+01ca     00e5     6803           47:13     <  \ Compare index < limit      //  
+01cc     00e6     20b5           47:13     ZJMP do_3  \ Jump if index < limit  //  
+01ce     00e7     600c           47:13     rdrop  \ Clean up index         //  
+01d0     00e8     600c           47:13     rdrop  \ Clean up limit         //  
+01d2     00e9     6b1d           48:9      r>  \ Get limit                 //  
+01d4     00ea     6b1d           48:9      r>  \ Get index                 //  
+01d6     00eb     7600           48:9      1+  \ Increment index           //  
+01d8     00ec     6111           48:9      over  \ duplicate for next iteration  //  
+01da     00ed     6111           48:9      over  \ duplicate for next iteration  //  
+01dc     00ee     6127           48:9      >r  \ Save new index back       //  
+01de     00ef     6127           48:9      >r  \ Save limit back           //  
+01e0     00f0     6803           48:9      <  \ Compare index < limit      //  
+01e2     00f1     20b1           48:9      ZJMP do_4  \ Jump if index < limit  //  
+01e4     00f2     600c           48:9      rdrop  \ Clean up index         //  
+01e6     00f3     600c           48:9      rdrop  \ Clean up limit         //  
+01e8     00f4     6b1d           49:5      r>  \ Get limit                 //  
+01ea     00f5     6b1d           49:5      r>  \ Get index                 //  
+01ec     00f6     7600           49:5      1+  \ Increment index           //  
+01ee     00f7     6111           49:5      over  \ duplicate for next iteration  //  
+01f0     00f8     6111           49:5      over  \ duplicate for next iteration  //  
+01f2     00f9     6127           49:5      >r  \ Save new index back       //  
+01f4     00fa     6127           49:5      >r  \ Save limit back           //  
+01f6     00fb     6803           49:5      <  \ Compare index < limit      //  
+01f8     00fc     20ad           49:5      ZJMP do_5  \ Jump if index < limit  //  
+01fa     00fd     600c           49:5      rdrop  \ Clean up index         //  
+01fc     00fe     600c           49:5      rdrop  \ Clean up limit         //  
+01fe     00ff     ----           51:3    :wait_forever                     //  
+01fe     00ff     6000           52:6      T                               //  (macro: noop)
+0200     0100     00ff           53:6      JMP wait_forever                //  

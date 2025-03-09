@@ -1,0 +1,39 @@
+// J1 Variable and Memory Test Program
+
+// Basic variable declaration and initialization
+VARIABLE counter           // Default initialization to 0
+VARIABLE timer 100,        // Initialize to specific value
+VARIABLE coords 10, 20,    // Initialize multiple values (array)
+
+// Constant declaration
+CONSTANT MAX_SIZE 50       // Numeric constant
+CONSTANT NEWLINE #'
+'      // Character constant
+
+// Reserved memory block
+RESERVE buffer 16          // Reserve 16 words
+
+// String declaration
+STRING greeting "Hello, J1 World!"
+
+// Direct memory initialization
+10, 20, 30,                // Word initialization
+'H'c, 'i'c, '!'c, 0c,      // Byte initialization
+
+: main
+    // Use variables
+    counter @              // Get value from counter
+    #1 +                   // Add 1
+    counter !              // Store back to counter
+    
+    // Use constant
+    MAX_SIZE               // Push constant value
+    
+    // Use string
+    greeting               // Push address of greeting
+    
+    // Use reserved memory
+    buffer 5 + #42 !       // Store 42 into buffer[5]
+    
+    // Exit program
+    ; 

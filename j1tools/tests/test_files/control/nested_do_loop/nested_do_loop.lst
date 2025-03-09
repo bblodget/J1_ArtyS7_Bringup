@@ -1,0 +1,97 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8003            8:5      #3                              //  Push limit (3)
+0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0006     0003     6127           10:5      >r  \ Save index to R stack     //  
+0008     0004     6127           10:5      >r  \ Save limit to R stack     //  
+000a     0005     ----           10:5    do_2: DO                          //  
+000a     0005     8002           12:9      #2                              //  Push limit (2)
+000c     0006     8000           13:9      #0                              //  Push initial index (0)
+000e     0007     6127           14:9      >r  \ Save index to R stack     //  
+0010     0008     6127           14:9      >r  \ Save limit to R stack     //  
+0012     0009     ----           14:9    do_1: DO                          //  
+0012     0009     8004           16:13     #4                              //  Push limit (4)
+0014     000a     8000           17:13     #0                              //  Push initial index (0)
+0016     000b     6127           18:13     >r  \ Save index to R stack     //  
+0018     000c     6127           18:13     >r  \ Save limit to R stack     //  
+001a     000d     ----           18:13   do_0: DO                          //  
+001a     000d     6b1d           20:17     r>  \ Get limit pair 0          //  Get K outer loop index (0,1,2)
+001c     000e     6b1d           20:17     r>  \ Get index pair 0          //  Get K outer loop index (0,1,2)
+001e     000f     6b1d           20:17     r>  \ Get limit pair 1          //  Get K outer loop index (0,1,2)
+0020     0010     6b1d           20:17     r>  \ Get index pair 1          //  Get K outer loop index (0,1,2)
+0022     0011     6b1d           20:17     r>  \ Get limit pair 2          //  Get K outer loop index (0,1,2)
+0024     0012     6b1d           20:17     r>  \ Get index pair 2          //  Get K outer loop index (0,1,2)
+0026     0013     6011           20:17     dup  \ Duplicate k index for use  //  Get K outer loop index (0,1,2)
+0028     0014     6127           20:17     >r  \ Restore index             //  Get K outer loop index (0,1,2)
+002a     0015     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+002c     0016     6127           20:17     >r  \ Restore limit             //  Get K outer loop index (0,1,2)
+002e     0017     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+0030     0018     6127           20:17     >r  \ Restore index             //  Get K outer loop index (0,1,2)
+0032     0019     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+0034     001a     6127           20:17     >r  \ Restore limit             //  Get K outer loop index (0,1,2)
+0036     001b     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+0038     001c     6127           20:17     >r  \ Restore index             //  Get K outer loop index (0,1,2)
+003a     001d     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+003c     001e     6127           20:17     >r  \ Restore limit             //  Get K outer loop index (0,1,2)
+003e     001f     6110           20:17     swap  \ Bring next value to top  //  Get K outer loop index (0,1,2)
+0040     0020     6103           21:17     N[d-1]                          //  (macro: drop)
+0042     0021     6b1d           22:17     r>  \ Get limit pair 0          //  Get J middle loop index (0,1)
+0044     0022     6b1d           22:17     r>  \ Get index pair 0          //  Get J middle loop index (0,1)
+0046     0023     6b1d           22:17     r>  \ Get limit pair 1          //  Get J middle loop index (0,1)
+0048     0024     6b1d           22:17     r>  \ Get index pair 1          //  Get J middle loop index (0,1)
+004a     0025     6011           22:17     dup  \ Duplicate j index for use  //  Get J middle loop index (0,1)
+004c     0026     6127           22:17     >r  \ Restore index             //  Get J middle loop index (0,1)
+004e     0027     6110           22:17     swap  \ Bring next value to top  //  Get J middle loop index (0,1)
+0050     0028     6127           22:17     >r  \ Restore limit             //  Get J middle loop index (0,1)
+0052     0029     6110           22:17     swap  \ Bring next value to top  //  Get J middle loop index (0,1)
+0054     002a     6127           22:17     >r  \ Restore index             //  Get J middle loop index (0,1)
+0056     002b     6110           22:17     swap  \ Bring next value to top  //  Get J middle loop index (0,1)
+0058     002c     6127           22:17     >r  \ Restore limit             //  Get J middle loop index (0,1)
+005a     002d     6110           22:17     swap  \ Bring next value to top  //  Get J middle loop index (0,1)
+005c     002e     6103           23:17     N[d-1]                          //  (macro: drop)
+005e     002f     6b1d           24:17     r>  \ Get limit pair 0          //  Get I inner loop index (0,1,2,3)
+0060     0030     6b1d           24:17     r>  \ Get index pair 0          //  Get I inner loop index (0,1,2,3)
+0062     0031     6011           24:17     dup  \ Duplicate i index for use  //  Get I inner loop index (0,1,2,3)
+0064     0032     6127           24:17     >r  \ Save index back           //  Get I inner loop index (0,1,2,3)
+0066     0033     6110           24:17     swap  \ Bring limit to top, leaving i below  //  Get I inner loop index (0,1,2,3)
+0068     0034     6127           24:17     >r  \ Save limit back           //  Get I inner loop index (0,1,2,3)
+006a     0035     6103           25:17     N[d-1]                          //  (macro: drop)
+006c     0036     6000           26:17     T                               //  (macro: noop)
+006e     0037     6b1d           27:13     r>  \ Get limit                 //  
+0070     0038     6b1d           27:13     r>  \ Get index                 //  
+0072     0039     7600           27:13     1+  \ Increment index           //  
+0074     003a     6111           27:13     over  \ duplicate for next iteration  //  
+0076     003b     6111           27:13     over  \ duplicate for next iteration  //  
+0078     003c     6127           27:13     >r  \ Save new index back       //  
+007a     003d     6127           27:13     >r  \ Save limit back           //  
+007c     003e     6803           27:13     <  \ Compare index < limit      //  
+007e     003f     200d           27:13     ZJMP do_0  \ Jump if index < limit  //  
+0080     0040     600c           27:13     rdrop  \ Clean up index         //  
+0082     0041     600c           27:13     rdrop  \ Clean up limit         //  
+0084     0042     6b1d           28:9      r>  \ Get limit                 //  
+0086     0043     6b1d           28:9      r>  \ Get index                 //  
+0088     0044     7600           28:9      1+  \ Increment index           //  
+008a     0045     6111           28:9      over  \ duplicate for next iteration  //  
+008c     0046     6111           28:9      over  \ duplicate for next iteration  //  
+008e     0047     6127           28:9      >r  \ Save new index back       //  
+0090     0048     6127           28:9      >r  \ Save limit back           //  
+0092     0049     6803           28:9      <  \ Compare index < limit      //  
+0094     004a     2009           28:9      ZJMP do_1  \ Jump if index < limit  //  
+0096     004b     600c           28:9      rdrop  \ Clean up index         //  
+0098     004c     600c           28:9      rdrop  \ Clean up limit         //  
+009a     004d     6b1d           29:5      r>  \ Get limit                 //  
+009c     004e     6b1d           29:5      r>  \ Get index                 //  
+009e     004f     7600           29:5      1+  \ Increment index           //  
+00a0     0050     6111           29:5      over  \ duplicate for next iteration  //  
+00a2     0051     6111           29:5      over  \ duplicate for next iteration  //  
+00a4     0052     6127           29:5      >r  \ Save new index back       //  
+00a6     0053     6127           29:5      >r  \ Save limit back           //  
+00a8     0054     6803           29:5      <  \ Compare index < limit      //  
+00aa     0055     2005           29:5      ZJMP do_2  \ Jump if index < limit  //  
+00ac     0056     600c           29:5      rdrop  \ Clean up index         //  
+00ae     0057     600c           29:5      rdrop  \ Clean up limit         //  
+00b0     0058     ----           31:3    :wait_forever                     //  
+00b0     0058     6000           32:6      T                               //  (macro: noop)
+00b2     0059     0058           33:6      JMP wait_forever                //  

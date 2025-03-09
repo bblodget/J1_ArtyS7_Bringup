@@ -1,0 +1,24 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0001            2:1      JMP start                       //  
+0002     0001     ----            6:3    :start                            //  
+0002     0001     8003            8:5      #3                              //  Push limit (3)
+0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0006     0003     6127           12:5      >r  \ Save index to R stack     //  
+0008     0004     6127           12:5      >r  \ Save limit to R stack     //  
+000a     0005     ----           12:5    do_0: DO                          //  
+000a     0005     6000           14:9      T                               //  (macro: noop)
+000c     0006     6b1d           15:5      r>  \ Get limit                 //  
+000e     0007     6b1d           15:5      r>  \ Get index                 //  
+0010     0008     7600           15:5      1+  \ Increment index           //  
+0012     0009     6111           15:5      over  \ duplicate for next iteration  //  
+0014     000a     6111           15:5      over  \ duplicate for next iteration  //  
+0016     000b     6127           15:5      >r  \ Save new index back       //  
+0018     000c     6127           15:5      >r  \ Save limit back           //  
+001a     000d     6803           15:5      <  \ Compare index < limit      //  
+001c     000e     2005           15:5      ZJMP do_0  \ Jump if index < limit  //  
+001e     000f     600c           15:5      rdrop  \ Clean up index         //  
+0020     0010     600c           15:5      rdrop  \ Clean up limit         //  
+0022     0011     ----           17:3    :wait_forever                     //  
+0022     0011     6000           18:6      T                               //  (macro: noop)
+0024     0012     0011           19:6      JMP wait_forever                //  

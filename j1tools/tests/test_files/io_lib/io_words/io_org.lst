@@ -1,0 +1,49 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0021            2:1      JMP start                       //  
+0002     0001     ----           25:3    uartstat:                         //  
+0002     0001     a000           26:5      #$2000                          //  (macro: UART_STATUS_REG)
+0004     0002     6d50           26:21     io[T][IORD]                     //  (macro: io@)
+0006     0003     6300           26:25     T&N                             //  (macro: overand)
+0008     0004     6703           26:33     N==T[d-1]                       //  (macro: =)
+000a     0005     608c           26:35     T[RET,r-1]                      //  (macro: exit)
+000c     0006     ----           30:3    emit?:                            //  
+000c     0006     6000           31:5      T                               //  (macro: pause)
+000e     0007     8001           32:5      #1                              //  Push transmit ready mask
+0010     0008     a000           33:5      #$2000                          //  (macro: UART_STATUS_REG)
+0012     0009     6d50           33:21     io[T][IORD]                     //  (macro: io@)
+0014     000a     6300           34:5      T&N                             //  (macro: overand)
+0016     000b     6703           35:5      N==T[d-1]                       //  (macro: =)
+0018     000c     608c           36:5      T[RET,r-1]                      //  (macro: exit)
+001a     000d     ----           40:3    key?:                             //  
+001a     000d     6000           41:5      T                               //  (macro: pause)
+001c     000e     8002           42:5      #2                              //  Push receive ready mask
+001e     000f     4001           43:5      CALL uartstat                   //  Check UART status
+0020     0010     608c           44:5      T[RET,r-1]                      //  (macro: exit)
+0022     0011     ----           48:3    emit:                             //  
+0022     0011     4006           49:5      CALL emit?                      //  Check if ready to transmit
+0024     0012     2011           50:5      ZJMP emit                       //  If not ready, keep waiting
+0026     0013     9000           51:5      #$1000                          //  (macro: UART_DATA_REG)
+0028     0014     6043           51:19     T[N->io[T],d-1]                 //  (macro: io!)
+002a     0015     608c           52:5      T[RET,r-1]                      //  (macro: exit)
+002c     0016     ----           56:3    key:                              //  
+002c     0016     400d           57:5      CALL key?                       //  Check if character available
+002e     0017     2016           58:5      ZJMP key                        //  If no character, keep waiting
+0030     0018     9000           59:5      #$1000                          //  (macro: UART_DATA_REG)
+0032     0019     6d50           59:19     io[T][IORD]                     //  (macro: io@)
+0034     001a     608c           60:5      T[RET,r-1]                      //  (macro: exit)
+0036     001b     ----           64:3    2emit:                            //  
+0036     001b     6110           65:5      N[T->N]                         //  (macro: swap)
+0038     001c     6127           65:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+003a     001d     4011           66:5      CALL emit                       //  Send first char
+003c     001e     6b1d           67:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+003e     001f     4011           67:8      CALL emit                       //  Send second char
+0040     0020     608c           68:5      T[RET,r-1]                      //  (macro: exit)
+0042     0021     ----            6:1    start:                            //  
+0042     0021     4016            7:5      CALL key                        //  Read the character
+0044     0022     4011            8:5      CALL emit                       //  Echo it back
+0046     0023     800a            9:5      #$0A                            //  Send newline (ASCII 0x0A)
+0048     0024     4011            9:10     CALL emit                       //  Send newline (ASCII 0x0A)
+004a     0025     ----           28:1    wait_forever:                     //  
+004a     0025     6000           29:6      T                               //  (macro: noop)
+004c     0026     0025           30:6      JMP wait_forever                //  
