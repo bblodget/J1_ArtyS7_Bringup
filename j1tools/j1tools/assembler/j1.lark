@@ -34,6 +34,9 @@ LEAVE.2: "LEAVE"
 // Add to directive tokens
 ORG.2: "ORG"
 
+// Add tick token for label referencing
+TICK: "'"
+
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
 IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
 
@@ -127,7 +130,7 @@ label: COLON IDENT
 // Numbers and references
 stack_number: STACK_HEX | STACK_DECIMAL
 raw_number: RAW_HEX | RAW_DECIMAL
-labelref: IDENT
+labelref: TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions
 instruction: stack_number     // Literal

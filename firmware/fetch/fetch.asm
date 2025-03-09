@@ -1,7 +1,7 @@
 // Fetch test program
 
 ORG $0000
-JMP start
+JMP 'start
 
 // word address 2, byte address 4
 macro: IRQ_COUNT0 ( -- ) #$0004 endmacro
@@ -36,5 +36,5 @@ macro: !       ( x addr -- )           3OS[N->[T],d-2] endmacro
     
 : main_loop
     noop
-    JMP main_loop   // Repeat forever
+    JMP 'main_loop   // Repeat forever
 

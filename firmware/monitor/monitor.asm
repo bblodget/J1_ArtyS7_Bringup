@@ -2,10 +2,10 @@
 // Provides live coding environment with monitor and user program threads
 
 ORG $0000
-JMP monitor_init        // Boot vector jumps to monitor initialization
+JMP 'monitor_init        // Boot vector jumps to monitor initialization
 
 ORG $0002
-JMP irq_handler        // Interrupt vector
+JMP 'irq_handler        // Interrupt vector
 
 include "core/j1_base_macros.asm"      
 include "core/j1_extended_macros.asm"   

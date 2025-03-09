@@ -242,11 +242,13 @@ class J1Assembler(Transformer):
         """Handle jump operations with their labels."""
         token = items[0]  # JMP token
         op = str(token)
-        label_token = items[1]  # Label token
-        label_name = str(label_token)  # Just use the label name directly
-
-        # Create instruction text by combining op and label
-        instr_text = f"{op} {label_name}"
+        
+        # Get the label name from labelref
+        label_ref = items[1]  # This is the result from labelref method
+        label_name = str(label_ref)  # This is the label name without the tick
+        
+        # Always add a tick to the formatted instruction text for consistency
+        instr_text = f"{op} '{label_name}"
 
         return InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
@@ -255,7 +257,7 @@ class J1Assembler(Transformer):
             filename=self.state.current_file,
             source_lines=self.state.source_lines,
             label_name=label_name,
-            instr_text=instr_text,  # Add instruction text
+            instr_text=instr_text,  # Add instruction text with tick
         )
 
     def instruction(
@@ -364,7 +366,8 @@ class J1Assembler(Transformer):
 
     def labelref(self, items: List[Token]) -> str:
         """Convert labelref rule into a string."""
-        return str(items[0])  # Just return the label name as a string
+        # items[0] is TICK, items[1] is IDENT
+        return str(items[1])  # Return just the label name (without the tick)
 
     def label(self, items: List[Token]) -> InstructionMetadata:
         """Convert label rule into InstructionMetadata."""

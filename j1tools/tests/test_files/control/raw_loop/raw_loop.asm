@@ -1,5 +1,5 @@
 ORG $0000
-JMP start
+JMP 'start
 
 include "platform/j1_16kb_dualport_macros.asm"
 
@@ -24,9 +24,9 @@ include "platform/j1_16kb_dualport_macros.asm"
     >r             // Save new index back
     >r             // Save limit back
     <              // Compare index < limit
-    ZJMP do_label  // Jump if index < limit
+    ZJMP 'do_label  // Jump if index < limit
     
 : wait_forever
     noop
-    JMP wait_forever
+    JMP 'wait_forever
 

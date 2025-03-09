@@ -6,7 +6,7 @@
 // FIXME: We should not have to jump to start here
 // Need to figure out a better way to handle this
 // Jump to start
-// JMP start
+// JMP 'start
 
 // UART Register Addresses
 macro: UART_STATUS_REG ( -- addr ) #$2000 endmacro
@@ -45,14 +45,14 @@ endmacro
 // Send a character to UART
 : emit ( c -- )
     emit?              // Check if ready to transmit
-    ZJMP emit     // If not ready, keep waiting
+    ZJMP 'emit     // If not ready, keep waiting
     UART_DATA_REG io!  // Send character
 ;
 
 // Read a character from UART
 : key ( -- c )
     key?              // Check if character available
-    ZJMP key         // If no character, keep waiting
+    ZJMP 'key         // If no character, keep waiting
     UART_DATA_REG io@ // Read character
 ;
 

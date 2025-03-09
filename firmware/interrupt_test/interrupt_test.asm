@@ -2,10 +2,10 @@
 // Toggles LED on each interrupt
 
 ORG $0000
-JMP start                // Boot vector
+JMP 'start                // Boot vector
 
 ORG $0001             // word addresss 1, but byte address 2
-JMP irq_handler        // Interrupt vector
+JMP 'irq_handler        // Interrupt vector
 
 
 // word address 2, byte address 4
@@ -98,7 +98,7 @@ macro: !       ( x addr -- )           3OS[N->[T],d-2] endmacro
         led_toggle
         print_toggle
     THEN
-    JMP main_loop
+    JMP 'main_loop
 
 // Interrupt handler - toggles LED
 : irq_handler

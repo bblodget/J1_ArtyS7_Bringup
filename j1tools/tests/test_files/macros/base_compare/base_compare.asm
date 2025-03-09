@@ -14,4 +14,4 @@ include "core/j1_base_macros.asm"
 
 : done
     noop
-    JMP done
+    JMP 'done

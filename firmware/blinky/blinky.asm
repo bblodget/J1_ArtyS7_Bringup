@@ -2,7 +2,7 @@
 // Blinks LED on PORTA_01 (pin 14)
 
 ORG $0000
-JMP start
+JMP 'start
 
 include "core/j1_base_macros.asm"      // Base J1 operations
 include "io/terminal_io.asm"
@@ -65,5 +65,5 @@ include "io/terminal_io.asm"
     led_off         // Turn LED off
     print_off       // Print "LED OFF" message
     delay           // Wait for delay instead of keypress
-    JMP main_loop   // Repeat forever
+    JMP 'main_loop   // Repeat forever
 

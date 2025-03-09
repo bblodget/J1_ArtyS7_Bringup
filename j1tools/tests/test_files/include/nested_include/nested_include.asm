@@ -7,8 +7,8 @@ include "math/math_words.asm"
     plus         // Stack: 5 3 8
     swap         // Stack: 5 8 3
     drop         // Stack: 5 8
-    JMP done     // Jump to end
+    JMP 'done     // Jump to end
 
 : done
     noop
-    JMP done
+    JMP 'done

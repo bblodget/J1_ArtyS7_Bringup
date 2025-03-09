@@ -11,8 +11,8 @@ endmacro
 : start                         // Note the colon after label
     #$2A #10                   // Push hex 2A (decimal 42) and decimal 10
     add_nums                   // Use our addition macro
-    JMP wait_forever           // Jump to end of program
+    JMP 'wait_forever           // Jump to end of program
 
 : wait_forever
     T[d+0]                     // NOOP
-    JMP wait_forever           // Loop forever
+    JMP 'wait_forever           // Loop forever

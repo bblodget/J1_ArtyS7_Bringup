@@ -1,5 +1,5 @@
 ORG $0000
-JMP start
+JMP 'start
 
 include "platform/j1_16kb_dualport_macros.asm"
 
@@ -16,5 +16,5 @@ include "platform/j1_16kb_dualport_macros.asm"
     
 : wait_forever
      noop
-     JMP wait_forever
+     JMP 'wait_forever
 

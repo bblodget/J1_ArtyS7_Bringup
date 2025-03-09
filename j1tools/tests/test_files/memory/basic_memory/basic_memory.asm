@@ -40,9 +40,9 @@ ORG $0000
     @            // Stack: 1234 1234 1234 5678 (should be 5678)
     #103         // Stack: 1234 1234 1234 5678 103
     @            // Stack: 1234 1234 1234 5678 5678 (should be 5678)
-    JMP done     // Jump to done
+    JMP 'done     // Jump to done
 
 ORG $0020
 : done
     noop
-    JMP done     // Loop forever
+    JMP 'done     // Loop forever

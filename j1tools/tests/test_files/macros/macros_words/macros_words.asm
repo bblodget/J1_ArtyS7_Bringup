@@ -9,8 +9,8 @@ macro: noop ( -- ) T[d+0]           endmacro
     #42 #10
     dup
     drop
-    JMP wait_forever           // Jump to end of program
+    JMP 'wait_forever           // Jump to end of program
 
 : wait_forever
     noop            
-    JMP wait_forever           // Loop forever
+    JMP 'wait_forever           // Loop forever

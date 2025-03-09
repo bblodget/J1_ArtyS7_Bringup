@@ -1,5 +1,5 @@
 ORG $0000
-JMP start
+JMP 'start
 
 include "core/j1_base_macros.asm"
 
@@ -28,5 +28,5 @@ include "core/j1_base_macros.asm"
 
 : wait_forever
      noop
-     JMP wait_forever
+     JMP 'wait_forever
 

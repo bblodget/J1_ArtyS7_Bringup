@@ -1,5 +1,5 @@
 ORG $8000
-JMP start
+JMP 'start
 
 include "io_ports.asm"
 
@@ -9,5 +9,5 @@ include "io_ports.asm"
 
 : wait_forever
      noop
-     JMP wait_forever
+     JMP 'wait_forever
 

@@ -79,11 +79,11 @@ def test_jump_instructions(assembler):
     """Test jump instructions with label resolution."""
     source = """
     : start
-        JMP end
+        JMP 'end
     : middle
-        ZJMP start
+        ZJMP 'start
     : end
-        CALL middle
+        CALL 'middle
     """
     tree = assembler.parse(source)
     assembler.transform(tree)

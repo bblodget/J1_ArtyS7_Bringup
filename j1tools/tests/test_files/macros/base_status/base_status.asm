@@ -10,4 +10,4 @@ include "core/j1_extended_macros.asm"
 
 : done
     noop
-    JMP done
+    JMP 'done

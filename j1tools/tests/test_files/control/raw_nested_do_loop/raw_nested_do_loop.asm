@@ -1,5 +1,5 @@
 ORG $0000
-JMP start
+JMP 'start
 
 include "platform/j1_16kb_dualport_macros.asm"
 
@@ -78,7 +78,7 @@ include "platform/j1_16kb_dualport_macros.asm"
     >r              // Save new index back
     >r              // Save limit back
     <               // Compare index < limit
-    ZJMP i_loop     // Jump if index < limit
+    ZJMP 'i_loop     // Jump if index < limit
     rdrop           // Clean up inner loop limit
     rdrop           // Clean up inner loop index
 
@@ -90,7 +90,7 @@ include "platform/j1_16kb_dualport_macros.asm"
     >r              // Save new index back
     >r              // Save limit back
     <               // Compare index < limit
-    ZJMP j_loop     // Jump if index < limit
+    ZJMP 'j_loop     // Jump if index < limit
     rdrop           // Clean up middle loop limit
     rdrop           // Clean up middle loop index
 
@@ -102,11 +102,11 @@ include "platform/j1_16kb_dualport_macros.asm"
     >r              // Save new index back
     >r              // Save limit back
     <               // Compare index < limit
-    ZJMP k_loop     // Jump if index < limit
+    ZJMP 'k_loop     // Jump if index < limit
     rdrop           // Clean up outer loop limit
     rdrop           // Clean up outer loop index
 
 : wait_forever
     noop
-    JMP wait_forever
+    JMP 'wait_forever
 

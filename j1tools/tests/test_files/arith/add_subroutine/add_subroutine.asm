@@ -4,9 +4,9 @@
 // Uses the stack and return stack
 : start                  // Note forth style label
     #$2A #10             // Push hex 2A (decimal 42) and decimal 10
-    CALL add_nums        // Call our addition subroutine
+    CALL 'add_nums        // Call our addition subroutine
     N[d-1]               // DROP the result
-    JMP wait_forever     // Jump to end of program
+    JMP 'wait_forever     // Jump to end of program
 
 : add_nums                // Note the colon after label
     T+N[d-1]             // Add top two stack items
@@ -16,4 +16,4 @@
 
 : wait_forever
     T[d+0]               // NOOP
-    JMP wait_forever     // Loop forever
+    JMP 'wait_forever     // Loop forever
