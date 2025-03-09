@@ -1628,6 +1628,54 @@ class J1Assembler(Transformer):
         # 4. Loop end instructions
         return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
 
+    def memory_init_statement(self, items):
+        """Handle direct memory initialization using raw_number, syntax."""
+        # The items are the raw tokens
+        num_token = items[0]  # This should be either RAW_HEX or RAW_DECIMAL
+        
+        # Extract the value from the token
+        if num_token.type == "RAW_HEX":
+            # Remove the $ prefix to get the raw hex number
+            value = int(str(num_token)[1:], 16)
+        elif num_token.type == "RAW_DECIMAL":
+            # Parse the decimal number directly
+            value = int(str(num_token), 10)
+        else:
+            raise ValueError(f"Unexpected token type for memory initialization: {num_token.type}")
+            
+        value = value & 0xFFFF  # Ensure 16-bit
+        
+        # Create an instruction metadata for this memory initialization
+        try:
+            source_line = self.state.source_lines[num_token.line - 1] if num_token.line > 0 and num_token.line <= len(self.state.source_lines) else ""
+        except IndexError:
+            source_line = ""
+            
+        # Store the value at the current address and advance the address space
+        word_addr = self.addr_space.advance()  # This gets the current address and advances it
+        
+        metadata = InstructionMetadata(
+            type=InstructionType.BYTE_CODE,  # Store directly as a byte code
+            value=value,  # The raw value to store
+            token=num_token,
+            filename=self.state.current_file,
+            line=num_token.line if hasattr(num_token, 'line') else 0,
+            column=num_token.column if hasattr(num_token, 'column') else 0,
+            source_line=source_line,
+            instr_text=f"{num_token},",  # Include the comma for clarity
+            word_addr=word_addr,
+            num_value=value,
+        )
+        
+        # Add the instruction to our instruction list
+        self.instructions.append(metadata)
+        self.instruction_metadata[word_addr] = metadata
+        
+        # Log the memory initialization
+        self.logger.debug(f"Memory init: {value:04x} at address {word_addr:04x}")
+        
+        return metadata
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))

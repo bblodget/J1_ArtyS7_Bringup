@@ -161,6 +161,7 @@ def test_combined_modifiers(assembler, source, expected):
     "category,test_name",
     [
         ("memory", "basic_memory"),
+        ("memory", "memory_init"),  # Add our new memory initialization test
         ("arith", "basic_ops"),
         ("arith", "add_subroutine"),
         ("include", "basic_include"),
@@ -195,6 +196,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "raw_loop"),
         ("control", "raw_i_loop"),
         ("control", "do_i_loop"),
+        ("constants", "constants_basic"),
         ("firmware", "blinky"),
         ("firmware", "count"),
         ("firmware", "fetch"),

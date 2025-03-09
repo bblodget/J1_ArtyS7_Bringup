@@ -35,7 +35,8 @@ LEAVE.2: "LEAVE"
 ORG.2: "ORG"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
-IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+// IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>.\?\/\\|~;>]+/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
@@ -44,7 +45,7 @@ STRING: /"[^"]*"/
 COLON: ":"
 LBRACKET: "["
 RBRACKET: "]"
-COMMA: ","
+COMMA.2: ","
 
 // Macro tokens
 MACRO.2: "macro:"
@@ -112,8 +113,11 @@ R_MINUS_2: "r-2"
 ?start: program
 program: (statement | org_directive)*
 // statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
-statement: label | instruction | macro_def | include_stmt | control_structure
+statement: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
 org_directive: ORG raw_number
+
+// Add memory initialization statement rule
+memory_init_statement: (RAW_HEX | RAW_DECIMAL) COMMA
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
