@@ -6,10 +6,17 @@ def hex_to_coe(hex_file):
     """Convert hex file to COE format and print to stdout"""
     # Read hex file, skip comments and empty lines
     with open(hex_file, "r") as f:
-        hex_data = [
-            line.split("//")[0].strip() for line in f
-        ]  # Split on // and take first part
+        hex_data = [line.split("//")[0].strip() for line in f]  # Split on // and take first part
         hex_data = [line for line in hex_data if line]  # Remove empty lines
+
+    # Validate each hex value explicitly
+    valid_chars = set("0123456789abcdefABCDEF")
+    for hex_str in hex_data:
+        # If any character in the hex_str is not in valid_chars, raise error
+        if not all(c in valid_chars for c in hex_str):
+            raise ValueError(f"Invalid hexadecimal value: {hex_str}")
+        # Also attempt conversion to ensure it's a proper hex value
+        int(hex_str, 16)
 
     # Output COE format
     print("memory_initialization_radix=16;")

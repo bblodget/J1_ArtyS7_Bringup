@@ -1,0 +1,47 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0006            7:1      JMP 'start                      //  
+0002     0001     ----            9:3    :my_table                         //  
+0002     0001     0041           10:5      'A',                            //  Table with five values
+0004     0002     0042           10:10     'B',                            //  Table with five values
+0006     0003     0043           10:15     'C',                            //  Table with five values
+0008     0004     0044           10:20     'D',                            //  Table with five values
+000a     0005     0045           10:25     'E',                            //  Table with five values
+000c     0006     ----           12:3    :start                            //  
+000c     0006     8041           14:5      #'A'                            //  
+000e     0007     6103           14:10     N[d-1]                          //  (macro: drop)
+0010     0008     8042           15:5      #'B'                            //  
+0012     0009     6103           15:10     N[d-1]                          //  (macro: drop)
+0014     000a     8043           16:5      #'C'                            //  
+0016     000b     6103           16:10     N[d-1]                          //  (macro: drop)
+0018     000c     8002           19:6      'my_table                       //  Get value at my_table[0] = 10
+001a     000d     7900           19:15     mem[T]                          //  (macro: @)
+001c     000e     8002           22:6      'my_table                       //  Get value at my_table[1] = 20
+001e     000f     8002           22:15     #2                              //  Get value at my_table[1] = 20
+0020     0010     6203           22:18     T+N[d-1]                        //  (macro: +)
+0022     0011     7900           22:20     mem[T]                          //  (macro: @)
+0024     0012     8002           25:6      'my_table                       //  Get value at my_table[2] = 30
+0026     0013     8004           25:15     #4                              //  Get value at my_table[2] = 30
+0028     0014     6203           25:18     T+N[d-1]                        //  (macro: +)
+002a     0015     7900           25:20     mem[T]                          //  (macro: @)
+002c     0016     8002           28:6      'my_table                       //  Get value at my_table[3] = 40
+002e     0017     8006           28:15     #6                              //  Get value at my_table[3] = 40
+0030     0018     6203           28:18     T+N[d-1]                        //  (macro: +)
+0032     0019     7900           28:20     mem[T]                          //  (macro: @)
+0034     001a     8002           31:6      'my_table                       //  Get value at my_table[4] = 50
+0036     001b     8008           31:15     #8                              //  Get value at my_table[4] = 50
+0038     001c     6203           31:18     T+N[d-1]                        //  (macro: +)
+003a     001d     7900           31:20     mem[T]                          //  (macro: @)
+003c     001e     8099           34:5      #$99                            //  Store $99 at my_table[1]
+003e     001f     8002           34:11     'my_table                       //  Store $99 at my_table[1]
+0040     0020     8002           34:20     #2                              //  Store $99 at my_table[1]
+0042     0021     6203           34:23     T+N[d-1]                        //  (macro: +)
+0044     0022     7832           34:25     3OS[N->[T],d-2]                 //  (macro: !)
+0046     0023     8002           37:6      'my_table                       //  Get value at my_table[1] = $99
+0048     0024     8002           37:15     #2                              //  Get value at my_table[1] = $99
+004a     0025     6203           37:18     T+N[d-1]                        //  (macro: +)
+004c     0026     7900           37:20     mem[T]                          //  (macro: @)
+004e     0027     0028           40:5      JMP 'end                        //  
+0050     0028     ----           42:3    :end                              //  
+0050     0028     6000           43:5      T                               //  (macro: noop)
+0052     0029     0028           44:5      JMP 'end                        //  

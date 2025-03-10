@@ -256,7 +256,7 @@ Label addressing is especially useful when working with tables. For example, sup
 Here, the label `my_table` corresponds to the base address of the table. To modify a specific element in the table, you can use the tick operator to obtain the base address, perform an arithmetic offset to target the desired element, and then use the store operator (`!`) to write a new value. For instance, to change the second value in the table to `$FF`, you would write:
 
 ```
-'my_table 1 + #$FF !
+'my_table 2 + #$FF !
 ```
 
 In this example, `'my_table` pushes the base address of the table onto the stack, `1 +` computes the address of the second element (since addresses are word-indexed), and `#$FF !` stores the new value `$FF` into that memory location.

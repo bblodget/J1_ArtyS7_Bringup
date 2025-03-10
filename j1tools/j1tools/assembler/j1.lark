@@ -4,6 +4,12 @@
 %import common.WS
 %ignore WS
 
+// Insert new tokens after %ignore WS
+%ignore WS
+
+STACK_CHAR: /#'[^']'/
+RAW_CHAR: /'[^']'/
+
 // Comments - match and ignore entire line
 COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
@@ -119,7 +125,7 @@ statement: label | instruction | macro_def | include_stmt | control_structure | 
 org_directive: ORG raw_number
 
 // Add memory initialization statement rule
-memory_init_statement: (RAW_HEX | RAW_DECIMAL) COMMA
+memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
@@ -128,8 +134,8 @@ include_stmt: INCLUDE STRING
 label: COLON IDENT
 
 // Numbers and references
-stack_number: STACK_HEX | STACK_DECIMAL
-raw_number: RAW_HEX | RAW_DECIMAL
+stack_number: STACK_HEX | STACK_DECIMAL | STACK_CHAR
+raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
 labelref: TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions

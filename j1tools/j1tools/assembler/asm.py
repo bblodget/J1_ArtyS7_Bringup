@@ -485,6 +485,25 @@ class J1Assembler(Transformer):
                 num_value=value,
                 word_addr=self.addr_space.get_word_address(),
             )
+        elif token.type == "STACK_CHAR":
+            # Expecting format: #'<char>' i.e. exactly 4 characters
+            token_str = str(token)
+            if len(token_str) != 4:
+                raise ValueError(f"Invalid stack character literal: {token_str}")
+            value = ord(token_str[2])
+            machine_code = value | 0x8000
+            return InstructionMetadata(
+                type=InstructionType.BYTE_CODE,
+                value=machine_code,
+                token=token,
+                filename=self.state.current_file,
+                line=token.line if hasattr(token, 'line') else 0,
+                column=token.column if hasattr(token, 'column') else 0,
+                source_line=self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else "",
+                instr_text=str(token),
+                num_value=value,
+                word_addr=self.addr_space.get_word_address(),
+            )
         else:
             raise ValueError(f"Unknown token type: {token.type}")
 
@@ -507,6 +526,12 @@ class J1Assembler(Transformer):
                     f"{self.state.current_file}:{token.line}:{token.column}: "
                     f"Decimal number {value} out of range (-32768 to 65535)"
                 )
+        elif token.type == "RAW_CHAR":
+            # Expecting format: '<char>' i.e. exactly 3 characters
+            token_str = str(token)
+            if len(token_str) != 3:
+                raise ValueError(f"Invalid raw character literal: {token_str}")
+            value = ord(token_str[1])
         else:
             raise ValueError(f"Unknown token type: {token.type}")
             
@@ -1664,11 +1689,14 @@ class J1Assembler(Transformer):
         
         # Handle raw hex literal
         if token.type == "RAW_HEX":
-            # Remove $ prefix to get raw hex number
             value = int(str(token)[1:], 16)
-        # Handle raw decimal literal
         elif token.type == "RAW_DECIMAL":
             value = int(str(token), 10)
+        elif token.type == "RAW_CHAR":
+            token_str = str(token)
+            if len(token_str) != 3:
+                raise ValueError(f"Invalid raw character literal in memory initialization: {token_str}")
+            value = ord(token_str[1])
         else:
             raise ValueError(f"Unexpected token type: {token.type}")
         
