@@ -1,5 +1,13 @@
 # Development Log
 
+## 2025-03-10
+
+- Added support for character literals in the J1 assembler.
+  - Extended the grammar (j1.lark) with new tokens STACK_CHAR and RAW_CHAR.
+  - Updated the assembler (asm.py) to handle character literals in stack pushes (e.g., #'A') and memory initialization (e.g., 'A',).
+- Enhanced hex file validation in memory/memory.py to catch invalid hex strings.
+- Verified the changes by running the full test suite and assembling the test file (chars.asm), confirming that listing, symbol, and simulation outputs are correct.
+
 ## 2025-03-09
 
 Enhanced J1 Assembler with consistent label reference syntax and improved build tooling:
