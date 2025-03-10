@@ -137,9 +137,13 @@ instruction: stack_number     // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
           | call_expr         // Macro or subroutine invocation
+          | address_of        // Label reference (push address)
 
 // Jump operations
 jump_op: (JMP | ZJMP | CALL) labelref
+
+// Address of operation (standalone tick)
+address_of: TICK IDENT  // Same as labelref but standalone to push address
 
 // ALU operations with optional modifiers
 alu_op: basic_alu modifiers?

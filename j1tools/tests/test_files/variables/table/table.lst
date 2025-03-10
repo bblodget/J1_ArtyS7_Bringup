@@ -1,0 +1,41 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     0006            7:1      JMP 'start                      //  
+0002     0001     ----           13:3    :my_table                         //  
+0002     0001     0010           14:5      $10,                            //  Table with five values
+0004     0002     0020           14:10     $20,                            //  Table with five values
+0006     0003     0030           14:15     $30,                            //  Table with five values
+0008     0004     0040           14:20     $40,                            //  Table with five values
+000a     0005     0050           14:25     $50,                            //  Table with five values
+000c     0006     ----           16:3    :start                            //  
+000c     0006     8002           18:6      'my_table                       //  Get value at my_table[0] = 10
+000e     0007     7900           18:15     mem[T]                          //  (macro: @)
+0010     0008     8002           21:6      'my_table                       //  Get value at my_table[1] = 20
+0012     0009     8002           21:15     #2                              //  Get value at my_table[1] = 20
+0014     000a     6203           21:18     T+N[d-1]                        //  (macro: +)
+0016     000b     7900           21:20     mem[T]                          //  (macro: @)
+0018     000c     8002           24:6      'my_table                       //  Get value at my_table[2] = 30
+001a     000d     8004           24:15     #4                              //  Get value at my_table[2] = 30
+001c     000e     6203           24:18     T+N[d-1]                        //  (macro: +)
+001e     000f     7900           24:20     mem[T]                          //  (macro: @)
+0020     0010     8002           27:6      'my_table                       //  Get value at my_table[3] = 40
+0022     0011     8006           27:15     #6                              //  Get value at my_table[3] = 40
+0024     0012     6203           27:18     T+N[d-1]                        //  (macro: +)
+0026     0013     7900           27:20     mem[T]                          //  (macro: @)
+0028     0014     8002           30:6      'my_table                       //  Get value at my_table[4] = 50
+002a     0015     8008           30:15     #8                              //  Get value at my_table[4] = 50
+002c     0016     6203           30:18     T+N[d-1]                        //  (macro: +)
+002e     0017     7900           30:20     mem[T]                          //  (macro: @)
+0030     0018     8099           33:5      #$99                            //  Store $99 at my_table[1]
+0032     0019     8002           33:11     'my_table                       //  Store $99 at my_table[1]
+0034     001a     8002           33:20     #2                              //  Store $99 at my_table[1]
+0036     001b     6203           33:23     T+N[d-1]                        //  (macro: +)
+0038     001c     7832           33:25     3OS[N->[T],d-2]                 //  (macro: !)
+003a     001d     8002           36:6      'my_table                       //  Get value at my_table[1] = $99
+003c     001e     8002           36:15     #2                              //  Get value at my_table[1] = $99
+003e     001f     6203           36:18     T+N[d-1]                        //  (macro: +)
+0040     0020     7900           36:20     mem[T]                          //  (macro: @)
+0042     0021     0022           39:5      JMP 'end                        //  
+0044     0022     ----           41:3    :end                              //  
+0044     0022     6000           42:5      T                               //  (macro: noop)
+0046     0023     0022           43:5      JMP 'end                        //  

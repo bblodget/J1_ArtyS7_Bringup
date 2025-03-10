@@ -20,6 +20,7 @@ class InstructionType(Enum):
     SUBROUTINE_DEF = auto()
     DIRECTIVE = auto()  # For ORG statements
     NUMBER = auto()     # For raw numbers (no # prefix)
+    LABEL_REF = auto()  # For tick operator (') label references
 
 
 @dataclass

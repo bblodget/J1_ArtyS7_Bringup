@@ -193,6 +193,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("control", "raw_i_loop"),
         ("control", "do_i_loop"),
         # ("constants", "constants_basic"),
+        ("variables", "table"),
         ("firmware", "blinky"),
         ("firmware", "count"),
         ("firmware", "fetch"),

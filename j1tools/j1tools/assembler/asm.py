@@ -205,6 +205,30 @@ class J1Assembler(Transformer):
                         continue
                 target = self.labels[inst.label_name]
                 inst.value |= target  # Modify the instruction value in place
+            
+            # Handle LABEL_REF instructions (standalone tick operator)
+            elif inst.type == InstructionType.LABEL_REF:
+                if not inst.label_name:
+                    raise ValueError(f"Label reference missing label name")
+                if inst.label_name not in self.labels:
+                    # Only raise error if we're processing the main file
+                    if self.state.current_file == self.main_file:
+                        raise ValueError(
+                            f"{self.state.current_file}:{inst.line}:{inst.column}: "
+                            f"Undefined label in tick reference: {inst.label_name}"
+                        )
+                    else:
+                        self.logger.warning(
+                            f"{self.state.current_file}:{inst.line}:{inst.column}: "
+                            f"Undefined label in tick reference: {inst.label_name}"
+                        )
+                        continue
+                # For label references, create a literal instruction (push address onto stack)
+                target = self.labels[inst.label_name]
+                # convert target from word address to byte address
+                target = target << 1
+                inst.value = 0x8000 | target  # Literal opcode with the label address
+                self.logger.debug(f"Resolved label reference '{inst.label_name}' to address {target:04x}")
 
         self.is_assembled = True
 
@@ -670,7 +694,7 @@ class J1Assembler(Transformer):
                 bytecodes.append(0x0000)
                 prev_word_addr += 1
 
-            if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP:
+            if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP or inst.type == InstructionType.NUMBER or inst.type == InstructionType.LABEL_REF:
                 bytecodes.append(inst.value)
                 prev_word_addr = word_addr + 1
 
@@ -1632,50 +1656,67 @@ class J1Assembler(Transformer):
         return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
 
     def memory_init_statement(self, items):
-        """Handle direct memory initialization using raw_number, syntax."""
-        # The items are the raw tokens
-        num_token = items[0]  # This should be either RAW_HEX or RAW_DECIMAL
+        """Process memory initialization statements."""
+        # items[0] should be a raw number token (hex or decimal)
+        # items[1] should be COMMA token
+        token = items[0]
+        instr_text = f"{token},"
         
-        # Extract the value from the token
-        if num_token.type == "RAW_HEX":
-            # Remove the $ prefix to get the raw hex number
-            value = int(str(num_token)[1:], 16)
-        elif num_token.type == "RAW_DECIMAL":
-            # Parse the decimal number directly
-            value = int(str(num_token), 10)
+        # Handle raw hex literal
+        if token.type == "RAW_HEX":
+            # Remove $ prefix to get raw hex number
+            value = int(str(token)[1:], 16)
+        # Handle raw decimal literal
+        elif token.type == "RAW_DECIMAL":
+            value = int(str(token), 10)
         else:
-            raise ValueError(f"Unexpected token type for memory initialization: {num_token.type}")
-            
-        value = value & 0xFFFF  # Ensure 16-bit
+            raise ValueError(f"Unexpected token type: {token.type}")
         
-        # Create an instruction metadata for this memory initialization
-        try:
-            source_line = self.state.source_lines[num_token.line - 1] if num_token.line > 0 and num_token.line <= len(self.state.source_lines) else ""
-        except IndexError:
-            source_line = ""
-            
-        # Store the value at the current address and advance the address space
-        word_addr = self.addr_space.advance()  # This gets the current address and advances it
-        
+        # Create metadata and assign address
+        addr = self.addr_space.advance()
         metadata = InstructionMetadata(
-            type=InstructionType.BYTE_CODE,  # Store directly as a byte code
-            value=value,  # The raw value to store
-            token=num_token,
+            type=InstructionType.NUMBER,
+            value=value,
+            token=token,
             filename=self.state.current_file,
-            line=num_token.line if hasattr(num_token, 'line') else 0,
-            column=num_token.column if hasattr(num_token, 'column') else 0,
-            source_line=source_line,
-            instr_text=f"{num_token},",  # Include the comma for clarity
-            word_addr=word_addr,
+            line=token.line,
+            column=token.column,
+            source_line=self.state.source_lines[token.line - 1],
+            instr_text=instr_text,
+            word_addr=addr,
             num_value=value,
         )
         
-        # Add the instruction to our instruction list
+        # Add to tracked instructions
+        self.instruction_metadata[addr] = metadata
         self.instructions.append(metadata)
-        self.instruction_metadata[word_addr] = metadata
         
-        # Log the memory initialization
-        self.logger.debug(f"Memory init: {value:04x} at address {word_addr:04x}")
+        # Return the metadata
+        return metadata
+        
+    def address_of(self, items):
+        """Handle standalone tick operations that push label addresses onto the stack."""
+        # items[0] is TICK, items[1] is IDENT
+        token = items[1]  # This is the IDENT token
+        label_name = str(token)  # Label name (without the tick)
+        
+        # Format for instruction text representation
+        instr_text = f"'{label_name}"
+        
+        # Create a placeholder instruction - the real address/value will be filled in during second pass
+        # when all labels are known
+        metadata = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL_REF,
+            value=0,  # Placeholder, will be filled with 0x8000 | address in second pass
+            token=token,
+            filename=self.state.current_file,
+            source_lines=self.state.source_lines,
+            instr_text=instr_text,
+            label_name=label_name,
+        )
+        
+        # NOTE: We do NOT advance the address space here as the instruction method will do that
+        # Do NOT add to tracked instructions here either - instruction method will handle that
         
         return metadata
 
