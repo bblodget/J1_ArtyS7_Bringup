@@ -230,6 +230,20 @@ To do this, you simply prefix the label with a single quote (often called the ti
 
 This approach mirrors traditional Forth usage, where the tick operator is used to obtain a word's execution token (address), and provides a clear distinction between calling a subroutine and retrieving its address.
 
+### Byte Addressing for Memory Operations
+
+**Important Note:** The tick operator (`'label`) automatically converts word addresses to byte addresses. When you use `'label` in your code, it pushes a byte address onto the stack that is directly compatible with memory access operations like `@` and `!`.
+
+This means that when using the tick operator with tables or data structures, you can access elements using natural indexing:
+
+```
+'my_table @            // Get the first value at my_table[0]
+'my_table #2 + @       // Get the second value at my_table[1] 
+'my_table #4 + @       // Get the third value at my_table[2]
+```
+
+This is different from how you might access code addresses, which use word addressing. The automatic conversion ensures that memory operations work correctly with the J1's byte-addressable memory system while maintaining natural indexing for array elements.
+
 ### Modifying Table Values
 
 Label addressing is especially useful when working with tables. For example, suppose you define a table as follows:

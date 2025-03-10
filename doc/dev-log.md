@@ -12,6 +12,15 @@ Enhanced J1 Assembler with consistent label reference syntax and improved build 
 - Added comprehensive documentation and help options for the new utility
 - Simplified rebuilding test outputs after grammar changes
 
+Implemented label address references and fixed memory initialization:
+- Added support for standalone tick (') operator to push label addresses onto stack
+- Created new InstructionType.LABEL_REF to handle address references
+- Implemented word-to-byte address conversion for memory access compatibility
+- Fixed memory initialization statements not being included in the hex output
+- Enhanced bytecode generation to include all instruction types in final output
+- Added test cases demonstrating table access through label references
+- Verified correct operation of memory-related instructions and data
+
 ## 2025-03-08
 
 Enhanced J1 Assembler with improved memory operations and documentation:
