@@ -199,6 +199,7 @@ def test_combined_modifiers(assembler, source, expected):
         ("firmware", "count"),
         ("firmware", "fetch"),
         ("firmware", "interrupt_test"),
+        ("directives", "arch_flag"),
     ],
 )
 def test_program(assembler, category, test_name):

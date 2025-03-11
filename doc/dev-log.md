@@ -1,5 +1,18 @@
 # Development Log
 
+## 2025-03-11
+
+Refactored architecture flag handling and prepared for expansion of directive system:
+- Created new `directives.py` module to handle all directive-related functionality
+- Moved architecture flag handling from `asm.py` to the `Directives` class
+- Implemented proper delegation through `arch_flag_directive` method in `J1Assembler`
+- Added comprehensive validation for flag names and values
+- Created test file in `j1tools/tests/test_files/directives/arch_flag/arch_flag.asm`
+- Verified correct operation with all architecture flags tests
+- Confirmed compatibility with existing functionality through full test suite
+- Established foundation for implementing additional directives like `.define` and conditional directives
+
+
 ## 2025-03-10
 
 - Added support for character literals in the J1 assembler.
