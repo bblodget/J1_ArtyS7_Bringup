@@ -28,6 +28,11 @@ from .macro_processor import MacroProcessor
 from .config import AssemblerConfig
 from .address_space import AddressSpace
 from .control_structures import ControlStructures
+import enum
+import os
+import re
+from dataclasses import dataclass
+from .directives import Directives
 
 
 class J1Assembler(Transformer):
@@ -93,6 +98,27 @@ class J1Assembler(Transformer):
 
         # Initialize control structures handler
         self.control_structures = ControlStructures(self.state, self.addr_space, debug)
+
+        # Architecture flags
+        self.arch_flags = {
+            "fetch_type": "quickstore",  # Default to quickstore
+            "alu_ops": "extended",      # Default to extended ALU
+        }
+        
+        # Architecture constants - automatically defined based on flags
+        self.constants = {
+            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+            "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
+        }
+        
+        # Control structure state
+        self._if_count = 0
+        self._begin_count = 0
+        self._do_count = 0
+        self._control_stack = []
+
+        # Instantiate Directives
+        self.directives = Directives(self.state, self.arch_flags, self.constants, debug=debug)
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -248,19 +274,42 @@ class J1Assembler(Transformer):
         """
         self.logger.debug(f"\nStatement items: {items}")
 
-        if len(items) == 1:
-            # Single item: either an instruction or a list of instructions
+        # Handle empty statement
+        if not items:
+            return None
+
+        # If the item is an instruction, handled directly
+        if isinstance(items[0], InstructionMetadata):
             return items[0]
-        elif len(items) == 2:
-            # Label + instruction pair
-            label, instruction = items
-            if label[0] != "label":
-                raise ValueError(f"Expected label, got {label[0]}")
-            self.logger.debug(f"Pairing label {label[1]} with instruction")
-            # Return both as a list so program() can process them together
-            return [label, instruction]
-        else:
-            raise ValueError(f"Unexpected statement format: {items}")
+
+        # If the item is a label definition
+        if isinstance(items[0], tuple) and items[0][0] == "label":
+            label_name = items[0][1]
+            if label_name in self.labels:
+                # Check if it's a redefinition at the same address
+                if self.labels[label_name] == self.current_address:
+                    return InstructionMetadata(
+                        addr=self.current_address,
+                        code=None,
+                        source=f": {label_name}",
+                        filename=self.state.current_file,
+                        line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                    )
+                else:
+                    raise ValueError(
+                        f"Label {label_name} already defined at 0x{self.labels[label_name]:04x}"
+                    )
+            else:
+                self.labels[label_name] = self.current_address
+                return InstructionMetadata(
+                    addr=self.current_address,
+                    code=None,
+                    source=f": {label_name}",
+                    filename=self.state.current_file,
+                    line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                )
+        # Handle other statement types
+        return items[0]
 
     def jump_op(self, items: List[Token]) -> InstructionMetadata:
         """Handle jump operations with their labels."""
@@ -1747,6 +1796,10 @@ class J1Assembler(Transformer):
         # Do NOT add to tracked instructions here either - instruction method will handle that
         
         return metadata
+    
+    def arch_flag_directive(self, items):
+        """Handle architecture flag directives, delegating to the directives class"""
+        return self.directives.arch_flag_directive(items)
 
 
 @click.command()
@@ -1844,6 +1897,7 @@ def main(input, output, debug, symbols, listing, include, no_stdlib):
 
             logger.debug(traceback.format_exc())
         raise click.Abort()
+
 
 
 
