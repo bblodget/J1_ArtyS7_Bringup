@@ -127,8 +127,9 @@ def test_undefined_label(assembler):
 def test_duplicate_label(assembler):
     """Test duplicate label handling."""
     source = """
-    : label T
-    : label N
+    : first_label T
+    #5
+    : first_label N
     """
     with pytest.raises((ValueError, VisitError)) as exc_info:
         assembler.transform(assembler.parse(source))

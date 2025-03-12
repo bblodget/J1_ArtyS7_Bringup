@@ -102,24 +102,101 @@ Additional conditional directives:
 .endif
 ```
 
-## Implementation Details
+## Implementation Phases
 
-### fetch_type: quickstore vs dualport
+### Phase 1: Architecture Flag Directives & Basic Constants (Completed)
+**Objective**: Implement `.arch_flag` with auto-defined constants
 
-The `quickstore` configuration uses a single-port memory with a write-before-read pattern, while the `dualport` configuration uses true dual-port memory allowing simultaneous read and write operations.
+#### Tasks:
+- **Grammar Updates (j1.lark)**
+  - Add ARCH_FLAG token and directive rule
+  - Add basic constant expression support
+- **Assembler Core (asm.py)**
+  - Add architecture flag storage
+  - Auto-define ARCH_* constants
+  - Add basic error checking for valid flags/values
+- **Testing**
+  - Verify flag persistence through includes
+  - Test ARCH_* constant availability
+  - Validate flag validation errors
 
-### alu_ops: extended vs original
+### Phase 2: .define Directive & Constant System
+**Objective**: Implement general constant definitions
 
-The `extended` configuration includes additional ALU operations beyond the original J1 specification:
-- NlshiftT
-- NrshiftT
-- NarshiftT
-- rstatus
-- L-UM*
-- H-UM*
-- T+1
-- T-1
-- 3OS
-- mem[T]
+#### Tasks:
+- **Grammar Updates**
+  - Add DEFINE token and rule
+  - Enhance expression parser
+- **Assembler Core**
+  - Create constant symbol table
+  - Implement constant substitution
+  - Add arithmetic expression evaluation
+- **Testing**
+  - Test numeric constant substitution
+  - Verify expression evaluation
+  - Check constant scope rules
 
-The `original` configuration includes only the basic ALU operations from the original J1 specification.
+### Phase 3: Conditional Assembly Foundation
+**Objective**: Implement basic `.if`/`.endif` with constants
+
+#### Tasks:
+- **Grammar Updates**
+  - Add CONDITIONAL tokens
+  - Add conditional block rules
+- **Assembler Core**
+  - Create conditional stack
+  - Implement expression evaluation
+  - Add code inclusion/exclusion
+- **Testing**
+  - Test basic conditionals with constants
+  - Verify nested conditionals
+  - Check error handling for missing `.endif`
+
+### Phase 4: Advanced Conditionals
+**Objective**: Add `.else`, `.ifdef`, `.ifndef`
+
+#### Tasks:
+- **Grammar Updates**
+  - Add ELSE token
+  - Add ifdef/ifndef rules
+- **Assembler Core**
+  - Implement else handling
+  - Add defined() check function
+  - Enhance expression parser
+- **Testing**
+  - Test else branches
+  - Verify ifdef/ifndef behavior
+  - Check complex expressions
+
+### Phase 5: Architecture Validation
+**Objective**: Enforce flag-appropriate operations
+
+#### Tasks:
+- **Assembler Core**
+  - Add operation validation by architecture
+  - Create flag/operation matrix
+  - Implement validation errors
+- **Macro System**
+  - Update standard library macros
+  - Add architecture-specific macros
+- **Testing**
+  - Verify prohibited operations throw errors
+  - Test dualport/quickstore differences
+  - Validate extended vs original ALU sets
+
+### Phase 6: Integration & Validation
+**Objective**: Final system testing
+
+#### Tasks:
+- **Test Suite**
+  - Add architecture matrix tests
+  - Create conditional stress tests
+  - Verify backward compatibility
+- **Documentation**
+  - Update macro documentation
+  - Add architecture flag examples
+  - Create conditional usage guide
+- **Performance**
+  - Benchmark conditional overhead
+  - Optimize constant resolution
+  - Profile memory usage

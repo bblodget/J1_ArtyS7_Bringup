@@ -119,6 +119,43 @@ class J1Assembler(Transformer):
 
         # Instantiate Directives
         self.directives = Directives(self.state, self.arch_flags, self.constants, debug=debug)
+        self.directives.set_assembler(self)
+
+    def reset(self):
+        """Reset the assembler state for a new assembly run."""
+        # Reset address state
+        self.addr_space.reset()
+        
+        # Clear dictionaries
+        self.labels = {}
+        self.constants = {
+            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+            "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
+        }
+        self.arch_flags = {
+            "fetch_type": "quickstore",
+            "alu_ops": "extended",
+        }
+        self.instruction_metadata = {}
+        
+        # Reset control structure state
+        self._if_count = 0
+        self._begin_count = 0
+        self._do_count = 0
+        self._control_stack = []
+        
+        # Reset processing state flags
+        self.is_assembled = False
+        
+        # Reset the state object
+        self.state = AssemblerState()
+        
+        # Update directives with new state and dictionaries
+        self.directives = Directives(self.state, self.arch_flags, self.constants, debug=self.debug)
+        self.directives.set_assembler(self)
+        
+        # Reset macro processor
+        self.macro_processor.reset()
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -141,6 +178,54 @@ class J1Assembler(Transformer):
 
         return tree
 
+    def transform(self, tree):
+        """Transform the parse tree into bytecode"""
+        # Reset the current address and labels before first pass
+        self.current_address = 0
+        self.labels = {}
+        self.instruction_metadata = {}  # Clear existing instruction metadata
+        self.instructions = []          # Clear existing instructions
+        self.label_metadata = {}        # Clear existing label metadata
+        
+        # Keep track of labels we've defined in the first pass
+        self._first_pass_labels = set()
+        
+        # First pass: Process all statements to collect labels
+        self._first_pass(tree)
+        
+        # Reset the current address before second pass
+        self.current_address = 0
+        
+        # Second pass: Process all statements again to generate bytecode
+        return super().transform(tree)
+    
+    def _first_pass(self, tree):
+        """First pass to collect all labels"""
+        if tree.data == 'program':
+            for child in tree.children:
+                if hasattr(child, 'data') and child.data == 'statement':
+                    for statement_child in child.children:
+                        if hasattr(statement_child, 'data') and statement_child.data == 'label':
+                            label_name = str(statement_child.children[1])
+                            if label_name in self.labels:
+                                # This is a duplicate label - raise an error
+                                token = statement_child.children[1]
+                                raise ValueError(
+                                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                                    f"Duplicate label: {label_name}"
+                                )
+                            self.labels[label_name] = self.current_address
+                            # Track that we defined this label in first pass
+                            self._first_pass_labels.add(label_name)
+                            self.logger.debug(f"First pass: Found label {label_name} at address {self.current_address}")
+                elif hasattr(child, 'data') and child.data == 'include_stmt':
+                    # When processing includes, we need to track that we've already found labels
+                    self.logger.debug(f"First pass: Processing include statement, current labels: {self.labels}")
+        elif hasattr(tree, 'children'):
+            for child in tree.children:
+                if hasattr(child, 'data'):
+                    self._first_pass(child)
+
     def program(
         self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
     ) -> None:
@@ -157,10 +242,19 @@ class J1Assembler(Transformer):
                             f"Label {stmt.label_name} has no word address"
                         )
                     if stmt.label_name in self.labels:
+                        # If this label was already defined in our first pass, just update it
+                        if stmt.label_name in self._first_pass_labels:
+                            self.logger.debug(f"Updating label {stmt.label_name} from first pass address {self.labels[stmt.label_name]} to second pass address {stmt.word_addr}")
+                            self.labels[stmt.label_name] = stmt.word_addr
+                            self.label_metadata[stmt.word_addr] = stmt
+                            continue
+                        
+                        # Otherwise, it's a real duplicate
                         raise ValueError(
                             f"{self.state.current_file}:{stmt.line}:{stmt.column}: "
                             f"Duplicate label: {stmt.label_name}"
                         )
+                        
                     self.labels[stmt.label_name] = stmt.word_addr
                     self.label_metadata[stmt.word_addr] = stmt
                     continue
@@ -193,10 +287,19 @@ class J1Assembler(Transformer):
                                 f"Label {inst.label_name} has no word address"
                             )
                         if inst.label_name in self.labels:
+                            # If this label was already defined in our first pass, just update it
+                            if inst.label_name in self._first_pass_labels:
+                                self.logger.debug(f"Updating label {inst.label_name} from first pass address {self.labels[inst.label_name]} to second pass address {inst.word_addr}")
+                                self.labels[inst.label_name] = inst.word_addr
+                                self.label_metadata[inst.word_addr] = inst
+                                continue
+                                
+                            # Otherwise, it's a real duplicate
                             raise ValueError(
                                 f"{self.state.current_file}:{inst.line}:{inst.column}: "
                                 f"Duplicate label: {inst.label_name}"
                             )
+                            
                         self.labels[inst.label_name] = inst.word_addr
                         self.label_metadata[inst.word_addr] = inst
                         continue
@@ -1800,6 +1903,10 @@ class J1Assembler(Transformer):
     def arch_flag_directive(self, items):
         """Handle architecture flag directives, delegating to the directives class"""
         return self.directives.arch_flag_directive(items)
+
+    def define_directive(self, items):
+        """Handle constant definition directives, delegating to the directives class"""
+        return self.directives.define_directive(items)
 
 
 @click.command()

@@ -40,6 +40,7 @@ LEAVE.2: "LEAVE"
 // Add to directive tokens
 ORG.2: "ORG"
 ARCH_FLAG.2: ".arch_flag"
+DEFINE.2: ".define"
 
 // Add tick token for label referencing
 TICK: "'"
@@ -120,11 +121,12 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive | arch_flag_directive)*
+program: (statement | org_directive | arch_flag_directive | define_directive)*
 // statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
 statement: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
 org_directive: ORG raw_number
 arch_flag_directive: ARCH_FLAG IDENT (IDENT | RAW_HEX | RAW_DECIMAL)
+define_directive: DEFINE IDENT (RAW_HEX | RAW_DECIMAL | IDENT | RAW_CHAR)
 
 // Add memory initialization statement rule
 memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
