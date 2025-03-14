@@ -660,23 +660,28 @@ class J1Assembler(Transformer):
             raise ValueError(f"Unknown token type: {token.type}")
 
     def raw_number(self, items: List[Token]) -> InstructionMetadata:
-        """Convert raw number tokens (without # prefix) to their numerical value."""
+        """Convert raw number tokens (without # prefix) to their machine code representation."""
         token = items[0]
         if token.type == "RAW_HEX":
             # Remove the $ prefix to get the raw hex number
             value = int(str(token)[1:], 16)
-            if value > 0xFFFF:
+            if value > 0x7FFF:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Hex number {value} out of range (0 to $FFFF)"
+                    f"Hex number {value} out of range (0 to $7FFF for literals)"
                 )
         elif token.type == "RAW_DECIMAL":
             # Parse the decimal number directly
             value = int(str(token), 10)
-            if value < -32768 or value > 65535:
+            if value < 0:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Decimal number {value} out of range (-32768 to 65535)"
+                    f"Negative numbers must be constructed manually"
+                )
+            if value > 0x7FFF:
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Decimal number {value} out of range (0 to 32767 for literals)"
                 )
         elif token.type == "RAW_CHAR":
             # Expecting format: '<char>' i.e. exactly 3 characters
@@ -687,7 +692,9 @@ class J1Assembler(Transformer):
         else:
             raise ValueError(f"Unknown token type: {token.type}")
             
-        # Raw numbers don't become instructions, they're just values
+        # Set high bit (0x8000) to make this a literal instruction that pushes value onto stack
+        machine_code = value | 0x8000
+        
         # Create metadata with safe source line handling
         try:
             source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
@@ -695,8 +702,8 @@ class J1Assembler(Transformer):
             source_line = ""
             
         return InstructionMetadata(
-            type=InstructionType.NUMBER,  # This is a raw number value, not an instruction
-            value=value & 0xFFFF,  # Ensure 16-bit value
+            type=InstructionType.BYTE_CODE,  # This is now a literal instruction
+            value=machine_code,
             token=token,
             filename=self.state.current_file,
             line=token.line if hasattr(token, 'line') else 0,
@@ -704,6 +711,7 @@ class J1Assembler(Transformer):
             source_line=source_line,
             instr_text=str(token),  # Use token string directly
             num_value=value,
+            word_addr=self.addr_space.get_word_address(),
         )
 
     def basic_alu(self, items: List[Token]) -> Token:

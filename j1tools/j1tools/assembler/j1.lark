@@ -7,9 +7,6 @@
 // Insert new tokens after %ignore WS
 %ignore WS
 
-STACK_CHAR: /#'[^']'/
-RAW_CHAR: /'[^']'/
-
 // Comments - match and ignore entire line
 COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
@@ -19,10 +16,9 @@ STACK_COMMENT: /\([^)]*\)/
 %ignore STACK_COMMENT
 
 // Numbers and identifiers
-STACK_HEX: /#\$[0-9a-fA-F]+/
-STACK_DECIMAL: /#-?[0-9]+/
 RAW_HEX: /\$[0-9a-fA-F]+/
 RAW_DECIMAL: /-?[0-9]+/
+RAW_CHAR: /'[^']'/
 
 // Control Structure Keywords (added with higher priority)
 IF.2: "IF"
@@ -138,12 +134,11 @@ include_stmt: INCLUDE STRING
 label: COLON IDENT
 
 // Numbers and references
-stack_number: STACK_HEX | STACK_DECIMAL | STACK_CHAR
 raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
 labelref: TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions
-instruction: stack_number     // Literal
+instruction: raw_number        // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
           | call_expr         // Macro or subroutine invocation

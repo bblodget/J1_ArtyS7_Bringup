@@ -1,8 +1,8 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
 0000     0000     ----            5:3    :start                            //  Note forth style label
-0000     0000     802a            6:5      #$2A                            //  Push hex 2A (decimal 42) and decimal 10
-0002     0001     800a            6:10     #10                             //  Push hex 2A (decimal 42) and decimal 10
+0000     0000     802a            6:5      $2A                             //  Push hex 2A (decimal 42) and decimal 10
+0002     0001     800a            6:9      10                              //  Push hex 2A (decimal 42) and decimal 10
 0004     0002     4005            7:5      CALL 'add_nums                  //  Call our addition subroutine
 0006     0003     6103            8:5      N[d-1]                          //  DROP the result
 0008     0004     0009            9:5      JMP 'wait_forever               //  Jump to end of program
