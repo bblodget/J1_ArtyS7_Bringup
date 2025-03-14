@@ -5,16 +5,16 @@ include "core/j1_base_macros.asm"
 
 : start
     // Test nested IF THEN with a true outer condition.
-    #1              // Outer condition: true.
+    1              // Outer condition: true.
     IF
         // Nested IF block: true condition.
-        #1          // Inner condition (true).
+        1          // Inner condition (true).
         IF
             dup   // This duplicative operation should run.
         THEN
 
         // Nested IF block: false condition.
-        #0          // Inner condition (false).
+        0          // Inner condition (false).
         IF
             dup   // This code should NOT execute.
         THEN
@@ -24,7 +24,7 @@ include "core/j1_base_macros.asm"
     drop            // Clean up the outer condition.
 
     // Test simple IF THEN with a false condition.
-    #0              // Outer condition: false.
+    0              // Outer condition: false.
     IF
         dup       // This code should NOT execute.
     THEN

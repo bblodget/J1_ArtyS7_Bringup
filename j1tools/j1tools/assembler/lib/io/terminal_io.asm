@@ -9,8 +9,8 @@
 // JMP 'start
 
 // UART Register Addresses
-macro: UART_STATUS_REG ( -- addr ) #$2000 endmacro
-macro: UART_DATA_REG   ( -- addr ) #$1000 endmacro
+macro: UART_STATUS_REG ( -- addr ) $2000 endmacro
+macro: UART_DATA_REG   ( -- addr ) $1000 endmacro
 
 // Basic utility macros
 macro: nop ( -- )
@@ -29,7 +29,7 @@ endmacro
 // Check if UART is ready to transmit
 : emit? ( -- ? )
     pause
-    #1                   // Push transmit ready mask
+    1                   // Push transmit ready mask
     UART_STATUS_REG io@  // Get UART status
     overand              // Duplicate status
     =                   // Compare result
@@ -38,7 +38,7 @@ endmacro
 // Check if UART has received data
 : key? ( -- ? )
     pause
-    #2                  // Push receive ready mask
+    2                  // Push receive ready mask
     uartstat      // Check UART status
 ;
 

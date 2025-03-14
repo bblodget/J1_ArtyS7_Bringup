@@ -13,8 +13,8 @@
 
 // Define a label for the entry point
 : main
-    #10              // Push MIN_VALUE (10) onto stack
-    #100             // Push MAX_VALUE (100) onto stack 
+    10              // Push MIN_VALUE (10) onto stack
+    100             // Push MAX_VALUE (100) onto stack 
     T+N[d-1]         // Add top two stack items
 
 : wait_forever

@@ -6,7 +6,7 @@
 
 // Simple test program that does nothing but jump to itself
 : start
-    #42     // Push 42
+    42     // Push 42
     N       // Drop the value (equivalent to 'drop')
     
     // Loop forever

@@ -9,46 +9,46 @@ include "io/terminal_io.asm"
 
 : init_led ( -- )
     // Set outputs
-    #$0001          // Set porta_dir[0] to 1 (output)
-    #4 io!          // Write to porta_dir
+    $0001          // Set porta_dir[0] to 1 (output)
+    4 io!          // Write to porta_dir
 ;
 
 : led_on ( -- )
-    #$0001          // Bit 13 mask (set bit 13)
-    #2 io!          // Write back to porta_out
+    $0001          // Bit 13 mask (set bit 13)
+    2 io!          // Write back to porta_out
 ;
 
 : led_off ( -- )
-    #$0000          // Bit 13 mask (clear bit 13)
-    #2 io!          // Write back to porta_out
+    $0000          // Bit 13 mask (clear bit 13)
+    2 io!          // Write back to porta_out
 ;
 
 : print_on ( -- )
-    #$4C emit  // L
-    #$45 emit  // E
-    #$44 emit  // D
-    #$20 emit  // space
-    #$4F emit  // O
-    #$4E emit  // N
-    #$20 emit  // space
-    #$0A emit  // Newline
+    $4C emit  // L
+    $45 emit  // E
+    $44 emit  // D
+    $20 emit  // space
+    $4F emit  // O
+    $4E emit  // N
+    $20 emit  // space
+    $0A emit  // Newline
 ;
 
 : print_off ( -- )
-    #$4C emit  // L
-    #$45 emit  // E
-    #$44 emit  // D
-    #$20 emit  // space
-    #$4F emit  // O
-    #$46 emit  // F
-    #$46 emit  // F
-    #$0A emit  // Newline
+    $4C emit  // L
+    $45 emit  // E
+    $44 emit  // D
+    $20 emit  // space
+    $4F emit  // O
+    $46 emit  // F
+    $46 emit  // F
+    $0A emit  // Newline
 ;
 
 : delay
     // Outer loop: 183 iterations
-    #100 #0 DO
-        #$7FF0 #0 DO
+    100 0 DO
+        $7FF0 0 DO
             // Inner loop body (empty for maximum speed)
             noop
         LOOP

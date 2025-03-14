@@ -14,10 +14,10 @@ include "io/terminal_io.asm"
 // Monitor system variables (high memory)
 // These are at fixed locations in high memory
 ORG $7F0              // Reserve last 16 words for system variables
-: user_dsp     #0 ;    // User data stack pointer save
-: user_rsp     #0 ;    // User return stack pointer save
-: user_pc      #0 ;    // User program counter save
-: user_st0     #0 ;    // User top of stack save
+: user_dsp     0 ;    // User data stack pointer save
+: user_rsp     0 ;    // User return stack pointer save
+: user_pc      0 ;    // User program counter save
+: user_st0     0 ;    // User top of stack save
 
 // Monitor initialization
 : monitor_init ( -- )
@@ -45,9 +45,9 @@ ORG $7F0              // Reserve last 16 words for system variables
 // Monitor command check
 : monitor_check_input ( -- )
     // Check if UART has data
-    #$2000 io@ #1 and IF      // Check UART status
+    $2000 io@ 1 and IF      // Check UART status
         key                    // Get character
-        #$FF = IF             // Check for command escape
+        $FF = IF             // Check for command escape
             handle_command     // Process command
         ELSE
             drop              // Discard normal character during interrupt
@@ -65,13 +65,13 @@ ORG $7F0              // Reserve last 16 words for system variables
 
 // Command handler
 : handle_command ( c -- )
-    dup #$01 = IF            // Upload command
+    dup $01 = IF            // Upload command
         drop
         do_upload
-    ELSE dup #$02 = IF       // Run command
+    ELSE dup $02 = IF       // Run command
         drop
         do_run
-    ELSE dup #$03 = IF       // Stop command
+    ELSE dup $03 = IF       // Stop command
         drop
         do_stop
     ELSE                     // Unknown command
@@ -82,17 +82,17 @@ ORG $7F0              // Reserve last 16 words for system variables
 // Upload handler - placeholder
 : do_upload ( -- )
     s" Upload mode" type
-    #$0A emit               // Newline
+    $0A emit               // Newline
     ;
 
 // Run handler - placeholder
 : do_run ( -- )
     s" Running user program" type
-    #$0A emit               // Newline
+    $0A emit               // Newline
     ;
 
 // Stop handler - placeholder
 : do_stop ( -- )
     s" Stopped user program" type
-    #$0A emit               // Newline
+    $0A emit               // Newline
     ;

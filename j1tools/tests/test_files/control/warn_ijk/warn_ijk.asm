@@ -13,7 +13,7 @@ include "core/j1_base_macros.asm"
     drop
 
     // Single loop - only i valid
-    #3 #0 DO
+    3 0 DO
         i           // OK - innermost loop index
         drop
         j           // Should warn: used in non-nested DO LOOP
@@ -23,8 +23,8 @@ include "core/j1_base_macros.asm"
     LOOP
 
     // Double nested - i and j valid
-    #3 #0 DO
-        #2 #0 DO
+    3 0 DO
+        2 0 DO
             i       // OK - innermost loop index
             drop
             j       // OK - outer loop index
@@ -35,9 +35,9 @@ include "core/j1_base_macros.asm"
     LOOP
 
     // Triple nested - i, j, and k all valid
-    #3 #0 DO
-        #2 #0 DO
-            #4 #0 DO
+    3 0 DO
+        2 0 DO
+            4 0 DO
                 k   // OK - outermost loop index
                 drop
                 j   // OK - middle loop index

@@ -16,8 +16,8 @@ $C3,
 
 // Some code using the initialized values
 // The values are at addresses 0, 1, 2, 3, 4, 5
-#$0000 @     // Load value at address 0 (10)
-#$0001 @     // Load value at address 1 (20)
+$0000 @     // Load value at address 0 (10)
+$0001 @     // Load value at address 1 (20)
 +           // Add them (should be 30)
 
 : wait_forever

@@ -9,7 +9,7 @@ macro: add_nums ( a b -- sum ) // Stack effect comment shows inputs and outputs
 endmacro
 
 : start                         // Note the colon after label
-    #$2A #10                   // Push hex 2A (decimal 42) and decimal 10
+    $2A 10                   // Push hex 2A (decimal 42) and decimal 10
     add_nums                   // Use our addition macro
     JMP 'wait_forever           // Jump to end of program
 
