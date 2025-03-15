@@ -399,6 +399,11 @@ class J1Assembler(Transformer):
         # Use flattened items instead of original items
         items = flattened_items
         
+        # Check for empty list after flattening
+        if not items:
+            self.logger.debug("Empty statement after flattening, returning None")
+            return None
+        
         # If we have multiple InstructionMetadata objects, return them as a list
         if len(items) > 1 and all(isinstance(item, InstructionMetadata) for item in items):
             return items  # Return all instructions
@@ -414,11 +419,16 @@ class J1Assembler(Transformer):
                 # Check if it's a redefinition at the same address
                 if self.labels[label_name] == self.current_address:
                     return InstructionMetadata(
-                        addr=self.current_address,
-                        code=None,
-                        source=f": {label_name}",
+                        type=InstructionType.LABEL,
+                        value=0,
+                        token=None,
                         filename=self.state.current_file,
-                        line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                        line=0,
+                        column=0,
+                        source_line="",
+                        instr_text=f": {label_name}",
+                        label_name=label_name,
+                        word_addr=self.current_address,
                     )
                 else:
                     raise ValueError(
@@ -427,11 +437,16 @@ class J1Assembler(Transformer):
             else:
                 self.labels[label_name] = self.current_address
                 return InstructionMetadata(
-                    addr=self.current_address,
-                    code=None,
-                    source=f": {label_name}",
+                    type=InstructionType.LABEL,
+                    value=0,
+                    token=None,
                     filename=self.state.current_file,
-                    line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                    line=0,
+                    column=0,
+                    source_line="",
+                    instr_text=f": {label_name}",
+                    label_name=label_name,
+                    word_addr=self.current_address,
                 )
         # Handle other statement types
         return items[0]
@@ -997,19 +1012,19 @@ class J1Assembler(Transformer):
         # Create metadata with safe source line handling
         try:
             source_line = self.state.source_lines[number.token.line - 1] if number.token.line > 0 and number.token.line <= len(self.state.source_lines) else ""
-        except IndexError:
+        except (IndexError, AttributeError):
             source_line = ""
             
         # Create metadata for listing
         return InstructionMetadata(
             type=InstructionType.DIRECTIVE,
             value=address,
-            token=number.token,
+            token=number.token if hasattr(number, 'token') else None,
             filename=self.state.current_file,
-            line=number.token.line if hasattr(number.token, 'line') else 0,
-            column=number.token.column if hasattr(number.token, 'column') else 0,
+            line=number.token.line if hasattr(number, 'token') and hasattr(number.token, 'line') else 0,
+            column=number.token.column if hasattr(number, 'token') and hasattr(number.token, 'column') else 0,
             source_line=source_line,
-            instr_text=f"ORG {number.instr_text}",
+            instr_text=f"ORG {number.instr_text}" if hasattr(number, 'instr_text') else f"ORG ${address:04x}",
         )
 
     def _generate_unique_label(self, base: str) -> str:
