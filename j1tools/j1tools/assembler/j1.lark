@@ -4,9 +4,6 @@
 %import common.WS
 %ignore WS
 
-// Insert new tokens after %ignore WS
-%ignore WS
-
 // Comments - match and ignore entire line
 COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
