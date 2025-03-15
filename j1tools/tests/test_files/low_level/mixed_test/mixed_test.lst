@@ -1,0 +1,7 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     ----            8:3    :test_label                       //  Define a label
+0000     0000     6000            9:5      T[d+0]                          //  ALU operation with modifier
+0002     0001     6013           10:5      T[T->N,d-1]                     //  Another ALU operation
+0004     0002     8002           11:5      2                               //  Raw number literal
+0006     0003     8002           12:5      2                               //  Raw number literal

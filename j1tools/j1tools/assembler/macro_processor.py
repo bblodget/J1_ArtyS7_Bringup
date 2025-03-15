@@ -78,7 +78,18 @@ class MacroProcessor:
 
     def process_macro_def(self, items):
         """Process a macro definition."""
-        _, name_token, stack_comment, body_tree, _ = items
+        self.logger.debug(f"Processing macro items: {items}")
+        
+        # Handle different item counts based on whether stack_comment is present
+        if len(items) == 4:
+            # No stack comment present
+            macro_token, name_token, body_tree, end_token = items
+            stack_comment = None
+        elif len(items) == 5:
+            # Stack comment present
+            macro_token, name_token, stack_comment, body_tree, end_token = items
+        else:
+            raise ValueError(f"Invalid macro definition structure: {items}")
 
         # Extract instructions from macro body
         if not isinstance(body_tree, Tree) or body_tree.data != "macro_body":

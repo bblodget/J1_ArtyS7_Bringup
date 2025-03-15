@@ -304,6 +304,11 @@ class J1Assembler(Transformer):
                         self.label_metadata[inst.word_addr] = inst
                         continue
 
+                    # Handle MACRO_DEF instructions within lists
+                    if inst.type == InstructionType.MACRO_DEF:
+                        self.macros.append(inst)
+                        continue
+
                     # Other Instruction types should have a word address
                     if inst.word_addr == -1:
                         raise ValueError(
