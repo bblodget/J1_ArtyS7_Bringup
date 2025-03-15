@@ -93,9 +93,9 @@ THIRD_OS: "3OS"
 MEM_T: "mem[T]"
 
 // Jump Operations
-JMP: "JMP"
-ZJMP: "ZJMP"
-CALL: "CALL"
+JMP.2: "JMP"
+ZJMP.2: "ZJMP"
+CALL.2: "CALL"
 
 // Stack Effect Modifiers
 T_TO_N: "T->N"
