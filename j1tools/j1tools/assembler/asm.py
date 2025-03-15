@@ -373,7 +373,6 @@ class J1Assembler(Transformer):
         
         Input items can be:
         - [statement_type] -> returns single statement
-        - [statement_type, WS, statement_type, ...] -> returns list of statements with WS filtered out
         - [label, instruction] -> returns [label, instruction] as list
         - [list_of_instructions] -> returns list (from subroutine definitions)
         """
