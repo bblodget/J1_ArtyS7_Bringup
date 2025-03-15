@@ -367,14 +367,15 @@ class J1Assembler(Transformer):
         """
         Handles the 'statement' rule by processing labels and instructions.
         A statement can return:
-        - A single instruction (InstructionMetadata)
+        - A single instruction or statement (InstructionMetadata)
+        - A list of statements separated by whitespace
         - A list of instructions (from subroutine definitions or label+instruction pairs)
         
         Input items can be:
-        - [instruction] -> returns single instruction
+        - [statement_type] -> returns single statement
+        - [statement_type, WS, statement_type, ...] -> returns list of statements with WS filtered out
         - [label, instruction] -> returns [label, instruction] as list
         - [list_of_instructions] -> returns list (from subroutine definitions)
-        - Multiple instructions separated by WS tokens -> returns list of instructions (filtered)
         """
         self.logger.debug(f"\nStatement items: {items}")
 
@@ -384,18 +385,18 @@ class J1Assembler(Transformer):
             
         # If the items list has WS tokens, filter them out
         if any(isinstance(item, Token) and item.type == "WS" for item in items):
-            # Filter out WS tokens, keeping only instruction metadata objects
+            # Filter out WS tokens, keeping only statement type objects
             filtered_items = [item for item in items if not (isinstance(item, Token) and item.type == "WS")]
             self.logger.debug(f"Filtered out WS tokens, remaining items: {filtered_items}")
             
-            # If after filtering we have multiple instructions, return them as a list
+            # If after filtering we have multiple statements, return them as a list
             if len(filtered_items) > 1:
                 return filtered_items
-            # If we have just one instruction, return it directly (fall through to below)
+            # If we have just one statement, return it directly (fall through to below)
             elif len(filtered_items) == 1:
                 items = filtered_items
 
-        # If the item is an instruction, handle directly
+        # If the item is an instruction/statement, handle directly
         if isinstance(items[0], InstructionMetadata):
             return items[0]
 

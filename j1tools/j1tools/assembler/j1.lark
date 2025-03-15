@@ -116,10 +116,11 @@ R_MINUS_2: "r-2"
 ?start: program
 program: (statement | org_directive | arch_flag_directive | define_directive)*
 
-// statement: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+// Define all possible statement types
+?statement_type: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
 
-// A statement should be one or more instructions separated by whitespace
-statement: instruction (WS instruction)*
+// A statement can be any statement type with optional whitespace-separated additional statement types
+statement: statement_type (WS statement_type)*
 
 
 org_directive: ORG raw_number
