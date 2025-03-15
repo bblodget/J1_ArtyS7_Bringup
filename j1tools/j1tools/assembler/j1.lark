@@ -4,6 +4,13 @@
 %import common.WS
 %ignore WS
 
+// Define a helper rule for required whitespace
+_WS_REQ: WS
+
+// Define optional whitespace
+_WS_OPT: WS?
+
+
 // Comments - match and ignore entire line
 COMMENT: "//" /[^\n]*/ "\n"?
 %ignore COMMENT
@@ -120,7 +127,7 @@ program: (statement | org_directive | arch_flag_directive | define_directive)*
 ?statement_type: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
 
 // A statement can be any statement type with optional whitespace-separated additional statement types
-statement: statement_type (WS statement_type)*
+statement: statement_type (_WS_REQ statement_type)*
 
 
 org_directive: ORG raw_number

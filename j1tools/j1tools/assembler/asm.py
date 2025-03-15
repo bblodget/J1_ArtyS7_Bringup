@@ -382,22 +382,13 @@ class J1Assembler(Transformer):
         # Handle empty statement
         if not items:
             return None
-            
-        # If the items list has WS tokens, filter them out
-        if any(isinstance(item, Token) and item.type == "WS" for item in items):
-            # Filter out WS tokens, keeping only statement type objects
-            filtered_items = [item for item in items if not (isinstance(item, Token) and item.type == "WS")]
-            self.logger.debug(f"Filtered out WS tokens, remaining items: {filtered_items}")
-            
-            # If after filtering we have multiple statements, return them as a list
-            if len(filtered_items) > 1:
-                return filtered_items
-            # If we have just one statement, return it directly (fall through to below)
-            elif len(filtered_items) == 1:
-                items = filtered_items
-
-        # If the item is an instruction/statement, handle directly
-        if isinstance(items[0], InstructionMetadata):
+        
+        # If we have multiple InstructionMetadata objects, return them as a list
+        if len(items) > 1 and all(isinstance(item, InstructionMetadata) for item in items):
+            return items  # Return all instructions
+        
+        # If we have a single instruction/statement, handle directly
+        if len(items) == 1 and isinstance(items[0], InstructionMetadata):
             return items[0]
 
         # If the item is a label definition
