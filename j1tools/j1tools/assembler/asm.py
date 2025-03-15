@@ -374,14 +374,28 @@ class J1Assembler(Transformer):
         - [instruction] -> returns single instruction
         - [label, instruction] -> returns [label, instruction] as list
         - [list_of_instructions] -> returns list (from subroutine definitions)
+        - Multiple instructions separated by WS tokens -> returns list of instructions (filtered)
         """
         self.logger.debug(f"\nStatement items: {items}")
 
         # Handle empty statement
         if not items:
             return None
+            
+        # If the items list has WS tokens, filter them out
+        if any(isinstance(item, Token) and item.type == "WS" for item in items):
+            # Filter out WS tokens, keeping only instruction metadata objects
+            filtered_items = [item for item in items if not (isinstance(item, Token) and item.type == "WS")]
+            self.logger.debug(f"Filtered out WS tokens, remaining items: {filtered_items}")
+            
+            # If after filtering we have multiple instructions, return them as a list
+            if len(filtered_items) > 1:
+                return filtered_items
+            # If we have just one instruction, return it directly (fall through to below)
+            elif len(filtered_items) == 1:
+                items = filtered_items
 
-        # If the item is an instruction, handled directly
+        # If the item is an instruction, handle directly
         if isinstance(items[0], InstructionMetadata):
             return items[0]
 
