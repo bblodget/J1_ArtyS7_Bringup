@@ -387,6 +387,18 @@ class J1Assembler(Transformer):
         if not items:
             return None
         
+        # If we need to flatten nested lists (from macro expansions)
+        flattened_items = []
+        for item in items:
+            if isinstance(item, list):
+                # Flatten nested lists (from macro expansions)
+                flattened_items.extend(item)
+            else:
+                flattened_items.append(item)
+        
+        # Use flattened items instead of original items
+        items = flattened_items
+        
         # If we have multiple InstructionMetadata objects, return them as a list
         if len(items) > 1 and all(isinstance(item, InstructionMetadata) for item in items):
             return items  # Return all instructions
