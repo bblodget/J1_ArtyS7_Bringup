@@ -419,16 +419,11 @@ class J1Assembler(Transformer):
                 # Check if it's a redefinition at the same address
                 if self.labels[label_name] == self.current_address:
                     return InstructionMetadata(
-                        type=InstructionType.LABEL,
-                        value=0,
-                        token=None,
+                        addr=self.current_address,
+                        code=None,
+                        source=f": {label_name}",
                         filename=self.state.current_file,
-                        line=0,
-                        column=0,
-                        source_line="",
-                        instr_text=f": {label_name}",
-                        label_name=label_name,
-                        word_addr=self.current_address,
+                        line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
                     )
                 else:
                     raise ValueError(
@@ -437,16 +432,11 @@ class J1Assembler(Transformer):
             else:
                 self.labels[label_name] = self.current_address
                 return InstructionMetadata(
-                    type=InstructionType.LABEL,
-                    value=0,
-                    token=None,
+                    addr=self.current_address,
+                    code=None,
+                    source=f": {label_name}",
                     filename=self.state.current_file,
-                    line=0,
-                    column=0,
-                    source_line="",
-                    instr_text=f": {label_name}",
-                    label_name=label_name,
-                    word_addr=self.current_address,
+                    line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
                 )
         # Handle other statement types
         return items[0]
