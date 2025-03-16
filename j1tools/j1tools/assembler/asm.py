@@ -712,7 +712,20 @@ class J1Assembler(Transformer):
         return items[0]
 
     def alu_op(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
-        """Convert ALU operations into their machine code representation."""
+        """
+        Convert ALU operations into their machine code representation.
+        
+        Grammar rule: alu_op: basic_alu modifiers?
+        
+        Args:
+            items: List containing basic_alu token and optional ModifierList
+            
+        Returns:
+            InstructionMetadata for the ALU operation
+        """
+        if not items or len(items) > 2:
+            raise ValueError(f"Expected 1-2 items for alu_op, got {len(items) if items else 0}")
+        
         token = items[0]  # This is the basic ALU operation token
         base_op = str(token)
         modifier_value = 0
@@ -743,20 +756,68 @@ class J1Assembler(Transformer):
             instr_text=instr_text,
         )
 
-    def data_stack_delta(self, items):
-        """Convert data stack delta rule into its token."""
+    def data_stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert data stack delta rule into its token.
+        
+        Grammar rule: data_stack_delta: D_PLUS_0 | D_PLUS_1 | D_MINUS_1 | D_MINUS_2
+        
+        Args:
+            items: List containing a single data stack delta token
+            
+        Returns:
+            The data stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for data_stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def return_stack_delta(self, items):
-        """Convert return stack delta rule into its token."""
+    def return_stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert return stack delta rule into its token.
+        
+        Grammar rule: return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
+        
+        Args:
+            items: List containing a single return stack delta token
+            
+        Returns:
+            The return stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for return_stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def stack_delta(self, items):
-        """Convert stack delta rule into its token."""
+    def stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert stack delta rule into its token.
+        
+        Grammar rule: stack_delta: data_stack_delta | return_stack_delta
+        
+        Args:
+            items: List containing a single stack delta token
+            
+        Returns:
+            The stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def stack_effect(self, items):
-        """Convert stack effect rule into its token."""
+    def stack_effect(self, items: List[Token]) -> Token:
+        """
+        Convert stack effect rule into its token.
+        
+        Grammar rule: stack_effect: T_TO_N | T_TO_R | N_TO_MEM | N_TO_IO | IORD | DINT | EINT | RET
+        
+        Args:
+            items: List containing a single stack effect token
+            
+        Returns:
+            The stack effect token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for stack_effect, got {len(items) if items else 0}")
         return items[0]
 
     def generate_listing_line(
@@ -1832,25 +1893,47 @@ class J1Assembler(Transformer):
         # 4. Loop end instructions
         return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
 
-    def memory_init_statement(self, items):
-        """Process memory initialization statements."""
-        # items[0] should be a raw number token (hex or decimal)
-        # items[1] there should not be since we use _COMMA token
-        token = items[0]
-        instr_text = f"{token},"
+    def memory_init_statement(self, items: List[Token]) -> InstructionMetadata:
+        """
+        Process memory initialization statements.
         
-        # Handle raw hex literal
+        Grammar rule: memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) _COMMA
+        
+        Note: Since _COMMA is used, only the number token is included in items.
+        
+        Args:
+            items: List containing a single token (RAW_HEX, RAW_DECIMAL, or RAW_CHAR)
+            
+        Returns:
+            InstructionMetadata for the memory initialization value
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for memory_init_statement, got {len(items) if items else 0}")
+            
+        token = items[0]
+        token_str = str(token)
+        instr_text = f"{token_str},"
+        
+        # Parse the value based on token type
         if token.type == "RAW_HEX":
-            value = int(str(token)[1:], 16)
+            # Remove the $ prefix to get the raw hex number
+            value = int(token_str[1:], 16)
         elif token.type == "RAW_DECIMAL":
-            value = int(str(token), 10)
+            # Parse the decimal number directly
+            value = int(token_str, 10)
         elif token.type == "RAW_CHAR":
-            token_str = str(token)
+            # Expecting format: '<char>' i.e. exactly 3 characters
             if len(token_str) != 3:
-                raise ValueError(f"Invalid raw character literal in memory initialization: {token_str}")
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Invalid character literal in memory initialization: {token_str}"
+                )
             value = ord(token_str[1])
         else:
-            raise ValueError(f"Unexpected token type: {token.type}")
+            raise ValueError(
+                f"{self.state.current_file}:{token.line}:{token.column}: "
+                f"Unsupported token type: {token.type}"
+            )
         
         # Create metadata and assign address
         addr = self.addr_space.advance()
@@ -1861,7 +1944,7 @@ class J1Assembler(Transformer):
             filename=self.state.current_file,
             line=token.line,
             column=token.column,
-            source_line=self.state.source_lines[token.line - 1],
+            source_line=self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else "",
             instr_text=instr_text,
             word_addr=addr,
             num_value=value,
