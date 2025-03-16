@@ -1,5 +1,8 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     6000            1:1      T[d+0]                          //  
-0002     0001     6013            2:1      T[T->N,d-1]                     //  
-0004     0002     6000            3:1      T                               //  
+0000     0000     6103            1:1      N[d-1]                          //  drop     N -> T, dec stack size
+0002     0001     6011            2:1      T[T->N,d+1]                     //  dup      T -> T, Copy TOS to NOS, inc stack size
+0004     0002     6000            3:1      T                               //  noop     T -> T
+0006     0003     6110            4:1      N[T->N]                         //  swap     N -> T, Copy TOS to NOS
+0008     0004     6111            5:1      N[T->N,d+1]                     //  over     N -> T, Copy TOS to NOS, inc stack size
+000a     0005     6003            6:1      T[d-1]                          //  nip      T -> T, dec stack size
