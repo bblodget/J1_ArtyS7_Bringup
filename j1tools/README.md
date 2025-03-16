@@ -2,6 +2,15 @@
 
 A collection of tools for working with the J1 Forth CPU.
 
+## Quick Tool Summary
+
+- **j1asm** - Assembler for the J1 Forth CPU that converts assembly code to hex format
+- **hex2coe** - Converts hex files to Xilinx COE format for use with Vivado IP cores
+- **hex2mif** - Converts hex files to Memory Initialization Format for FPGA tools
+- **mif2mem** - Converts MIF files to memory files for simulation
+- **rebuild_make** - Utility to recursively find and rebuild Makefiles in a project
+- **gen_ebnf** - Generates EBNF from Lark grammar files for railroad diagram visualization
+
 These tools are a work in progress.  They are in development and
 are not even in an alpha state.
 

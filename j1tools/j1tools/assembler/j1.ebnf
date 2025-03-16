@@ -1,0 +1,70 @@
+/* J1 Forth Assembler Grammar - RR Compatible Format */
+
+start   ::= program
+program ::= (statement | org_directive | arch_flag_directive | define_directive)*
+statement_type 
+         ::= label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+statement 
+         ::= statement_type (_WS_REQ statement_type)*
+org_directive 
+         ::= "ORG" raw_number
+arch_flag_directive 
+         ::= "ARCH_FLAG" "IDENT" ("IDENT" | "RAW_HEX" | "RAW_DECIMAL")
+define_directive 
+         ::= "DEFINE" "IDENT" ("RAW_HEX" | "RAW_DECIMAL" | "IDENT" | "RAW_CHAR")
+memory_init_statement 
+         ::= ("RAW_HEX" | "RAW_DECIMAL" | "RAW_CHAR") "COMMA"
+include_stmt 
+         ::= "INCLUDE" "STRING"
+label   ::= "COLON" "IDENT"
+raw_number 
+         ::= "RAW_HEX" | "RAW_DECIMAL" | "RAW_CHAR"
+labelref 
+         ::= "TICK" "IDENT"
+instruction 
+         ::= raw_number | jump_op | alu_op | call_expr | address_of
+jump_op ::= ("JMP" | "ZJMP" | "CALL") labelref
+address_of 
+         ::= "TICK" "IDENT"
+alu_op  ::= basic_alu modifiers?
+basic_alu 
+         ::= "T" | "N" | "THIRD_OS" | "T_PLUS_N" | "T_AND_N" | "T_OR_N" | "T_XOR_N" | "NOT_T" | "N_EQ_T" | "N_LT_T" | "N_ULT_T" | "T2_DIV" | "T2_MUL" | "RT" | "N_MINUS_T" | "IO_T" | "STATUS" | "RSTATUS" | "NLSHIFT_T" | "NRSHIFT_T" | "NARSHIFT_T" | "L_UM_MUL" | "H_UM_MUL" | "T_PLUS_1" | "T_MINUS_1" | "MEM_T"
+modifiers 
+         ::= "LBRACKET" modifier_list "RBRACKET"
+modifier_list 
+         ::= modifier ("COMMA" modifier)*
+modifier 
+         ::= stack_effect | stack_delta
+stack_effect 
+         ::= "T_TO_N" | "T_TO_R" | "N_TO_MEM" | "N_TO_IO" | "IORD" | "DINT" | "EINT" | "RET"
+stack_delta 
+         ::= data_stack_delta | return_stack_delta
+data_stack_delta 
+         ::= "D_PLUS_0" | "D_PLUS_1" | "D_MINUS_1" | "D_MINUS_2"
+return_stack_delta 
+         ::= "R_PLUS_0" | "R_PLUS_1" | "R_MINUS_1" | "R_MINUS_2"
+macro_def 
+         ::= "MACRO" "IDENT" "STACK_COMMENT"? macro_body "ENDMACRO"
+macro_body 
+         ::= instruction+
+call_expr 
+         ::= "IDENT"
+control_structure 
+         ::= if_then | if_else_then | loop_until | loop_while | do_loop | do_plus_loop
+if_then ::= "IF" block "THEN"
+if_else_then 
+         ::= "IF" block "ELSE" block "THEN"
+loop_until 
+         ::= "BEGIN" block "UNTIL"
+loop_while 
+         ::= "BEGIN" block "WHILE" block "REPEAT"
+do_loop ::= do_op block loop_op
+do_plus_loop 
+         ::= do_op block plus_loop_op
+block   ::= (block_item)+
+block_item 
+         ::= instruction | label | control_structure
+do_op   ::= "DO"
+loop_op ::= "LOOP"
+plus_loop_op 
+         ::= "PLUS_LOOP"

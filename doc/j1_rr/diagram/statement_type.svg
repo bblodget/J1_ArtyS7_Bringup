@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="271" height="257">
+   <defs>
+      <style type="text/css">
+    @namespace "http://www.w3.org/2000/svg";
+    .line                 {fill: none; stroke: #332900; stroke-width: 1;}
+    .bold-line            {stroke: #141000; shape-rendering: crispEdges; stroke-width: 2;}
+    .thin-line            {stroke: #1F1800; shape-rendering: crispEdges}
+    .filled               {fill: #332900; stroke: none;}
+    text.terminal         {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #141000;
+                            font-weight: bold;
+                          }
+    text.nonterminal      {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1A1400;
+                            font-weight: normal;
+                          }
+    text.regexp           {font-family: Verdana, Sans-serif;
+                            font-size: 12px;
+                            fill: #1F1800;
+                            font-weight: normal;
+                          }
+    rect, circle, polygon {fill: #332900; stroke: #332900;}
+    rect.terminal         {fill: #FFDB4D; stroke: #332900; stroke-width: 1;}
+    rect.nonterminal      {fill: #FFEC9E; stroke: #332900; stroke-width: 1;}
+    rect.text             {fill: none; stroke: none;}
+    polygon.regexp        {fill: #FFF4C7; stroke: #332900; stroke-width: 1;}
+  </style>
+   </defs>
+   <polygon points="9 17 1 13 1 21"/>
+   <polygon points="17 17 9 13 9 21"/>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#label"
+      xlink:title="label">
+      <rect x="51" y="3" width="50" height="32"/>
+      <rect x="49" y="1" width="50" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="21">label</text>
+   </a>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#instruction"
+      xlink:title="instruction">
+      <rect x="51" y="47" width="86" height="32"/>
+      <rect x="49" y="45" width="86" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="65">instruction</text>
+   </a>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#macro_def"
+      xlink:title="macro_def">
+      <rect x="51" y="91" width="86" height="32"/>
+      <rect x="49" y="89" width="86" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="109">macro_def</text>
+   </a>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#include_stmt"
+      xlink:title="include_stmt">
+      <rect x="51" y="135" width="100" height="32"/>
+      <rect x="49" y="133" width="100" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="153">include_stmt</text>
+   </a>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#control_structure"
+      xlink:title="control_structure">
+      <rect x="51" y="179" width="128" height="32"/>
+      <rect x="49" y="177" width="128" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="197">control_structure</text>
+   </a>
+   <a xmlns:xlink="http://www.w3.org/1999/xlink"
+      xlink:href="#memory_init_statement"
+      xlink:title="memory_init_statement">
+      <rect x="51" y="223" width="172" height="32"/>
+      <rect x="49" y="221" width="172" height="32" class="nonterminal"/>
+      <text class="nonterminal" x="59" y="241">memory_init_statement</text>
+   </a>
+   <path class="line"
+         d="m17 17 h2 m20 0 h10 m50 0 h10 m0 0 h122 m-212 0 h20 m192 0 h20 m-232 0 q10 0 10 10 m212 0 q0 -10 10 -10 m-222 10 v24 m212 0 v-24 m-212 24 q0 10 10 10 m192 0 q10 0 10 -10 m-202 10 h10 m86 0 h10 m0 0 h86 m-202 -10 v20 m212 0 v-20 m-212 20 v24 m212 0 v-24 m-212 24 q0 10 10 10 m192 0 q10 0 10 -10 m-202 10 h10 m86 0 h10 m0 0 h86 m-202 -10 v20 m212 0 v-20 m-212 20 v24 m212 0 v-24 m-212 24 q0 10 10 10 m192 0 q10 0 10 -10 m-202 10 h10 m100 0 h10 m0 0 h72 m-202 -10 v20 m212 0 v-20 m-212 20 v24 m212 0 v-24 m-212 24 q0 10 10 10 m192 0 q10 0 10 -10 m-202 10 h10 m128 0 h10 m0 0 h44 m-202 -10 v20 m212 0 v-20 m-212 20 v24 m212 0 v-24 m-212 24 q0 10 10 10 m192 0 q10 0 10 -10 m-202 10 h10 m172 0 h10 m23 -220 h-3"/>
+   <polygon points="261 17 269 13 269 21"/>
+   <polygon points="261 17 253 13 253 21"/>
+</svg>

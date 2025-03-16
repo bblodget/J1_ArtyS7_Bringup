@@ -21,6 +21,7 @@ setup(
             "hex2mif=j1tools.memory.memory:main",
             "mif2mem=j1tools.memory.memory:main",
             "rebuild_make=j1tools.utils.rebuild_make:main",
+            "gen_ebnf=j1tools.utils.gen_ebnf:main",
         ],
     },
     author="Brandon Blodget",

@@ -1,0 +1,21 @@
+(*
+  Simple J1 Grammar - W3C EBNF Format
+*)
+
+start ::= program
+
+program ::= statement*
+
+statement ::= instruction 
+
+instruction ::= raw_number | jump_op | alu_op
+
+jump_op ::= ("JMP" | "ZJMP" | "CALL") labelref
+
+labelref ::= "TICK" "IDENT"
+
+raw_number ::= "RAW_HEX" | "RAW_DECIMAL" | "RAW_CHAR"
+
+alu_op ::= basic_alu
+
+basic_alu ::= "T" | "N" | "THIRD_OS" 
