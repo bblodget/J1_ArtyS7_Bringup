@@ -4,6 +4,7 @@ Based on instructionset-16kb-dualport.fs
 """
 
 # ALU Operations (base operations without stack effects)
+# The "return value" becomes the next TOS
 ALU_OPS = {
     "T": 0x0000,      # Return top of stack (TOS)
     "N": 0x0100,      # Return next on stack (NOS)

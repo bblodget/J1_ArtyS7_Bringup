@@ -505,11 +505,23 @@ class J1Assembler(Transformer):
         raise ValueError(f"Unexpected instruction format: {type(item)}")
 
     def modifier(self, items: List[Token]) -> Modifier:
-        """Convert modifiers into their machine code representation with type."""
+        """
+        Convert modifiers into their machine code representation.
+        
+        Grammar rule: modifier: stack_effect | stack_delta
+        
+        Args:
+            items: List containing a single token (stack effect or stack delta)
+            
+        Returns:
+            Modifier with machine code value and text
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for modifier, got {len(items) if items else 0}")
+            
         token = items[0]
         mod = str(token)
-        self.logger.debug(f"\nModifier: processing '{mod}'")
-
+        
         if mod in STACK_EFFECTS:
             value = STACK_EFFECTS[mod]
         elif mod in D_EFFECTS:
@@ -521,51 +533,56 @@ class J1Assembler(Transformer):
                 f"{self.state.current_file}:{token.line}:{token.column}: "
                 f"Unknown modifier: {mod}"
             )
-
-        self.logger.debug(f"Modifier result: value={value:04x}, text={mod}")
+        
         return Modifier(value=value, text=mod, token=token)
 
-    def modifier_list(self, items: List[Union[Modifier, Token]]) -> ModifierList:
-        """Combines all modifiers into a single ModifierList."""
-        self.logger.debug(f"\nModifier list items: {items}")
-
+    def modifier_list(self, items: List[Modifier]) -> ModifierList:
+        """
+        Combines all modifiers into a single ModifierList.
+        
+        Grammar rule: modifier_list: modifier (_COMMA modifier)*
+        
+        Note: Using _COMMA means comma tokens are excluded from items.
+        
+        Args:
+            items: List of Modifier objects
+            
+        Returns:
+            ModifierList containing combined value and text representation
+        """
         result_value = 0
         texts = []
         tokens = []
-
+        
         for item in items:
-            if isinstance(item, Token) and item.type == "COMMA":
-                continue
-            elif isinstance(item, Modifier):
-                result_value |= item.value
-                texts.append(item.text)
-                tokens.append(item.token)
-            else:
-                token = item if isinstance(item, Token) else items[0]
-                raise ValueError(
-                    f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Expected modifier, got {item}"
-                )
-
+            if not isinstance(item, Modifier):
+                raise ValueError(f"Expected Modifier, got {type(item)}")
+                
+            result_value |= item.value
+            texts.append(item.text)
+            tokens.append(item.token)
+        
         return ModifierList(value=result_value, text=",".join(texts), tokens=tokens)
 
-    def modifiers(self, items: List[Union[Token, ModifierList]]) -> ModifierList:
-        """Process modifiers within square brackets."""
-        self.logger.debug(f"\nModifiers: processing items: {items}")
 
-        # Skip brackets
-        modifier_items = items[1:-1]  # Skip '[' and ']'
-
-        # We should receive a single ModifierList from modifier_list()
-        if len(modifier_items) != 1 or not isinstance(modifier_items[0], ModifierList):
-            raise ValueError(f"Expected single ModifierList, got {modifier_items}")
-
-        modifier_list = modifier_items[0]
-        self.logger.debug(
-            f"Modifiers result: value={modifier_list.value:04x}, text=[{modifier_list.text}]"
-        )
-
-        return modifier_list
+    def modifiers(self, items: List[ModifierList]) -> ModifierList:
+        """
+        Process modifiers within square brackets.
+        
+        Grammar rule: modifiers: _LBRACKET modifier_list _RBRACKET
+        
+        Note: Using _LBRACKET and _RBRACKET means bracket tokens are excluded from items.
+        
+        Args:
+            items: List containing a single ModifierList 
+            
+        Returns:
+            The ModifierList object
+        """
+        if not items or len(items) != 1 or not isinstance(items[0], ModifierList):
+            raise ValueError(f"Expected single ModifierList, got {items}")
+        
+        return items[0]
 
     def labelref(self, items: List[Token]) -> str:
         """Convert labelref rule into a string."""
@@ -679,8 +696,19 @@ class J1Assembler(Transformer):
         )
 
     def basic_alu(self, items: List[Token]) -> Token:
-        """Convert basic_alu rule into its token."""
-        # items[0] is the Token for the ALU operation
+        """
+        Convert basic_alu rule into its token.
+        
+        Grammar rule: basic_alu: T | N | THIRD_OS | T_PLUS_N | ...
+        
+        Args:
+            items: List containing a single token for an ALU operation
+            
+        Returns:
+            The ALU operation token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for basic_alu, got {len(items) if items else 0}")
         return items[0]
 
     def alu_op(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
@@ -1807,7 +1835,7 @@ class J1Assembler(Transformer):
     def memory_init_statement(self, items):
         """Process memory initialization statements."""
         # items[0] should be a raw number token (hex or decimal)
-        # items[1] should be COMMA token
+        # items[1] there should not be since we use _COMMA token
         token = items[0]
         instr_text = f"{token},"
         
