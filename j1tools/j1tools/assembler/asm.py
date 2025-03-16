@@ -599,19 +599,36 @@ class J1Assembler(Transformer):
         )
 
     def raw_number(self, items: List[Token]) -> InstructionMetadata:
-        """Convert raw number tokens (without # prefix) to their machine code representation."""
+        """
+        Convert a raw number token into its machine code representation.
+        
+        Args:
+            items: List containing a single token (RAW_HEX, RAW_DECIMAL, or RAW_CHAR)
+            
+        Returns:
+            InstructionMetadata: Metadata for a literal instruction that pushes the value onto stack
+            
+        Raises:
+            ValueError: If the number is out of range or token type is unsupported
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for raw_number, got {len(items) if items else 0}")
+            
         token = items[0]
+        token_str = str(token)
+        
+        # Parse the value based on token type
         if token.type == "RAW_HEX":
             # Remove the $ prefix to get the raw hex number
-            value = int(str(token)[1:], 16)
+            value = int(token_str[1:], 16)
             if value > 0x7FFF:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Hex number {value} out of range (0 to $7FFF for literals)"
+                    f"Hex number ${value:x} out of range (0 to $7FFF for literals)"
                 )
         elif token.type == "RAW_DECIMAL":
             # Parse the decimal number directly
-            value = int(str(token), 10)
+            value = int(token_str, 10)
             if value < 0:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
@@ -624,31 +641,39 @@ class J1Assembler(Transformer):
                 )
         elif token.type == "RAW_CHAR":
             # Expecting format: '<char>' i.e. exactly 3 characters
-            token_str = str(token)
             if len(token_str) != 3:
-                raise ValueError(f"Invalid raw character literal: {token_str}")
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Invalid character literal: {token_str}"
+                )
             value = ord(token_str[1])
         else:
-            raise ValueError(f"Unknown token type: {token.type}")
+            raise ValueError(
+                f"{self.state.current_file}:{token.line}:{token.column}: "
+                f"Unsupported token type: {token.type}"
+            )
             
         # Set high bit (0x8000) to make this a literal instruction that pushes value onto stack
         machine_code = value | 0x8000
         
-        # Create metadata with safe source line handling
-        try:
-            source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
-        except IndexError:
-            source_line = ""
+        # Safely get source line if available
+        source_line = ""
+        if hasattr(token, 'line') and token.line > 0:
+            try:
+                if token.line <= len(self.state.source_lines):
+                    source_line = self.state.source_lines[token.line - 1]
+            except (IndexError, TypeError):
+                pass
             
         return InstructionMetadata(
-            type=InstructionType.BYTE_CODE,  # This is now a literal instruction
+            type=InstructionType.BYTE_CODE,
             value=machine_code,
             token=token,
             filename=self.state.current_file,
             line=token.line if hasattr(token, 'line') else 0,
             column=token.column if hasattr(token, 'column') else 0,
             source_line=source_line,
-            instr_text=str(token),  # Use token string directly
+            instr_text=token_str,
             num_value=value,
             word_addr=self.addr_space.get_word_address(),
         )
