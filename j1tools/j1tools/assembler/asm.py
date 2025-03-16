@@ -585,9 +585,66 @@ class J1Assembler(Transformer):
         return items[0]
 
     def labelref(self, items: List[Token]) -> str:
-        """Convert labelref rule into a string."""
-        # items[0] is TICK, items[1] is IDENT
-        return str(items[1])  # Return just the label name (without the tick)
+        """
+        Convert a label reference with tick prefix into the label name string.
+        
+        Grammar rule: labelref: _TICK IDENT
+        
+        Note: Since _TICK is used, only the IDENT token is included in items.
+        
+        Args:
+            items: List containing a single IDENT token
+            
+        Returns:
+            str: The label name
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single IDENT token for labelref, got {len(items) if items else 0}")
+        
+        if items[0].type != "IDENT":
+            raise ValueError(f"Expected IDENT token, got {items[0].type}")
+        
+        return str(items[0])
+
+    def address_of(self, items: List[Token]) -> InstructionMetadata:
+        """
+        Handle standalone tick operations that push label addresses onto the stack.
+        
+        Grammar rule: address_of: _TICK IDENT
+        
+        Note: Since _TICK is used, only the IDENT token is included in items.
+        
+        Args:
+            items: List containing a single IDENT token
+            
+        Returns:
+            InstructionMetadata: A placeholder instruction for a label reference
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single IDENT token for address_of, got {len(items) if items else 0}")
+            
+        if items[0].type != "IDENT":
+            raise ValueError(f"Expected IDENT token, got {items[0].type}")
+            
+        token = items[0]  # This is the IDENT token
+        label_name = str(token)  # Label name
+        
+        # Format for instruction text representation (add back the tick for clarity)
+        instr_text = f"'{label_name}"
+        
+        # Create a placeholder instruction - the real address/value will be filled in during second pass
+        # when all labels are known
+        metadata = InstructionMetadata.from_token(
+            inst_type=InstructionType.LABEL_REF,
+            value=0,  # Placeholder, will be filled with 0x8000 | address in second pass
+            token=token,
+            filename=self.state.current_file,
+            source_lines=self.state.source_lines,
+            instr_text=instr_text,
+            label_name=label_name,
+        )
+        
+        return metadata
 
     def label(self, items: List[Token]) -> InstructionMetadata:
         """Convert label rule into InstructionMetadata."""
@@ -618,6 +675,8 @@ class J1Assembler(Transformer):
     def raw_number(self, items: List[Token]) -> InstructionMetadata:
         """
         Convert a raw number token into its machine code representation.
+
+        Grammar rule: raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
         
         Args:
             items: List containing a single token (RAW_HEX, RAW_DECIMAL, or RAW_CHAR)
@@ -1957,32 +2016,6 @@ class J1Assembler(Transformer):
         # Return the metadata
         return metadata
         
-    def address_of(self, items):
-        """Handle standalone tick operations that push label addresses onto the stack."""
-        # items[0] is TICK, items[1] is IDENT
-        token = items[1]  # This is the IDENT token
-        label_name = str(token)  # Label name (without the tick)
-        
-        # Format for instruction text representation
-        instr_text = f"'{label_name}"
-        
-        # Create a placeholder instruction - the real address/value will be filled in during second pass
-        # when all labels are known
-        metadata = InstructionMetadata.from_token(
-            inst_type=InstructionType.LABEL_REF,
-            value=0,  # Placeholder, will be filled with 0x8000 | address in second pass
-            token=token,
-            filename=self.state.current_file,
-            source_lines=self.state.source_lines,
-            instr_text=instr_text,
-            label_name=label_name,
-        )
-        
-        # NOTE: We do NOT advance the address space here as the instruction method will do that
-        # Do NOT add to tracked instructions here either - instruction method will handle that
-        
-        return metadata
-    
     def arch_flag_directive(self, items):
         """Handle architecture flag directives, delegating to the directives class"""
         return self.directives.arch_flag_directive(items)

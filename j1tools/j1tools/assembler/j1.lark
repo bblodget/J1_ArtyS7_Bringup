@@ -42,8 +42,8 @@ ORG.2: "ORG"
 ARCH_FLAG.2: ".arch_flag"
 DEFINE.2: ".define"
 
-// Add tick token for label referencing
-TICK: "'"
+// Add tick token for label referencing (with underscore to exclude from parse tree)
+_TICK: "'"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
 IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
@@ -148,7 +148,7 @@ label: COLON IDENT
 
 // Numbers and references
 raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
-labelref: TICK IDENT  // Only allow tick syntax for label references
+labelref: _TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions
 instruction: raw_number        // Literal
@@ -161,7 +161,7 @@ instruction: raw_number        // Literal
 jump_op: (JMP | ZJMP | CALL) labelref
 
 // Address of operation (standalone tick)
-address_of: TICK IDENT  // Same as labelref but standalone to push address
+address_of: _TICK IDENT  // Same as labelref but standalone to push address
 
 // ALU operations with optional modifiers
 alu_op: basic_alu modifiers?
