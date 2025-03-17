@@ -224,7 +224,8 @@ return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 
 // Add new rules for macros
 macro_def: MACRO IDENT STACK_COMMENT? macro_body ENDMACRO
-macro_body: instruction+
+// macro_body: instruction+
+macro_body: instruction (_WS_REQ instruction)*
 
 // call_expr: an identifier that is interpreted as a macro call if defined,
 // otherwise it is assembled as a CALL instruction.
