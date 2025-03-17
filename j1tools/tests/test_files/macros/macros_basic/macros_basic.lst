@@ -1,8 +1,8 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
 0000     0000     ----           11:3    :start                            //  Note the colon after label
-0000     0000     802a           12:5      #$2A                            //  Push hex 2A (decimal 42) and decimal 10
-0002     0001     800a           12:10     #10                             //  Push hex 2A (decimal 42) and decimal 10
+0000     0000     802a           12:5      $2A                             //  Push hex 2A (decimal 42) and decimal 10
+0002     0001     800a           12:9      10                              //  Push hex 2A (decimal 42) and decimal 10
 0004     0002     6203           13:5      T+N[d-1]                        //  (macro: add_nums) Add top two stack items
 0006     0003     6024           13:5      T[T->R,r+1]                     //  (macro: add_nums) Save result to return stack (push, don't overwrite)
 0008     0004     600c           13:5      T[r-1]                          //  (macro: add_nums) Pop (return stack) our saved value to T
