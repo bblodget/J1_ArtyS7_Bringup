@@ -442,13 +442,31 @@ class J1Assembler(Transformer):
         return items[0]
 
     def jump_op(self, items: List[Token]) -> InstructionMetadata:
-        """Handle jump operations with their labels."""
-        token = items[0]  # JMP token
-        op = str(token)
+        """
+        Handle jump operations with their labels.
         
-        # Get the label name from labelref
-        label_ref = items[1]  # This is the result from labelref method
-        label_name = str(label_ref)  # This is the label name without the tick
+        Grammar rule: jump_op: (JMP | ZJMP | CALL) labelref
+        
+        Args:
+            items: List containing [jump operation token, label token]
+            
+        Returns:
+            InstructionMetadata: Metadata for the jump instruction
+            
+        Raises:
+            ValueError: If items is invalid or operation is not recognized
+        """
+        if not items or len(items) != 2:
+            raise ValueError(f"Expected [JMP/ZJMP/CALL, IDENT token], got {len(items) if items else 0} items")
+            
+        op_token = items[0]  # JMP/ZJMP/CALL token
+        label_token = items[1]  # IDENT token from labelref
+        
+        if op_token.type not in ["JMP", "ZJMP", "CALL"]:
+            raise ValueError(f"Expected jump operation token, got {op_token.type}")
+            
+        op = str(op_token)
+        label_name = str(label_token)  # Extract the label name from the token
         
         # Always add a tick to the formatted instruction text for consistency
         instr_text = f"{op} '{label_name}"
@@ -456,7 +474,7 @@ class J1Assembler(Transformer):
         return InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
             value=JUMP_OPS[op],  # Base jump opcode
-            token=token,
+            token=op_token,
             filename=self.state.current_file,
             source_lines=self.state.source_lines,
             label_name=label_name,
@@ -584,9 +602,9 @@ class J1Assembler(Transformer):
         
         return items[0]
 
-    def labelref(self, items: List[Token]) -> str:
+    def labelref(self, items: List[Token]) -> Token:
         """
-        Convert a label reference with tick prefix into the label name string.
+        Convert a label reference to its identifier token.
         
         Grammar rule: labelref: _TICK IDENT
         
@@ -596,7 +614,7 @@ class J1Assembler(Transformer):
             items: List containing a single IDENT token
             
         Returns:
-            str: The label name
+            Token: The IDENT token for the label
         """
         if not items or len(items) != 1:
             raise ValueError(f"Expected single IDENT token for labelref, got {len(items) if items else 0}")
@@ -604,7 +622,7 @@ class J1Assembler(Transformer):
         if items[0].type != "IDENT":
             raise ValueError(f"Expected IDENT token, got {items[0].type}")
         
-        return str(items[0])
+        return items[0]  # Return the token itself, not just the string
 
     def address_of(self, items: List[Token]) -> InstructionMetadata:
         """
