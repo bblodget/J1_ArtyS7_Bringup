@@ -58,7 +58,7 @@ class MacroProcessor:
 
         Args:
             name: Name of the macro
-            body: List of instructions that make up the macro
+            body: List of instructions that make up the macro (pre-flattened)
             stack_effect: Optional stack effect comment
             token: Token for error reporting
         """
@@ -74,64 +74,6 @@ class MacroProcessor:
             stack_effect=stack_effect,
             body=body,
             defined_at=f"{self.current_file}:{token.line if token else 'unknown'}",
-        )
-
-    def process_macro_def(self, items):
-        """Process a macro definition."""
-        self.logger.debug(f"Processing macro items: {items}")
-        
-        # Handle different item counts based on whether stack_comment is present
-        if len(items) == 4:
-            # No stack comment present
-            macro_token, name_token, body_tree, end_token = items
-            stack_comment = None
-        elif len(items) == 5:
-            # Stack comment present
-            macro_token, name_token, stack_comment, body_tree, end_token = items
-        else:
-            raise ValueError(f"Invalid macro definition structure: {items}")
-
-        # Extract instructions from macro body
-        if not isinstance(body_tree, Tree) or body_tree.data != "macro_body":
-            raise ValueError(f"Invalid macro body structure")
-
-        # Get the instruction list from the body
-        instructions = body_tree.children
-
-        # Flatten and validate instructions
-        flattened_instructions = []
-        for instr in instructions:
-            if isinstance(instr, list):
-                # TODO: Why does this happen?
-                if len(instr) == 1:
-                    self.addr_space.undo_advance()
-                    instr[0].word_addr = -1;
-                    flattened_instructions.append(instr[0])
-                else:
-                    raise ValueError(
-                        f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                        f"GOT HERE: Expected InstructionMetadata or list in macro body, got {type(instr)}"
-                    )
-            elif isinstance(instr, InstructionMetadata):
-                # We are just defining a macro, so undo the advance of the address space
-                self.addr_space.undo_advance()
-
-                # Ther is no address for this instruction yet
-                instr.word_addr = -1;
-
-                flattened_instructions.append(instr)
-            else:
-                raise ValueError(
-                    f"{self.current_file}:{name_token.line}:{name_token.column}: "
-                    f"Expected InstructionMetadata or list in macro body, got {type(instr)}"
-                )
-
-        # Store the macro definition
-        self.define_macro(
-            str(name_token),
-            flattened_instructions,
-            str(stack_comment) if stack_comment else None,
-            name_token,
         )
 
     def expand_macro(self, name: str, token: Token) -> List[InstructionMetadata]:

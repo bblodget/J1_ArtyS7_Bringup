@@ -15,7 +15,7 @@ from .instructionset_16kb_dualport import (
     JUMP_OPS,
 )
 import click
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union, Set
 from .asm_types import (
     InstructionType,
     InstructionMetadata,
@@ -42,6 +42,9 @@ class J1Assembler(Transformer):
         self.current_address: int = 0
         self.base_address: int = 0  # Add this to track base address for includes
         self.debug: bool = debug
+        
+        # Set to track labels defined in first pass
+        self._first_pass_labels: Set[str] = set()
         
         # Replace direct file/source tracking with AssemblerState
         self.state = AssemblerState(
@@ -90,7 +93,6 @@ class J1Assembler(Transformer):
 
         # Add this to store all instructions
         self.instructions: List[InstructionMetadata] = []
-        self.macros: List[InstructionMetadata] = []
 
         self.main_file: str = "<unknown>"  # Track the main file
 
@@ -206,10 +208,12 @@ class J1Assembler(Transformer):
                 if hasattr(child, 'data') and child.data == 'statement':
                     for statement_child in child.children:
                         if hasattr(statement_child, 'data') and statement_child.data == 'label':
-                            label_name = str(statement_child.children[1])
+                            # With _COLON in grammar, there's only one child token (the IDENT)
+                            token = statement_child.children[0]
+                            label_name = str(token)
+                            
                             if label_name in self.labels:
                                 # This is a duplicate label - raise an error
-                                token = statement_child.children[1]
                                 raise ValueError(
                                     f"{self.state.current_file}:{token.line}:{token.column}: "
                                     f"Duplicate label: {label_name}"
@@ -260,7 +264,7 @@ class J1Assembler(Transformer):
                     continue
 
                 if stmt.type == InstructionType.MACRO_DEF:
-                    self.macros.append(stmt)
+                    # Macro definitions are processed by the macro processor
                     continue
 
                 # Other Instruction types should have a word address
@@ -306,7 +310,7 @@ class J1Assembler(Transformer):
 
                     # Handle MACRO_DEF instructions within lists
                     if inst.type == InstructionType.MACRO_DEF:
-                        self.macros.append(inst)
+                        # Macro definitions are processed by the macro processor
                         continue
 
                     # Other Instruction types should have a word address
@@ -665,12 +669,23 @@ class J1Assembler(Transformer):
         return metadata
 
     def label(self, items: List[Token]) -> InstructionMetadata:
-        """Convert label rule into InstructionMetadata."""
+        """
+        Convert label rule into InstructionMetadata.
+        
+        Since we use _COLON in the grammar (with underscore to ignore it),
+        this transformer will only receive the IDENT token.
+        
+        Args:
+            items: List containing a single IDENT token
+            
+        Returns:
+            InstructionMetadata for the label
+        """
         self.logger.debug(f"\nLabel items: {items}")
 
-        # Forth-style subroutine definition: COLON IDENT
-        if len(items) == 2 and items[0].type == "COLON" and items[1].type == "IDENT":
-            token = items[1]  # This is the IDENT token
+        # With _COLON in grammar, we now only get the IDENT token
+        if len(items) == 1 and items[0].type == "IDENT":
+            token = items[0]  # The IDENT token
             label_name = str(token)
             instr_text = f":{label_name}"
         else:
@@ -1027,33 +1042,55 @@ class J1Assembler(Transformer):
                 print(f"{code:04x}", file=f)
 
     def macro_def(self, items):
-        """Handle macro definitions by delegating to macro processor."""
+        """
+        Handle macro definitions by extracting name, stack effect, and body.
+        
+        Args:
+            items: List containing [MACRO token, IDENT token, optional STACK_COMMENT, macro_body, ENDMACRO token]
+            
+        Returns:
+            InstructionMetadata for the macro definition (for listing purposes)
+        """
         self.logger.debug(f"Processing macro definition: {items}")
+        
+        # Extract components
         macro_token = items[0]  # MACRO token
         name_token = items[1]  # IDENT token
         macro_name = str(name_token)
-
-        # Process the macro definition
-        self.macro_processor.process_macro_def(items)
-
+        
+        # Find body and stack effect (if present)
+        stack_effect = None
+        body = None
+        
+        # Handle different item counts based on whether stack_comment is present
+        if len(items) == 4:
+            # No stack comment present: [MACRO, IDENT, body, ENDMACRO]
+            body = items[2]
+        elif len(items) == 5:
+            # Stack comment present: [MACRO, IDENT, STACK_COMMENT, body, ENDMACRO]
+            stack_effect = str(items[2])
+            body = items[3]
+        
+        # Define the macro directly
+        self.macro_processor.define_macro(
+            macro_name,
+            body,  # This is now the result of the macro_body transformer
+            stack_effect,
+            name_token
+        )
+        
         # Create instruction text for the macro definition
-        # Include stack effect comment if present
-        stack_effect = ""
-        for item in items:
-            if isinstance(item, Token) and item.type == "STACK_COMMENT":
-                stack_effect = f" {str(item)}"
-                break
-
-        instr_text = f"macro: {macro_name}{stack_effect}"
-
-        # Return InstructionMetadata instead of tuple
+        stack_effect_text = f" {stack_effect}" if stack_effect else ""
+        instr_text = f"macro: {macro_name}{stack_effect_text}"
+        
+        # Return InstructionMetadata for listing purposes
         return InstructionMetadata.from_token(
             inst_type=InstructionType.MACRO_DEF,
             value=0,  # No machine code value needed for macro definition
             token=name_token,
             filename=self.state.current_file,
             source_lines=self.state.source_lines,
-            instr_text=instr_text,  # Add formatted instruction text
+            instr_text=instr_text,
             macro_name=macro_name,
         )
 
@@ -2041,6 +2078,53 @@ class J1Assembler(Transformer):
     def define_directive(self, items):
         """Handle constant definition directives, delegating to the directives class"""
         return self.directives.define_directive(items)
+
+    def macro_body(self, items: List[Union[InstructionMetadata, List[InstructionMetadata]]]) -> List[InstructionMetadata]:
+        """
+        Processes a macro body and returns a flattened list of instructions.
+        
+        Args:
+            items: List of instructions or lists of instructions
+            
+        Returns:
+            A flattened list of InstructionMetadata objects
+        """
+        self.logger.debug(f"Processing macro body with {len(items)} items")
+        
+        # Flatten and validate instructions
+        flattened_instructions = []
+        for instr in items:
+            if isinstance(instr, list):
+                if len(instr) == 0:
+                    continue
+                elif len(instr) == 1:
+                    # Undo the address advance if this comes from an instruction
+                    self.addr_space.undo_advance()
+                    # Mark as not having a word address yet (will be assigned during expansion)
+                    instr[0].word_addr = -1
+                    flattened_instructions.append(instr[0])
+                else:
+                    # Multiple instructions - add all with addresses reset
+                    for sub_instr in instr:
+                        self.addr_space.undo_advance()
+                        sub_instr.word_addr = -1
+                        flattened_instructions.append(sub_instr)
+            elif isinstance(instr, InstructionMetadata):
+                # We are just defining a macro, so undo the advance of the address space
+                self.addr_space.undo_advance()
+                # Mark as not having a word address yet
+                instr.word_addr = -1
+                flattened_instructions.append(instr)
+            else:
+                token = getattr(instr, 'token', None)
+                line = token.line if token else "unknown"
+                column = token.column if token else "unknown"
+                raise ValueError(
+                    f"{self.state.current_file}:{line}:{column}: "
+                    f"Expected InstructionMetadata or list in macro body, got {type(instr)}"
+                )
+        
+        return flattened_instructions
 
 
 @click.command()

@@ -52,6 +52,7 @@ IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
 STRING: /"[^"]*"/
 
 // Syntax tokens
+_COLON: ":"
 COLON: ":"
 // COMMA.2: ","
 
@@ -124,10 +125,10 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive | arch_flag_directive | define_directive)*
+program: (statement | org_directive | arch_flag_directive | define_directive | macro_def)*
 
 // Define all possible statement types
-?statement_type: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+?statement_type: label | instruction | include_stmt | control_structure | memory_init_statement
 
 // A statement can be any statement type with optional whitespace-separated additional statement types
 statement: statement_type (_WS_REQ statement_type)*
@@ -144,7 +145,7 @@ memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) _COMMA
 include_stmt: INCLUDE STRING
 
 // Add label rule
-label: COLON IDENT
+label: _COLON IDENT
 
 // Numbers and references
 raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR

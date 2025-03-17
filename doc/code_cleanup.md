@@ -31,7 +31,7 @@ Based on the EBNF grammar, here's a hierarchical list of transformer methods in 
 20. `plus_loop_op`
 
 ## Operations
-21. `jump_op`
+21. [x] `jump_op`
 22. [x] `address_of`
 23. [x] `alu_op`
 24. [x] `basic_alu`
