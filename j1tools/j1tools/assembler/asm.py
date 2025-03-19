@@ -120,41 +120,41 @@ class J1Assembler(Transformer):
         self.directives = Directives(self.state, self.arch_flags, self.constants, debug=debug)
         self.directives.set_assembler(self)
 
-    def reset(self):
-        """Reset the assembler state for a new assembly run."""
-        # Reset address state
-        self.addr_space.reset()
+    # def reset(self):
+    #     """Reset the assembler state for a new assembly run."""
+    #     # Reset address state
+    #     self.addr_space.reset()
         
-        # Clear dictionaries
-        self.labels = {}
-        self.constants = {
-            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
-            "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
-        }
-        self.arch_flags = {
-            "fetch_type": "quickstore",
-            "alu_ops": "extended",
-        }
-        self.instruction_metadata = {}
+    #     # Clear dictionaries
+    #     self.labels = {}
+    #     self.constants = {
+    #         "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+    #         "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
+    #     }
+    #     self.arch_flags = {
+    #         "fetch_type": "quickstore",
+    #         "alu_ops": "extended",
+    #     }
+    #     self.instruction_metadata = {}
         
-        # Reset control structure state
-        self._if_count = 0
-        self._begin_count = 0
-        self._do_count = 0
-        self._control_stack = []
+    #     # Reset control structure state
+    #     self._if_count = 0
+    #     self._begin_count = 0
+    #     self._do_count = 0
+    #     self._control_stack = []
         
-        # Reset processing state flags
-        self.is_assembled = False
+    #     # Reset processing state flags
+    #     self.is_assembled = False
         
-        # Reset the state object
-        self.state = AssemblerState()
+    #     # Reset the state object
+    #     self.state = AssemblerState()
         
-        # Update directives with new state and dictionaries
-        self.directives = Directives(self.state, self.arch_flags, self.constants, debug=self.debug)
-        self.directives.set_assembler(self)
+    #     # Update directives with new state and dictionaries
+    #     self.directives = Directives(self.state, self.arch_flags, self.constants, debug=self.debug)
+    #     self.directives.set_assembler(self)
         
-        # Reset macro processor
-        self.macro_processor.reset()
+    #     # Reset macro processor
+    #     self.macro_processor.reset()
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -177,17 +177,17 @@ class J1Assembler(Transformer):
 
         return tree
 
-    def transform(self, tree):
-        """Transform the parse tree into bytecode"""
-        # Reset the current address and labels before processing
-        self.current_address = 0
-        self.labels = {}
-        self.instruction_metadata = {}  # Clear existing instruction metadata
-        self.instructions = []          # Clear existing instructions
-        self.label_metadata = {}        # Clear existing label metadata
+    # def transform(self, tree):
+    #     """Transform the parse tree into bytecode"""
+    #     # Reset the current address and labels before processing
+    #     self.current_address = 0
+    #     self.labels = {}
+    #     self.instruction_metadata = {}  # Clear existing instruction metadata
+    #     self.instructions = []          # Clear existing instructions
+    #     self.label_metadata = {}        # Clear existing label metadata
         
-        # Process all statements to generate bytecode
-        return super().transform(tree)
+    #     # Process all statements to generate bytecode
+    #     return super().transform(tree)
     
     def program(
         self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
@@ -1096,7 +1096,23 @@ class J1Assembler(Transformer):
             )
 
     def include_stmt(self, items: List[Token]) -> List[InstructionMetadata]:
-        """Process an include statement and return an empty list."""
+        """Process an include statement by parsing and transforming the included file.
+        
+        Grammar rule: include_stmt: INCLUDE STRING
+        
+        Args:
+            items: List containing [INCLUDE token, STRING token] where STRING token
+                  contains the filename in quotes
+        
+        Returns:
+            List[InstructionMetadata]: Always returns an empty list since include statements
+            don't generate instructions directly. Instead, the included file's contents
+            are processed and added to the assembler's state during execution.
+            
+        Raises:
+            ValueError: If the include file cannot be found or processed
+            FileNotFoundError: If the include file doesn't exist
+        """
         token = items[1]
         filename = str(token)[1:-1]  # Remove quotes
 
