@@ -33,6 +33,7 @@ import os
 import re
 from dataclasses import dataclass
 from .directives import Directives
+import time
 
 
 class J1Assembler(Transformer):
@@ -195,6 +196,8 @@ class J1Assembler(Transformer):
         """Process all statements and resolve labels."""
         # Collect labels and instructions
         for stmt in statements:
+            if stmt is None:
+                continue
             if isinstance(stmt, InstructionMetadata):
                 if stmt.type == InstructionType.DIRECTIVE:
                     continue    # ORG already handled
@@ -994,7 +997,7 @@ class J1Assembler(Transformer):
             items: List containing [MACRO token, IDENT token, optional STACK_COMMENT, macro_body, ENDMACRO token]
             
         Returns:
-            InstructionMetadata for the macro definition (for listing purposes)
+            None
         """
         self.logger.debug(f"Processing macro definition: {items}")
         
@@ -1029,15 +1032,17 @@ class J1Assembler(Transformer):
         instr_text = f"macro: {macro_name}{stack_effect_text}"
         
         # Return InstructionMetadata for listing purposes
-        return InstructionMetadata.from_token(
-            inst_type=InstructionType.MACRO_DEF,
-            value=0,  # No machine code value needed for macro definition
-            token=name_token,
-            filename=self.state.current_file,
-            source_lines=self.state.source_lines,
-            instr_text=instr_text,
-            macro_name=macro_name,
-        )
+        # return InstructionMetadata.from_token(
+        #     inst_type=InstructionType.MACRO_DEF,
+        #     value=0,  # No machine code value needed for macro definition
+        #     token=name_token,
+        #     filename=self.state.current_file,
+        #     source_lines=self.state.source_lines,
+        #     instr_text=instr_text,
+        #     macro_name=macro_name,
+        # )
+
+        return None
 
     def call_expr(self, items: List[Token]) -> List[InstructionMetadata]:
         """Handle word calls, checking for loop index words (i, j, k)."""
@@ -1153,8 +1158,13 @@ class J1Assembler(Transformer):
             self.state.current_file = str(resolved_path)  # Use resolved path as current file
             self.state.source_lines = included_lines
 
-            # Parse and process the included file
+            # Time the parse operation
+            # start_time = time.time()
             tree = self.parser.parse(included_source)
+            # end_time = time.time()
+            # parse_time = end_time - start_time
+            # self.logger.debug(f"Parse time for {resolved_path}: {parse_time:.4f} seconds")
+
             self.transform(tree)
 
             # Restore previous state
