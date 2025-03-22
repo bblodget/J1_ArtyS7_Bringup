@@ -7,6 +7,10 @@
 // Insert new tokens after %ignore WS
 %ignore WS
 
+// Define a helper rule for required whitespace
+_WS_REQ: WS
+
+
 STACK_CHAR: /#'[^']'/
 RAW_CHAR: /'[^']'/
 
@@ -119,10 +123,21 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive)*
-// statement: label | instruction | macro_def | include_stmt | subroutine_def | control_structure
-statement: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+program: (statement | org_directive )*
+
+//program: program_type (_WS_REQ program_type)*
+//program_type: statement | org_directive
+
 org_directive: ORG raw_number
+
+statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (include_stmt _WS_REQ)  | (control_structure _WS_REQ) | (memory_init_statement _WS_REQ)
+
+// Define all possible statement types
+// ?statement_type: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+
+// A statement can be any statement type with optional whitespace-separated additional statement types
+// statement: statement_type (_WS_REQ statement_type)*
+
 
 // Add memory initialization statement rule
 memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
@@ -212,7 +227,8 @@ return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 
 // Add new rules for macros
 macro_def: MACRO IDENT STACK_COMMENT? macro_body ENDMACRO
-macro_body: instruction+
+//macro_body: instruction+
+macro_body: instruction (_WS_REQ instruction)*
 
 // call_expr: an identifier that is interpreted as a macro call if defined,
 // otherwise it is assembled as a CALL instruction.

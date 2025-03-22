@@ -100,8 +100,12 @@ class J1Assembler(Transformer):
             self.main_file = filename
         self.state.current_file = filename  # Update state instead of direct attribute
         self.macro_processor.set_current_file(filename)
+        
         # Store source lines in state
         self.state.source_lines = [line.rstrip() for line in source.splitlines()]
+        
+        # Add blank line to source before parsing
+        source = source + '\n'
         
         logging.getLogger("lark").setLevel(logging.DEBUG)
         tree = self.parser.parse(source)
