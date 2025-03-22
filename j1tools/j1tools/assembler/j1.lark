@@ -46,7 +46,8 @@ DEFINE.2: ".define"
 _TICK: "'"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
-IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+// IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+IDENT: /(?!\/\/)[0-9]*[a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>][0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]*/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
