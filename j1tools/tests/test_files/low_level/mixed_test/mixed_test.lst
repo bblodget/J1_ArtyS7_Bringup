@@ -1,0 +1,6 @@
+BYTE     WORD     CODE            #:col    SOURCE
+----------------------------------------------------------------------
+0000     0000     ----            6:3    :test_label                       //  Define a label
+0000     0000     8002            7:5      2                               //  Raw number literal
+0002     0001     8003            8:5      3                               //  Raw number literal
+0004     0002     6203            9:5      T+N[d-1]                        //  (macro: add)
