@@ -427,8 +427,8 @@ class J1Assembler(Transformer):
         """Convert stack number tokens (with # prefix) to their machine code representation."""
         token = items[0]
         if token.type == "STACK_HEX":
-            # Remove the #$ prefix to get the raw hex number
-            value = int(str(token)[2:], 16)
+            # Remove the $ prefix to get the raw hex number
+            value = int(str(token)[1:], 16)
             if value > 0x7FFF:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
@@ -455,8 +455,8 @@ class J1Assembler(Transformer):
                 word_addr=self.addr_space.get_word_address(),
             )
         elif token.type == "STACK_DECIMAL":
-            # Remove the # prefix to get the raw decimal number
-            value = int(str(token)[1:], 10)
+            # No # prefix
+            value = int(str(token), 10)
             if value < 0:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
@@ -490,11 +490,11 @@ class J1Assembler(Transformer):
                 word_addr=self.addr_space.get_word_address(),
             )
         elif token.type == "STACK_CHAR":
-            # Expecting format: #'<char>' i.e. exactly 4 characters
+            # Expecting format: '<char>' i.e. exactly 3 characters
             token_str = str(token)
-            if len(token_str) != 4:
+            if len(token_str) != 3:
                 raise ValueError(f"Invalid stack character literal: {token_str}")
-            value = ord(token_str[2])
+            value = ord(token_str[1])
             machine_code = value | 0x8000
             return InstructionMetadata(
                 type=InstructionType.BYTE_CODE,
@@ -1692,11 +1692,11 @@ class J1Assembler(Transformer):
         instr_text = f"{token},"
         
         # Handle raw hex literal
-        if token.type == "RAW_HEX":
+        if token.type == "STACK_HEX":
             value = int(str(token)[1:], 16)
-        elif token.type == "RAW_DECIMAL":
+        elif token.type == "STACK_DECIMAL":
             value = int(str(token), 10)
-        elif token.type == "RAW_CHAR":
+        elif token.type == "STACK_CHAR":
             token_str = str(token)
             if len(token_str) != 3:
                 raise ValueError(f"Invalid raw character literal in memory initialization: {token_str}")

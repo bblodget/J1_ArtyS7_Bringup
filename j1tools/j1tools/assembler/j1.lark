@@ -11,8 +11,6 @@
 _WS_REQ: WS
 
 
-STACK_CHAR: /#'[^']'/
-RAW_CHAR: /'[^']'/
 
 // Comments - match and ignore entire line
 COMMENT: "//" /[^\n]*/ "\n"?
@@ -23,10 +21,17 @@ STACK_COMMENT: /\([^)]*\)/
 %ignore STACK_COMMENT
 
 // Numbers and identifiers
-STACK_HEX: /#\$[0-9a-fA-F]+/
-STACK_DECIMAL: /#-?[0-9]+/
-RAW_HEX: /\$[0-9a-fA-F]+/
-RAW_DECIMAL: /-?[0-9]+/
+//STACK_HEX: /#\$[0-9a-fA-F]+/
+//STACK_DECIMAL: /#-?[0-9]+/
+//STACK_CHAR: /#'[^']'/
+
+STACK_HEX: /\$[0-9a-fA-F]+/
+STACK_DECIMAL: /-?[0-9]+/
+STACK_CHAR: /'[^']'/
+
+//RAW_HEX: /\$[0-9a-fA-F]+/
+//RAW_DECIMAL: /-?[0-9]+/
+//RAW_CHAR: /'[^']'/
 
 // Control Structure Keywords (added with higher priority)
 IF.2: "IF"
@@ -128,7 +133,8 @@ program: (statement | org_directive )*
 //program: program_type (_WS_REQ program_type)*
 //program_type: statement | org_directive
 
-org_directive: ORG raw_number
+//org_directive: ORG raw_number
+org_directive: ORG stack_number
 
 statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (include_stmt _WS_REQ)  | (control_structure _WS_REQ) | (memory_init_statement _WS_REQ)
 
@@ -140,7 +146,8 @@ statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (incl
 
 
 // Add memory initialization statement rule
-memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
+//memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
+memory_init_statement: (STACK_HEX | STACK_DECIMAL | STACK_CHAR) COMMA
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
@@ -150,7 +157,7 @@ label: COLON IDENT
 
 // Numbers and references
 stack_number: STACK_HEX | STACK_DECIMAL | STACK_CHAR
-raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
+// raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
 labelref: TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions
