@@ -96,11 +96,11 @@ def test_jump_instructions(assembler):
 @pytest.mark.parametrize(
     "source,expected",
     [
-        ("#42", 0x802A),  # Decimal
-        ("#$2A", 0x802A),  # Hex (same as 42)
-        ("#0", 0x8000),  # Zero
-        ("#$FF", 0x80FF),  # Max 8-bit hex
-        ("#255", 0x80FF),  # Max 8-bit decimal
+        ("42", 0x802A),  # Decimal
+        ("$2A", 0x802A),  # Hex (same as 42)
+        ("0", 0x8000),  # Zero
+        ("$FF", 0x80FF),  # Max 8-bit hex
+        ("255", 0x80FF),  # Max 8-bit decimal
     ],
 )
 def test_number_literals(assembler, source, expected):

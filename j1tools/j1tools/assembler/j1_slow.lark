@@ -4,12 +4,11 @@
 %import common.WS
 %ignore WS
 
-// Insert new tokens after %ignore WS
-%ignore WS
-
 // Define a helper rule for required whitespace
 _WS_REQ: WS
 
+// Define optional whitespace
+_WS_OPT: WS?
 
 
 // Comments - match and ignore entire line
@@ -21,17 +20,9 @@ STACK_COMMENT: /\([^)]*\)/
 %ignore STACK_COMMENT
 
 // Numbers and identifiers
-//STACK_HEX: /#\$[0-9a-fA-F]+/
-//STACK_DECIMAL: /#-?[0-9]+/
-//STACK_CHAR: /#'[^']'/
-
-STACK_HEX: /\$[0-9a-fA-F]+/
-STACK_DECIMAL: /-?[0-9]+/
-STACK_CHAR: /'[^']'/
-
-//RAW_HEX: /\$[0-9a-fA-F]+/
-//RAW_DECIMAL: /-?[0-9]+/
-//RAW_CHAR: /'[^']'/
+RAW_HEX: /\$[0-9a-fA-F]+/
+RAW_DECIMAL: /-?[0-9]+/
+RAW_CHAR: /'[^']'/
 
 // Control Structure Keywords (added with higher priority)
 IF.2: "IF"
@@ -48,21 +39,28 @@ LEAVE.2: "LEAVE"
 
 // Add to directive tokens
 ORG.2: "ORG"
+ARCH_FLAG.2: ".arch_flag"
+DEFINE.2: ".define"
 
-// Add tick token for label referencing
+// Add tick token for label referencing (with underscore to exclude from parse tree)
 _TICK: "'"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
-IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+// IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+IDENT: /(?!\/\/)[0-9]*[a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>][0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]*/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
 
 // Syntax tokens
+_COLON: ":"
 COLON: ":"
-LBRACKET: "["
-RBRACKET: "]"
-COMMA.2: ","
+// COMMA.2: ","
+
+// Token definitions with underscores to ignore them
+_LBRACKET: "["
+_RBRACKET: "]"
+_COMMA.2: ","
 
 // Macro tokens
 MACRO.2: "macro:"
@@ -100,9 +98,9 @@ THIRD_OS: "3OS"
 MEM_T: "mem[T]"
 
 // Jump Operations
-JMP: "JMP"
-ZJMP: "ZJMP"
-CALL: "CALL"
+JMP.2: "JMP"
+ZJMP.2: "ZJMP"
+CALL.2: "CALL"
 
 // Stack Effect Modifiers
 T_TO_N: "T->N"
@@ -128,40 +126,34 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive )*
-
-//program: program_type (_WS_REQ program_type)*
-//program_type: statement | org_directive
-
-//org_directive: ORG raw_number
-org_directive: ORG stack_number
-
-statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (include_stmt _WS_REQ)  | (control_structure _WS_REQ) | (memory_init_statement _WS_REQ)
+program: (statement | org_directive | arch_flag_directive | define_directive | macro_def)*
 
 // Define all possible statement types
-// ?statement_type: label | instruction | macro_def | include_stmt | control_structure | memory_init_statement
+?statement_type: label | instruction | include_stmt | control_structure | memory_init_statement
 
 // A statement can be any statement type with optional whitespace-separated additional statement types
-// statement: statement_type (_WS_REQ statement_type)*
+statement: statement_type (_WS_REQ statement_type)*
 
+
+org_directive: ORG raw_number
+arch_flag_directive: ARCH_FLAG IDENT (IDENT | RAW_HEX | RAW_DECIMAL)
+define_directive: DEFINE IDENT (RAW_HEX | RAW_DECIMAL | IDENT | RAW_CHAR)
 
 // Add memory initialization statement rule
-//memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) COMMA
-memory_init_statement: (STACK_HEX | STACK_DECIMAL | STACK_CHAR) COMMA
+memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) _COMMA
 
 // Add include statement rule
 include_stmt: INCLUDE STRING
 
 // Add label rule
-label: COLON IDENT
+label: _COLON IDENT
 
 // Numbers and references
-stack_number: STACK_HEX | STACK_DECIMAL | STACK_CHAR
-// raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
+raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
 labelref: _TICK IDENT  // Only allow tick syntax for label references
 
 // Instructions
-instruction: stack_number     // Literal
+instruction: raw_number        // Literal
           | jump_op           // Jump instructions
           | alu_op            // ALU operations
           | call_expr         // Macro or subroutine invocation
@@ -205,10 +197,10 @@ basic_alu: T
         | MEM_T
 
 // Modifiers
-modifiers: LBRACKET modifier_list RBRACKET
-modifier_list: modifier (COMMA modifier)*
-modifier: stack_effect
-       | stack_delta
+modifiers: _LBRACKET modifier_list _RBRACKET
+modifier_list: modifier (_COMMA modifier)*
+modifier: stack_effect | stack_delta
+
 
 // Stack effects
 stack_effect: T_TO_N
@@ -234,7 +226,7 @@ return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
 
 // Add new rules for macros
 macro_def: MACRO IDENT STACK_COMMENT? macro_body ENDMACRO
-//macro_body: instruction+
+// macro_body: instruction+
 macro_body: instruction (_WS_REQ instruction)*
 
 // call_expr: an identifier that is interpreted as a macro call if defined,

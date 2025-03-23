@@ -15,7 +15,7 @@ from .instructionset_16kb_dualport import (
     JUMP_OPS,
 )
 import click
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union, Set
 from .asm_types import (
     InstructionType,
     InstructionMetadata,
@@ -28,6 +28,12 @@ from .macro_processor import MacroProcessor
 from .config import AssemblerConfig
 from .address_space import AddressSpace
 from .control_structures import ControlStructures
+import enum
+import os
+import re
+from dataclasses import dataclass
+from .directives import Directives
+import time
 
 
 class J1Assembler(Transformer):
@@ -85,7 +91,6 @@ class J1Assembler(Transformer):
 
         # Add this to store all instructions
         self.instructions: List[InstructionMetadata] = []
-        self.macros: List[InstructionMetadata] = []
 
         self.main_file: str = "<unknown>"  # Track the main file
 
@@ -94,18 +99,72 @@ class J1Assembler(Transformer):
         # Initialize control structures handler
         self.control_structures = ControlStructures(self.state, self.addr_space, debug)
 
+        # Architecture flags
+        self.arch_flags = {
+            "fetch_type": "quickstore",  # Default to quickstore
+            "alu_ops": "extended",      # Default to extended ALU
+        }
+        
+        # Architecture constants - automatically defined based on flags
+        self.constants = {
+            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+            "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
+        }
+        
+        # Control structure state
+        self._if_count = 0
+        self._begin_count = 0
+        self._do_count = 0
+        self._control_stack = []
+
+        # Instantiate Directives
+        self.directives = Directives(self.state, self.arch_flags, self.constants, debug=debug)
+        self.directives.set_assembler(self)
+
+    # def reset(self):
+    #     """Reset the assembler state for a new assembly run."""
+    #     # Reset address state
+    #     self.addr_space.reset()
+        
+    #     # Clear dictionaries
+    #     self.labels = {}
+    #     self.constants = {
+    #         "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+    #         "ARCH_ALU_OPS": 1,     # 0 = original, 1 = extended
+    #     }
+    #     self.arch_flags = {
+    #         "fetch_type": "quickstore",
+    #         "alu_ops": "extended",
+    #     }
+    #     self.instruction_metadata = {}
+        
+    #     # Reset control structure state
+    #     self._if_count = 0
+    #     self._begin_count = 0
+    #     self._do_count = 0
+    #     self._control_stack = []
+        
+    #     # Reset processing state flags
+    #     self.is_assembled = False
+        
+    #     # Reset the state object
+    #     self.state = AssemblerState()
+        
+    #     # Update directives with new state and dictionaries
+    #     self.directives = Directives(self.state, self.arch_flags, self.constants, debug=self.debug)
+    #     self.directives.set_assembler(self)
+        
+    #     # Reset macro processor
+    #     self.macro_processor.reset()
+
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
         if self.main_file == "<unknown>":
             self.main_file = filename
         self.state.current_file = filename  # Update state instead of direct attribute
         self.macro_processor.set_current_file(filename)
-        
         # Store source lines in state
         self.state.source_lines = [line.rstrip() for line in source.splitlines()]
-        
-        # Add blank line to source before parsing
-        source = source + '\n'
         
         logging.getLogger("lark").setLevel(logging.DEBUG)
         tree = self.parser.parse(source)
@@ -119,12 +178,26 @@ class J1Assembler(Transformer):
 
         return tree
 
+    # def transform(self, tree):
+    #     """Transform the parse tree into bytecode"""
+    #     # Reset the current address and labels before processing
+    #     self.current_address = 0
+    #     self.labels = {}
+    #     self.instruction_metadata = {}  # Clear existing instruction metadata
+    #     self.instructions = []          # Clear existing instructions
+    #     self.label_metadata = {}        # Clear existing label metadata
+        
+    #     # Process all statements to generate bytecode
+    #     return super().transform(tree)
+    
     def program(
         self, statements: List[Union[InstructionMetadata, List[InstructionMetadata]]]
     ) -> None:
         """Process all statements and resolve labels."""
-        # First pass: collect labels and instructions
+        # Collect labels and instructions
         for stmt in statements:
+            if stmt is None:
+                continue
             if isinstance(stmt, InstructionMetadata):
                 if stmt.type == InstructionType.DIRECTIVE:
                     continue    # ORG already handled
@@ -135,16 +208,18 @@ class J1Assembler(Transformer):
                             f"Label {stmt.label_name} has no word address"
                         )
                     if stmt.label_name in self.labels:
+                        # Duplicate label error
                         raise ValueError(
                             f"{self.state.current_file}:{stmt.line}:{stmt.column}: "
                             f"Duplicate label: {stmt.label_name}"
                         )
+                        
                     self.labels[stmt.label_name] = stmt.word_addr
                     self.label_metadata[stmt.word_addr] = stmt
                     continue
 
                 if stmt.type == InstructionType.MACRO_DEF:
-                    self.macros.append(stmt)
+                    # Macro definitions are processed by the macro processor
                     continue
 
                 # Other Instruction types should have a word address
@@ -171,12 +246,19 @@ class J1Assembler(Transformer):
                                 f"Label {inst.label_name} has no word address"
                             )
                         if inst.label_name in self.labels:
+                            # Duplicate label error
                             raise ValueError(
                                 f"{self.state.current_file}:{inst.line}:{inst.column}: "
                                 f"Duplicate label: {inst.label_name}"
                             )
+                            
                         self.labels[inst.label_name] = inst.word_addr
                         self.label_metadata[inst.word_addr] = inst
+                        continue
+
+                    # Handle MACRO_DEF instructions within lists
+                    if inst.type == InstructionType.MACRO_DEF:
+                        # Macro definitions are processed by the macro processor
                         continue
 
                     # Other Instruction types should have a word address
@@ -242,38 +324,101 @@ class J1Assembler(Transformer):
         """
         Handles the 'statement' rule by processing labels and instructions.
         A statement can return:
-        - A single instruction (InstructionMetadata)
+        - A single instruction or statement (InstructionMetadata)
+        - A list of statements separated by whitespace
         - A list of instructions (from subroutine definitions or label+instruction pairs)
         
         Input items can be:
-        - [instruction] -> returns single instruction
+        - [statement_type] -> returns single statement
         - [label, instruction] -> returns [label, instruction] as list
         - [list_of_instructions] -> returns list (from subroutine definitions)
         """
         self.logger.debug(f"\nStatement items: {items}")
 
-        if len(items) == 1:
-            # Single item: either an instruction or a list of instructions
+        # Handle empty statement
+        if not items:
+            return None
+        
+        # If we need to flatten nested lists (from macro expansions)
+        flattened_items = []
+        for item in items:
+            if isinstance(item, list):
+                # Flatten nested lists (from macro expansions)
+                flattened_items.extend(item)
+            else:
+                flattened_items.append(item)
+        
+        # Use flattened items instead of original items
+        items = flattened_items
+        
+        # Check for empty list after flattening
+        if not items:
+            self.logger.debug("Empty statement after flattening, returning None")
+            return None
+        
+        # If we have multiple InstructionMetadata objects, return them as a list
+        if len(items) > 1 and all(isinstance(item, InstructionMetadata) for item in items):
+            return items  # Return all instructions
+        
+        # If we have a single instruction/statement, handle directly
+        if len(items) == 1 and isinstance(items[0], InstructionMetadata):
             return items[0]
-        elif len(items) == 2:
-            # Label + instruction pair
-            label, instruction = items
-            if label[0] != "label":
-                raise ValueError(f"Expected label, got {label[0]}")
-            self.logger.debug(f"Pairing label {label[1]} with instruction")
-            # Return both as a list so program() can process them together
-            return [label, instruction]
-        else:
-            raise ValueError(f"Unexpected statement format: {items}")
+
+        # If the item is a label definition
+        if isinstance(items[0], tuple) and items[0][0] == "label":
+            label_name = items[0][1]
+            if label_name in self.labels:
+                # Check if it's a redefinition at the same address
+                if self.labels[label_name] == self.current_address:
+                    return InstructionMetadata(
+                        addr=self.current_address,
+                        code=None,
+                        source=f": {label_name}",
+                        filename=self.state.current_file,
+                        line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                    )
+                else:
+                    raise ValueError(
+                        f"Label {label_name} already defined at 0x{self.labels[label_name]:04x}"
+                    )
+            else:
+                self.labels[label_name] = self.current_address
+                return InstructionMetadata(
+                    addr=self.current_address,
+                    code=None,
+                    source=f": {label_name}",
+                    filename=self.state.current_file,
+                    line=self.state.source_lines[self.state.source_lines.index(items[0][1]) - 1] if self.state.source_lines else "",
+                )
+        # Handle other statement types
+        return items[0]
 
     def jump_op(self, items: List[Token]) -> InstructionMetadata:
-        """Handle jump operations with their labels."""
-        token = items[0]  # JMP token
-        op = str(token)
+        """
+        Handle jump operations with their labels.
         
-        # Get the label name from labelref
-        label_ref = items[1]  # This is the result from labelref method
-        label_name = str(label_ref)  # This is the label name without the tick
+        Grammar rule: jump_op: (JMP | ZJMP | CALL) labelref
+        
+        Args:
+            items: List containing [jump operation token, label token]
+            
+        Returns:
+            InstructionMetadata: Metadata for the jump instruction
+            
+        Raises:
+            ValueError: If items is invalid or operation is not recognized
+        """
+        if not items or len(items) != 2:
+            raise ValueError(f"Expected [JMP/ZJMP/CALL, IDENT token], got {len(items) if items else 0} items")
+            
+        op_token = items[0]  # JMP/ZJMP/CALL token
+        label_token = items[1]  # IDENT token from labelref
+        
+        if op_token.type not in ["JMP", "ZJMP", "CALL"]:
+            raise ValueError(f"Expected jump operation token, got {op_token.type}")
+            
+        op = str(op_token)
+        label_name = str(label_token)  # Extract the label name from the token
         
         # Always add a tick to the formatted instruction text for consistency
         instr_text = f"{op} '{label_name}"
@@ -281,7 +426,7 @@ class J1Assembler(Transformer):
         return InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
             value=JUMP_OPS[op],  # Base jump opcode
-            token=token,
+            token=op_token,
             filename=self.state.current_file,
             source_lines=self.state.source_lines,
             label_name=label_name,
@@ -330,11 +475,23 @@ class J1Assembler(Transformer):
         raise ValueError(f"Unexpected instruction format: {type(item)}")
 
     def modifier(self, items: List[Token]) -> Modifier:
-        """Convert modifiers into their machine code representation with type."""
+        """
+        Convert modifiers into their machine code representation.
+        
+        Grammar rule: modifier: stack_effect | stack_delta
+        
+        Args:
+            items: List containing a single token (stack effect or stack delta)
+            
+        Returns:
+            Modifier with machine code value and text
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for modifier, got {len(items) if items else 0}")
+            
         token = items[0]
         mod = str(token)
-        self.logger.debug(f"\nModifier: processing '{mod}'")
-
+        
         if mod in STACK_EFFECTS:
             value = STACK_EFFECTS[mod]
         elif mod in D_EFFECTS:
@@ -346,52 +503,56 @@ class J1Assembler(Transformer):
                 f"{self.state.current_file}:{token.line}:{token.column}: "
                 f"Unknown modifier: {mod}"
             )
-
-        self.logger.debug(f"Modifier result: value={value:04x}, text={mod}")
+        
         return Modifier(value=value, text=mod, token=token)
 
-    def modifier_list(self, items: List[Union[Modifier, Token]]) -> ModifierList:
-        """Combines all modifiers into a single ModifierList."""
-        self.logger.debug(f"\nModifier list items: {items}")
-
+    def modifier_list(self, items: List[Modifier]) -> ModifierList:
+        """
+        Combines all modifiers into a single ModifierList.
+        
+        Grammar rule: modifier_list: modifier (_COMMA modifier)*
+        
+        Note: Using _COMMA means comma tokens are excluded from items.
+        
+        Args:
+            items: List of Modifier objects
+            
+        Returns:
+            ModifierList containing combined value and text representation
+        """
         result_value = 0
         texts = []
         tokens = []
-
+        
         for item in items:
-            if isinstance(item, Token) and item.type == "COMMA":
-                continue
-            elif isinstance(item, Modifier):
-                result_value |= item.value
-                texts.append(item.text)
-                tokens.append(item.token)
-            else:
-                token = item if isinstance(item, Token) else items[0]
-                raise ValueError(
-                    f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Expected modifier, got {item}"
-                )
-
+            if not isinstance(item, Modifier):
+                raise ValueError(f"Expected Modifier, got {type(item)}")
+                
+            result_value |= item.value
+            texts.append(item.text)
+            tokens.append(item.token)
+        
         return ModifierList(value=result_value, text=",".join(texts), tokens=tokens)
 
-    def modifiers(self, items: List[Union[Token, ModifierList]]) -> ModifierList:
-        """Process modifiers within square brackets."""
-        self.logger.debug(f"\nModifiers: processing items: {items}")
 
-        # Skip brackets
-        modifier_items = items[1:-1]  # Skip '[' and ']'
-
-        # We should receive a single ModifierList from modifier_list()
-        if len(modifier_items) != 1 or not isinstance(modifier_items[0], ModifierList):
-            raise ValueError(f"Expected single ModifierList, got {modifier_items}")
-
-        modifier_list = modifier_items[0]
-        self.logger.debug(
-            f"Modifiers result: value={modifier_list.value:04x}, text=[{modifier_list.text}]"
-        )
-
-        return modifier_list
-
+    def modifiers(self, items: List[ModifierList]) -> ModifierList:
+        """
+        Process modifiers within square brackets.
+        
+        Grammar rule: modifiers: _LBRACKET modifier_list _RBRACKET
+        
+        Note: Using _LBRACKET and _RBRACKET means bracket tokens are excluded from items.
+        
+        Args:
+            items: List containing a single ModifierList 
+            
+        Returns:
+            The ModifierList object
+        """
+        if not items or len(items) != 1 or not isinstance(items[0], ModifierList):
+            raise ValueError(f"Expected single ModifierList, got {items}")
+        
+        return items[0]
 
     def labelref(self, items: List[Token]) -> Token:
         """
@@ -456,12 +617,23 @@ class J1Assembler(Transformer):
         return metadata
 
     def label(self, items: List[Token]) -> InstructionMetadata:
-        """Convert label rule into InstructionMetadata."""
+        """
+        Convert label rule into InstructionMetadata.
+        
+        Since we use _COLON in the grammar (with underscore to ignore it),
+        this transformer will only receive the IDENT token.
+        
+        Args:
+            items: List containing a single IDENT token
+            
+        Returns:
+            InstructionMetadata for the label
+        """
         self.logger.debug(f"\nLabel items: {items}")
 
-        # Forth-style subroutine definition: COLON IDENT
-        if len(items) == 2 and items[0].type == "COLON" and items[1].type == "IDENT":
-            token = items[1]  # This is the IDENT token
+        # With _COLON in grammar, we now only get the IDENT token
+        if len(items) == 1 and items[0].type == "IDENT":
+            token = items[0]  # The IDENT token
             label_name = str(token)
             instr_text = f":{label_name}"
         else:
@@ -481,148 +653,119 @@ class J1Assembler(Transformer):
             word_addr=addr,
         )
 
-    def stack_number(self, items: List[Token]) -> InstructionMetadata:
-        """Convert stack number tokens (with # prefix) to their machine code representation."""
+    def raw_number(self, items: List[Token]) -> InstructionMetadata:
+        """
+        Convert a raw number token into its machine code representation.
+
+        Grammar rule: raw_number: RAW_HEX | RAW_DECIMAL | RAW_CHAR
+        
+        Args:
+            items: List containing a single token (RAW_HEX, RAW_DECIMAL, or RAW_CHAR)
+            
+        Returns:
+            InstructionMetadata: Metadata for a literal instruction that pushes the value onto stack
+            
+        Raises:
+            ValueError: If the number is out of range or token type is unsupported
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for raw_number, got {len(items) if items else 0}")
+            
         token = items[0]
-        if token.type == "STACK_HEX":
+        token_str = str(token)
+        
+        # Parse the value based on token type
+        if token.type == "RAW_HEX":
             # Remove the $ prefix to get the raw hex number
-            value = int(str(token)[1:], 16)
+            value = int(token_str[1:], 16)
             if value > 0x7FFF:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Hex number {value} out of range (0 to $7FFF)"
+                    f"Hex number ${value:x} out of range (0 to $7FFF for literals)"
                 )
-            machine_code = value | 0x8000
-            
-            # Create metadata with safe source line handling
-            try:
-                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
-            except IndexError:
-                source_line = ""
-                
-            return InstructionMetadata(
-                type=InstructionType.BYTE_CODE,
-                value=machine_code,
-                token=token,
-                filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
-                source_line=source_line,
-                instr_text=str(token),  # Use token string directly
-                num_value=value,
-                word_addr=self.addr_space.get_word_address(),
-            )
-        elif token.type == "STACK_DECIMAL":
-            # No # prefix
-            value = int(str(token), 10)
+        elif token.type == "RAW_DECIMAL":
+            # Parse the decimal number directly
+            value = int(token_str, 10)
             if value < 0:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
                     f"Negative numbers must be constructed manually"
                 )
-                # TODO: Generate instructions for negative number
-                # abs_value = abs(value)
-                # return [
-                #    ("byte_code", (0x8000 | abs_value, token)),  # Push absolute value
-                #    ("byte_code", (24577, token)),               # T 1-
-                #    ("byte_code", (24584, token)),               # INVERT
-                # ]
-            machine_code = 0x8000 | value
-
-            # Create metadata with safe source line handling
-            try:
-                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
-            except IndexError:
-                source_line = ""
-                
-            return InstructionMetadata(
-                type=InstructionType.BYTE_CODE,
-                value=machine_code,
-                token=token,
-                filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
-                source_line=source_line,
-                instr_text=str(token),  # Use token string directly
-                num_value=value,
-                word_addr=self.addr_space.get_word_address(),
-            )
-        elif token.type == "STACK_CHAR":
-            # Expecting format: '<char>' i.e. exactly 3 characters
-            token_str = str(token)
-            if len(token_str) != 3:
-                raise ValueError(f"Invalid stack character literal: {token_str}")
-            value = ord(token_str[1])
-            machine_code = value | 0x8000
-            return InstructionMetadata(
-                type=InstructionType.BYTE_CODE,
-                value=machine_code,
-                token=token,
-                filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
-                source_line=self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else "",
-                instr_text=str(token),
-                num_value=value,
-                word_addr=self.addr_space.get_word_address(),
-            )
-        else:
-            raise ValueError(f"Unknown token type: {token.type}")
-
-    def raw_number(self, items: List[Token]) -> InstructionMetadata:
-        """Convert raw number tokens (without # prefix) to their numerical value."""
-        token = items[0]
-        if token.type == "RAW_HEX":
-            # Remove the $ prefix to get the raw hex number
-            value = int(str(token)[1:], 16)
-            if value > 0xFFFF:
+            if value > 0x7FFF:
                 raise ValueError(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Hex number {value} out of range (0 to $FFFF)"
-                )
-        elif token.type == "RAW_DECIMAL":
-            # Parse the decimal number directly
-            value = int(str(token), 10)
-            if value < -32768 or value > 65535:
-                raise ValueError(
-                    f"{self.state.current_file}:{token.line}:{token.column}: "
-                    f"Decimal number {value} out of range (-32768 to 65535)"
+                    f"Decimal number {value} out of range (0 to 32767 for literals)"
                 )
         elif token.type == "RAW_CHAR":
             # Expecting format: '<char>' i.e. exactly 3 characters
-            token_str = str(token)
             if len(token_str) != 3:
-                raise ValueError(f"Invalid raw character literal: {token_str}")
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Invalid character literal: {token_str}"
+                )
             value = ord(token_str[1])
         else:
-            raise ValueError(f"Unknown token type: {token.type}")
+            raise ValueError(
+                f"{self.state.current_file}:{token.line}:{token.column}: "
+                f"Unsupported token type: {token.type}"
+            )
             
-        # Raw numbers don't become instructions, they're just values
-        # Create metadata with safe source line handling
-        try:
-            source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
-        except IndexError:
-            source_line = ""
+        # Set high bit (0x8000) to make this a literal instruction that pushes value onto stack
+        machine_code = value | 0x8000
+        
+        # Safely get source line if available
+        source_line = ""
+        if hasattr(token, 'line') and token.line > 0:
+            try:
+                if token.line <= len(self.state.source_lines):
+                    source_line = self.state.source_lines[token.line - 1]
+            except (IndexError, TypeError):
+                pass
             
         return InstructionMetadata(
-            type=InstructionType.NUMBER,  # This is a raw number value, not an instruction
-            value=value & 0xFFFF,  # Ensure 16-bit value
+            type=InstructionType.BYTE_CODE,
+            value=machine_code,
             token=token,
             filename=self.state.current_file,
             line=token.line if hasattr(token, 'line') else 0,
             column=token.column if hasattr(token, 'column') else 0,
             source_line=source_line,
-            instr_text=str(token),  # Use token string directly
+            instr_text=token_str,
             num_value=value,
+            word_addr=self.addr_space.get_word_address(),
         )
 
     def basic_alu(self, items: List[Token]) -> Token:
-        """Convert basic_alu rule into its token."""
-        # items[0] is the Token for the ALU operation
+        """
+        Convert basic_alu rule into its token.
+        
+        Grammar rule: basic_alu: T | N | THIRD_OS | T_PLUS_N | ...
+        
+        Args:
+            items: List containing a single token for an ALU operation
+            
+        Returns:
+            The ALU operation token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for basic_alu, got {len(items) if items else 0}")
         return items[0]
 
     def alu_op(self, items: List[Union[Token, ModifierList]]) -> InstructionMetadata:
-        """Convert ALU operations into their machine code representation."""
+        """
+        Convert ALU operations into their machine code representation.
+        
+        Grammar rule: alu_op: basic_alu modifiers?
+        
+        Args:
+            items: List containing basic_alu token and optional ModifierList
+            
+        Returns:
+            InstructionMetadata for the ALU operation
+        """
+        if not items or len(items) > 2:
+            raise ValueError(f"Expected 1-2 items for alu_op, got {len(items) if items else 0}")
+        
         token = items[0]  # This is the basic ALU operation token
         base_op = str(token)
         modifier_value = 0
@@ -653,20 +796,68 @@ class J1Assembler(Transformer):
             instr_text=instr_text,
         )
 
-    def data_stack_delta(self, items):
-        """Convert data stack delta rule into its token."""
+    def data_stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert data stack delta rule into its token.
+        
+        Grammar rule: data_stack_delta: D_PLUS_0 | D_PLUS_1 | D_MINUS_1 | D_MINUS_2
+        
+        Args:
+            items: List containing a single data stack delta token
+            
+        Returns:
+            The data stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for data_stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def return_stack_delta(self, items):
-        """Convert return stack delta rule into its token."""
+    def return_stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert return stack delta rule into its token.
+        
+        Grammar rule: return_stack_delta: R_PLUS_0 | R_PLUS_1 | R_MINUS_1 | R_MINUS_2
+        
+        Args:
+            items: List containing a single return stack delta token
+            
+        Returns:
+            The return stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for return_stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def stack_delta(self, items):
-        """Convert stack delta rule into its token."""
+    def stack_delta(self, items: List[Token]) -> Token:
+        """
+        Convert stack delta rule into its token.
+        
+        Grammar rule: stack_delta: data_stack_delta | return_stack_delta
+        
+        Args:
+            items: List containing a single stack delta token
+            
+        Returns:
+            The stack delta token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for stack_delta, got {len(items) if items else 0}")
         return items[0]
 
-    def stack_effect(self, items):
-        """Convert stack effect rule into its token."""
+    def stack_effect(self, items: List[Token]) -> Token:
+        """
+        Convert stack effect rule into its token.
+        
+        Grammar rule: stack_effect: T_TO_N | T_TO_R | N_TO_MEM | N_TO_IO | IORD | DINT | EINT | RET
+        
+        Args:
+            items: List containing a single stack effect token
+            
+        Returns:
+            The stack effect token
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for stack_effect, got {len(items) if items else 0}")
         return items[0]
 
     def generate_listing_line(
@@ -799,35 +990,59 @@ class J1Assembler(Transformer):
                 print(f"{code:04x}", file=f)
 
     def macro_def(self, items):
-        """Handle macro definitions by delegating to macro processor."""
+        """
+        Handle macro definitions by extracting name, stack effect, and body.
+        
+        Args:
+            items: List containing [MACRO token, IDENT token, optional STACK_COMMENT, macro_body, ENDMACRO token]
+            
+        Returns:
+            None
+        """
         self.logger.debug(f"Processing macro definition: {items}")
+        
+        # Extract components
         macro_token = items[0]  # MACRO token
         name_token = items[1]  # IDENT token
         macro_name = str(name_token)
-
-        # Process the macro definition
-        self.macro_processor.process_macro_def(items)
-
-        # Create instruction text for the macro definition
-        # Include stack effect comment if present
-        stack_effect = ""
-        for item in items:
-            if isinstance(item, Token) and item.type == "STACK_COMMENT":
-                stack_effect = f" {str(item)}"
-                break
-
-        instr_text = f"macro: {macro_name}{stack_effect}"
-
-        # Return InstructionMetadata instead of tuple
-        return InstructionMetadata.from_token(
-            inst_type=InstructionType.MACRO_DEF,
-            value=0,  # No machine code value needed for macro definition
-            token=name_token,
-            filename=self.state.current_file,
-            source_lines=self.state.source_lines,
-            instr_text=instr_text,  # Add formatted instruction text
-            macro_name=macro_name,
+        
+        # Find body and stack effect (if present)
+        stack_effect = None
+        body = None
+        
+        # Handle different item counts based on whether stack_comment is present
+        if len(items) == 4:
+            # No stack comment present: [MACRO, IDENT, body, ENDMACRO]
+            body = items[2]
+        elif len(items) == 5:
+            # Stack comment present: [MACRO, IDENT, STACK_COMMENT, body, ENDMACRO]
+            stack_effect = str(items[2])
+            body = items[3]
+        
+        # Define the macro directly
+        self.macro_processor.define_macro(
+            macro_name,
+            body,  # This is now the result of the macro_body transformer
+            stack_effect,
+            name_token
         )
+        
+        # Create instruction text for the macro definition
+        stack_effect_text = f" {stack_effect}" if stack_effect else ""
+        instr_text = f"macro: {macro_name}{stack_effect_text}"
+        
+        # Return InstructionMetadata for listing purposes
+        # return InstructionMetadata.from_token(
+        #     inst_type=InstructionType.MACRO_DEF,
+        #     value=0,  # No machine code value needed for macro definition
+        #     token=name_token,
+        #     filename=self.state.current_file,
+        #     source_lines=self.state.source_lines,
+        #     instr_text=instr_text,
+        #     macro_name=macro_name,
+        # )
+
+        return None
 
     def call_expr(self, items: List[Token]) -> List[InstructionMetadata]:
         """Handle word calls, checking for loop index words (i, j, k)."""
@@ -886,7 +1101,23 @@ class J1Assembler(Transformer):
             )
 
     def include_stmt(self, items: List[Token]) -> List[InstructionMetadata]:
-        """Process an include statement and return an empty list."""
+        """Process an include statement by parsing and transforming the included file.
+        
+        Grammar rule: include_stmt: INCLUDE STRING
+        
+        Args:
+            items: List containing [INCLUDE token, STRING token] where STRING token
+                  contains the filename in quotes
+        
+        Returns:
+            List[InstructionMetadata]: Always returns an empty list since include statements
+            don't generate instructions directly. Instead, the included file's contents
+            are processed and added to the assembler's state during execution.
+            
+        Raises:
+            ValueError: If the include file cannot be found or processed
+            FileNotFoundError: If the include file doesn't exist
+        """
         token = items[1]
         filename = str(token)[1:-1]  # Remove quotes
 
@@ -927,8 +1158,13 @@ class J1Assembler(Transformer):
             self.state.current_file = str(resolved_path)  # Use resolved path as current file
             self.state.source_lines = included_lines
 
-            # Parse and process the included file
+            # Time the parse operation
+            # start_time = time.time()
             tree = self.parser.parse(included_source)
+            # end_time = time.time()
+            # parse_time = end_time - start_time
+            # self.logger.debug(f"Parse time for {resolved_path}: {parse_time:.4f} seconds")
+
             self.transform(tree)
 
             # Restore previous state
@@ -965,19 +1201,19 @@ class J1Assembler(Transformer):
         # Create metadata with safe source line handling
         try:
             source_line = self.state.source_lines[number.token.line - 1] if number.token.line > 0 and number.token.line <= len(self.state.source_lines) else ""
-        except IndexError:
+        except (IndexError, AttributeError):
             source_line = ""
             
         # Create metadata for listing
         return InstructionMetadata(
             type=InstructionType.DIRECTIVE,
             value=address,
-            token=number.token,
+            token=number.token if hasattr(number, 'token') else None,
             filename=self.state.current_file,
-            line=number.token.line if hasattr(number.token, 'line') else 0,
-            column=number.token.column if hasattr(number.token, 'column') else 0,
+            line=number.token.line if hasattr(number, 'token') and hasattr(number.token, 'line') else 0,
+            column=number.token.column if hasattr(number, 'token') and hasattr(number.token, 'column') else 0,
             source_line=source_line,
-            instr_text=f"ORG {number.instr_text}",
+            instr_text=f"ORG {number.instr_text}" if hasattr(number, 'instr_text') else f"ORG ${address:04x}",
         )
 
     def _generate_unique_label(self, base: str) -> str:
@@ -1742,25 +1978,47 @@ class J1Assembler(Transformer):
         # 4. Loop end instructions
         return setup_instrs + [do_label_instr] + block_instructions + loop_end_instrs
 
-    def memory_init_statement(self, items):
-        """Process memory initialization statements."""
-        # items[0] should be a raw number token (hex or decimal)
-        # items[1] should be COMMA token
-        token = items[0]
-        instr_text = f"{token},"
+    def memory_init_statement(self, items: List[Token]) -> InstructionMetadata:
+        """
+        Process memory initialization statements.
         
-        # Handle raw hex literal
-        if token.type == "STACK_HEX":
-            value = int(str(token)[1:], 16)
-        elif token.type == "STACK_DECIMAL":
-            value = int(str(token), 10)
-        elif token.type == "STACK_CHAR":
-            token_str = str(token)
+        Grammar rule: memory_init_statement: (RAW_HEX | RAW_DECIMAL | RAW_CHAR) _COMMA
+        
+        Note: Since _COMMA is used, only the number token is included in items.
+        
+        Args:
+            items: List containing a single token (RAW_HEX, RAW_DECIMAL, or RAW_CHAR)
+            
+        Returns:
+            InstructionMetadata for the memory initialization value
+        """
+        if not items or len(items) != 1:
+            raise ValueError(f"Expected single token for memory_init_statement, got {len(items) if items else 0}")
+            
+        token = items[0]
+        token_str = str(token)
+        instr_text = f"{token_str},"
+        
+        # Parse the value based on token type
+        if token.type == "RAW_HEX":
+            # Remove the $ prefix to get the raw hex number
+            value = int(token_str[1:], 16)
+        elif token.type == "RAW_DECIMAL":
+            # Parse the decimal number directly
+            value = int(token_str, 10)
+        elif token.type == "RAW_CHAR":
+            # Expecting format: '<char>' i.e. exactly 3 characters
             if len(token_str) != 3:
-                raise ValueError(f"Invalid raw character literal in memory initialization: {token_str}")
+                raise ValueError(
+                    f"{self.state.current_file}:{token.line}:{token.column}: "
+                    f"Invalid character literal in memory initialization: {token_str}"
+                )
             value = ord(token_str[1])
         else:
-            raise ValueError(f"Unexpected token type: {token.type}")
+            raise ValueError(
+                f"{self.state.current_file}:{token.line}:{token.column}: "
+                f"Unsupported token type: {token.type}"
+            )
         
         # Create metadata and assign address
         addr = self.addr_space.advance()
@@ -1771,7 +2029,7 @@ class J1Assembler(Transformer):
             filename=self.state.current_file,
             line=token.line,
             column=token.column,
-            source_line=self.state.source_lines[token.line - 1],
+            source_line=self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else "",
             instr_text=instr_text,
             word_addr=addr,
             num_value=value,
@@ -1784,6 +2042,61 @@ class J1Assembler(Transformer):
         # Return the metadata
         return metadata
         
+    def arch_flag_directive(self, items):
+        """Handle architecture flag directives, delegating to the directives class"""
+        return self.directives.arch_flag_directive(items)
+
+    def define_directive(self, items):
+        """Handle constant definition directives, delegating to the directives class"""
+        return self.directives.define_directive(items)
+
+    def macro_body(self, items: List[Union[InstructionMetadata, List[InstructionMetadata]]]) -> List[InstructionMetadata]:
+        """
+        Processes a macro body and returns a flattened list of instructions.
+        
+        Args:
+            items: List of instructions or lists of instructions
+            
+        Returns:
+            A flattened list of InstructionMetadata objects
+        """
+        self.logger.debug(f"Processing macro body with {len(items)} items")
+        
+        # Flatten and validate instructions
+        flattened_instructions = []
+        for instr in items:
+            if isinstance(instr, list):
+                if len(instr) == 0:
+                    continue
+                elif len(instr) == 1:
+                    # Undo the address advance if this comes from an instruction
+                    self.addr_space.undo_advance()
+                    # Mark as not having a word address yet (will be assigned during expansion)
+                    instr[0].word_addr = -1
+                    flattened_instructions.append(instr[0])
+                else:
+                    # Multiple instructions - add all with addresses reset
+                    for sub_instr in instr:
+                        self.addr_space.undo_advance()
+                        sub_instr.word_addr = -1
+                        flattened_instructions.append(sub_instr)
+            elif isinstance(instr, InstructionMetadata):
+                # We are just defining a macro, so undo the advance of the address space
+                self.addr_space.undo_advance()
+                # Mark as not having a word address yet
+                instr.word_addr = -1
+                flattened_instructions.append(instr)
+            else:
+                token = getattr(instr, 'token', None)
+                line = token.line if token else "unknown"
+                column = token.column if token else "unknown"
+                raise ValueError(
+                    f"{self.state.current_file}:{line}:{column}: "
+                    f"Expected InstructionMetadata or list in macro body, got {type(instr)}"
+                )
+        
+        return flattened_instructions
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
@@ -1880,6 +2193,7 @@ def main(input, output, debug, symbols, listing, include, no_stdlib):
 
             logger.debug(traceback.format_exc())
         raise click.Abort()
+
 
 
 
