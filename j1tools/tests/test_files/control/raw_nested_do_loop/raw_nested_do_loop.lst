@@ -2,18 +2,18 @@ BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
 0000     0000     0001            2:1      JMP 'start                      //  
 0002     0001     ----            6:3    :start                            //  
-0002     0001     8003            8:5      #3                              //  Push limit (3)
-0004     0002     8000            9:5      #0                              //  Push initial index (0)
+0002     0001     8003            8:5      3                               //  Push limit (3)
+0004     0002     8000            9:5      0                               //  Push initial index (0)
 0006     0003     6127           10:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0008     0004     6127           11:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 000a     0005     ----           13:3    :k_loop                           //  
-000a     0005     8002           15:5      #2                              //  Push limit (2)
-000c     0006     8000           16:5      #0                              //  Push initial index (0)
+000a     0005     8002           15:5      2                               //  Push limit (2)
+000c     0006     8000           16:5      0                               //  Push initial index (0)
 000e     0007     6127           17:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0010     0008     6127           18:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0012     0009     ----           20:3    :j_loop                           //  
-0012     0009     8004           22:5      #4                              //  Push limit (4)
-0014     000a     8000           23:5      #0                              //  Push initial index (0)
+0012     0009     8004           22:5      4                               //  Push limit (4)
+0014     000a     8000           23:5      0                               //  Push initial index (0)
 0016     000b     6127           24:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 0018     000c     6127           25:5      N[T->R,r+1,d-1]                 //  (macro: >r)
 001a     000d     ----           27:3    :i_loop                           //  

@@ -2,7 +2,7 @@
 include "core/j1_base_macros.asm"
 
 : start
-    #5 #3        // Stack: 5 3
+    5 3        // Stack: 5 3
     dup>r        // Stack: 5 3, R: 3
     r>           // Stack: 5 3 3
     drop         // Stack: 5 3

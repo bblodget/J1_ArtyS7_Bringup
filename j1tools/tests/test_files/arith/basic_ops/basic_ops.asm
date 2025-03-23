@@ -1,7 +1,7 @@
 : first
-    #5
+    5
 : second
-    #$2A
+    $2A
     T
     T[d+0]
     T[T->N,d-1]

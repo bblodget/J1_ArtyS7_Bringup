@@ -11,30 +11,30 @@ JMP 'start
 
 : start
     // Test pushing chars onto the stack
-    #'A' drop
-    #'B' drop
-    #'C' drop
+    'A' drop
+    'B' drop
+    'C' drop
 
     // Read first value from table
     'my_table @            // Get value at my_table[0] = 10
 
     // Read the second valued from the table
-    'my_table #2 + @       // Get value at my_table[1] = 20
+    'my_table 2 + @       // Get value at my_table[1] = 20
 
     // Read the third value from the table
-    'my_table #4 + @       // Get value at my_table[2] = 30
+    'my_table 4 + @       // Get value at my_table[2] = 30
 
     // Read the fourth value from the table
-    'my_table #6 + @       // Get value at my_table[3] = 40
+    'my_table 6 + @       // Get value at my_table[3] = 40
 
     // Read the fifth value from the table
-    'my_table #8 + @       // Get value at my_table[4] = 50
+    'my_table 8 + @       // Get value at my_table[4] = 50
 
     // Modify the second value in the table
-    #$99 'my_table #2 + !   // Store $99 at my_table[1]
+    $99 'my_table 2 + !   // Store $99 at my_table[1]
 
     // Read the modified value from the table
-    'my_table #2 + @       // Get value at my_table[1] = $99
+    'my_table 2 + @       // Get value at my_table[1] = $99
     
     // Jump to end
     JMP 'end

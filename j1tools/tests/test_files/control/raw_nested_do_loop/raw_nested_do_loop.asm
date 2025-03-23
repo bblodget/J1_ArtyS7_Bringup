@@ -5,22 +5,22 @@ include "platform/j1_16kb_dualport_macros.asm"
 
 : start
     // Outer loop (k): 0 to 2
-    #3              // Push limit (3)
-    #0              // Push initial index (0)
+    3              // Push limit (3)
+    0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (3) to R stack
 
 : k_loop
     // Middle loop (j): 0 to 1
-    #2              // Push limit (2)
-    #0              // Push initial index (0)
+    2              // Push limit (2)
+    0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (2) to R stack
 
 : j_loop
     // Inner loop (i): 0 to 3
-    #4              // Push limit (4)
-    #0              // Push initial index (0)
+    4              // Push limit (4)
+    0              // Push initial index (0)
     >r              // Save index (0) to R stack
     >r              // Save limit (4) to R stack
 

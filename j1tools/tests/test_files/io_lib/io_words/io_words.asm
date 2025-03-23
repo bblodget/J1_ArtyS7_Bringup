@@ -7,7 +7,7 @@ include "io/terminal_io.asm"
 : start
     key        // Read the character
     emit       // Echo it back
-    #$0A emit  // Send newline (ASCII 0x0A)
+    $0A emit  // Send newline (ASCII 0x0A)
 
 : wait_forever
      noop
