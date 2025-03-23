@@ -276,3 +276,9 @@
 - Focus on implementing architecture flag directives next
 - Consider adding more examples for interrupt handling
 - Document memory fetch patterns for different architectures
+
+## Next
+ - [ ] Make sure we have all the functionality from refactor/code_cleanup branch
+ - [ ] Need profile stuff
+ - [ ] Need all the tests
+ - [ ] Need to clean up the docstrings in asm.py
