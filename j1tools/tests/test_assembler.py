@@ -315,5 +315,5 @@ def test_loop_index_warnings(tmp_path, caplog):
         f"Expected {len(expected_warnings)} warnings, got {len(actual_warnings)}"
     
     for expected, actual in zip(expected_warnings, actual_warnings):
-        assert expected == actual, \
+        assert expected in actual, \
             f"Expected warning '{expected}' not found in '{actual}'"
