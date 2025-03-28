@@ -44,7 +44,9 @@ REPEAT.2: "REPEAT"
 DO.2: "DO"
 LOOP.2: "LOOP"
 PLUS_LOOP.2: "+LOOP"
-LEAVE.2: "LEAVE"
+
+// Note: LEAVE is not implemented
+// LEAVE.2: "LEAVE"
 
 // Add to directive tokens
 ORG.2: "ORG"
