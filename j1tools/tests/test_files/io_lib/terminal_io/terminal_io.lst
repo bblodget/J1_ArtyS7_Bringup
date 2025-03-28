@@ -1,0 +1,49 @@
+Address  Machine Code  #:col  Source
+--------------------------------------------------
+0000     0021            9:1      JMP start                       //  
+0001     ----           25:3    uartstat:                         //  
+0001     a000           26:5      #$2000                          //  (macro: UART_STATUS_REG)
+0002     6d50           26:21     io[T][IORD]                     //  (macro: io@)
+0003     6300           26:25     T&N                             //  (macro: overand)
+0004     6703           26:33     N==T[d-1]                       //  (macro: =)
+0005     608c           26:35     T[RET,r-1]                      //  (macro: exit)
+0006     ----           30:3    emit?:                            //  
+0006     6000           31:5      T                               //  (macro: pause)
+0007     8001           32:5      #1                              //  Push transmit ready mask
+0008     a000           33:5      #$2000                          //  (macro: UART_STATUS_REG)
+0009     6d50           33:21     io[T][IORD]                     //  (macro: io@)
+000a     6300           34:5      T&N                             //  (macro: overand)
+000b     6703           35:5      N==T[d-1]                       //  (macro: =)
+000c     608c           36:5      T[RET,r-1]                      //  (macro: exit)
+000d     ----           40:3    key?:                             //  
+000d     6000           41:5      T                               //  (macro: pause)
+000e     8002           42:5      #2                              //  Push receive ready mask
+000f     4001           43:5      CALL uartstat                   //  Check UART status
+0010     608c           44:5      T[RET,r-1]                      //  (macro: exit)
+0011     ----           48:3    emit:                             //  
+0011     4006           49:5      CALL emit?                      //  Check if ready to transmit
+0012     2011           50:5      ZJMP emit                       //  If not ready, keep waiting
+0013     9000           51:5      #$1000                          //  (macro: UART_DATA_REG)
+0014     6043           51:19     T[N->io[T],d-1]                 //  (macro: io!)
+0015     608c           52:5      T[RET,r-1]                      //  (macro: exit)
+0016     ----           56:3    key:                              //  
+0016     400d           57:5      CALL key?                       //  Check if character available
+0017     2016           58:5      ZJMP key                        //  If no character, keep waiting
+0018     9000           59:5      #$1000                          //  (macro: UART_DATA_REG)
+0019     6d50           59:19     io[T][IORD]                     //  (macro: io@)
+001a     608c           60:5      T[RET,r-1]                      //  (macro: exit)
+001b     ----           64:3    2emit:                            //  
+001b     6110           65:5      N[T->N]                         //  (macro: swap)
+001c     6127           65:10     N[T->R,r+1,d-1]                 //  (macro: >r)
+001d     4011           66:5      CALL emit                       //  Send first char
+001e     6b1d           67:5      rT[T->N,r-1,d+1]                //  (macro: r>)
+001f     4011           67:8      CALL emit                       //  Send second char
+0020     608c           68:5      T[RET,r-1]                      //  (macro: exit)
+0021     ----            4:1    start:                            //  
+0021     4016            5:5      CALL key                        //  Read the character
+0022     4011            6:5      CALL emit                       //  Echo it back
+0023     800a            7:5      #$0A                            //  Send newline (ASCII 0x0A)
+0024     4011            7:10     CALL emit                       //  Send newline (ASCII 0x0A)
+0025     ----           26:1    wait_forever:                     //  
+0025     6000           27:6      T                               //  (macro: noop)
+0026     0025           28:6      JMP wait_forever                //  
