@@ -1,5 +1,14 @@
 # Development Log
 
+## 2025-03-28
+
+- Cleand up warn_ijk test so works on Windows and Linux and deals with absolute paths
+- Removed the LEAVE token from the grammar since not using (yet?)
+- Copied over the test files from refactore/code_cleanup, to start working on these features.
+    - test_arch_flags.py, 
+    - test_define_directive.py, 
+    - test_integration.py
+
 ## 2025-03-10
 
 - Added support for character literals in the J1 assembler.
