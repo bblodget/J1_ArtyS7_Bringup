@@ -28,6 +28,7 @@ from .macro_processor import MacroProcessor
 from .config import AssemblerConfig
 from .address_space import AddressSpace
 from .control_structures import ControlStructures
+from .directives import Directives
 
 
 class J1Assembler(Transformer):
@@ -37,13 +38,13 @@ class J1Assembler(Transformer):
         self.current_address: int = 0
         self.base_address: int = 0  # Add this to track base address for includes
         self.debug: bool = debug
-        
+
         # Replace direct file/source tracking with AssemblerState
         self.state = AssemblerState(
             current_file="<unknown>",
             include_paths=[],
             include_stack=[],
-            source_lines=[]
+            source_lines=[],
         )
 
         # Dict to store metadata for instructions
@@ -62,7 +63,7 @@ class J1Assembler(Transformer):
             self.logger.setLevel(logging.DEBUG)
         else:
             self.logger.setLevel(logging.INFO)
-        
+
         # Initialize address space
         self.addr_space = AddressSpace()
 
@@ -89,10 +90,30 @@ class J1Assembler(Transformer):
 
         self.main_file: str = "<unknown>"  # Track the main file
 
-        self.current_section = '.code'
+        self.current_section = ".code"
 
         # Initialize control structures handler
         self.control_structures = ControlStructures(self.state, self.addr_space, debug)
+
+        # Directive data structures
+
+        # Architecture flags
+        self.arch_flags = {
+            "fetch_type": "quickstore",  # Default to quickstore
+            "alu_ops": "extended",  # Default to extended ALU
+        }
+
+        # Architecture constants - automatically defined based on flags
+        self.constants = {
+            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
+            "ARCH_ALU_OPS": 1,  # 0 = original, 1 = extended
+        }
+
+        # Instantiate Directives
+        self.directives = Directives(
+            self.state, self.arch_flags, self.constants, debug=debug
+        )
+        self.directives.set_assembler(self)
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
         """Parse source code with optional filename for error reporting."""
@@ -100,13 +121,13 @@ class J1Assembler(Transformer):
             self.main_file = filename
         self.state.current_file = filename  # Update state instead of direct attribute
         self.macro_processor.set_current_file(filename)
-        
+
         # Store source lines in state
         self.state.source_lines = [line.rstrip() for line in source.splitlines()]
-        
+
         # Add blank line to source before parsing
-        source = source + '\n'
-        
+        source = source + "\n"
+
         logging.getLogger("lark").setLevel(logging.DEBUG)
         tree = self.parser.parse(source)
 
@@ -127,7 +148,7 @@ class J1Assembler(Transformer):
         for stmt in statements:
             if isinstance(stmt, InstructionMetadata):
                 if stmt.type == InstructionType.DIRECTIVE:
-                    continue    # ORG already handled
+                    continue  # ORG already handled
                 if stmt.type == InstructionType.LABEL:
                     if stmt.word_addr == -1:
                         raise ValueError(
@@ -209,7 +230,7 @@ class J1Assembler(Transformer):
                         continue
                 target = self.labels[inst.label_name]
                 inst.value |= target  # Modify the instruction value in place
-            
+
             # Handle LABEL_REF instructions (standalone tick operator)
             elif inst.type == InstructionType.LABEL_REF:
                 if not inst.label_name:
@@ -232,7 +253,9 @@ class J1Assembler(Transformer):
                 # convert target from word address to byte address
                 target = target << 1
                 inst.value = 0x8000 | target  # Literal opcode with the label address
-                self.logger.debug(f"Resolved label reference '{inst.label_name}' to address {target:04x}")
+                self.logger.debug(
+                    f"Resolved label reference '{inst.label_name}' to address {target:04x}"
+                )
 
         self.is_assembled = True
 
@@ -244,7 +267,7 @@ class J1Assembler(Transformer):
         A statement can return:
         - A single instruction (InstructionMetadata)
         - A list of instructions (from subroutine definitions or label+instruction pairs)
-        
+
         Input items can be:
         - [instruction] -> returns single instruction
         - [label, instruction] -> returns [label, instruction] as list
@@ -270,11 +293,11 @@ class J1Assembler(Transformer):
         """Handle jump operations with their labels."""
         token = items[0]  # JMP token
         op = str(token)
-        
+
         # Get the label name from labelref
         label_ref = items[1]  # This is the result from labelref method
         label_name = str(label_ref)  # This is the label name without the tick
-        
+
         # Always add a tick to the formatted instruction text for consistency
         instr_text = f"{op} '{label_name}"
 
@@ -392,55 +415,58 @@ class J1Assembler(Transformer):
 
         return modifier_list
 
-
     def labelref(self, items: List[Token]) -> Token:
         """
         Convert a label reference to its identifier token.
-        
+
         Grammar rule: labelref: _TICK IDENT
-        
+
         Note: Since _TICK is used, only the IDENT token is included in items.
-        
+
         Args:
             items: List containing a single IDENT token
-            
+
         Returns:
             Token: The IDENT token for the label
         """
         if not items or len(items) != 1:
-            raise ValueError(f"Expected single IDENT token for labelref, got {len(items) if items else 0}")
-        
+            raise ValueError(
+                f"Expected single IDENT token for labelref, got {len(items) if items else 0}"
+            )
+
         if items[0].type != "IDENT":
             raise ValueError(f"Expected IDENT token, got {items[0].type}")
-        
+
         return items[0]  # Return the token itself, not just the string
 
     def address_of(self, items: List[Token]) -> InstructionMetadata:
         """
         Handle standalone tick operations that push label addresses onto the stack.
-        
+
         Grammar rule: address_of: _TICK IDENT
-        
+
         Note: Since _TICK is used, only the IDENT token is included in items.
-        
+
         Args:
             items: List containing a single IDENT token
-            
+
         Returns:
             InstructionMetadata: A placeholder instruction for a label reference
         """
         if not items or len(items) != 1:
-            raise ValueError(f"Expected single IDENT token for address_of, got {len(items) if items else 0}")
-            
+            raise ValueError(
+                f"Expected single IDENT token for address_of, got {len(items) if items else 0}"
+            )
+
         if items[0].type != "IDENT":
             raise ValueError(f"Expected IDENT token, got {items[0].type}")
-            
+
         token = items[0]  # This is the IDENT token
         label_name = str(token)  # Label name
-        
+
         # Format for instruction text representation (add back the tick for clarity)
         instr_text = f"'{label_name}"
-        
+
         # Create a placeholder instruction - the real address/value will be filled in during second pass
         # when all labels are known
         metadata = InstructionMetadata.from_token(
@@ -452,7 +478,7 @@ class J1Assembler(Transformer):
             instr_text=instr_text,
             label_name=label_name,
         )
-        
+
         return metadata
 
     def label(self, items: List[Token]) -> InstructionMetadata:
@@ -493,20 +519,24 @@ class J1Assembler(Transformer):
                     f"Hex number {value} out of range (0 to $7FFF)"
                 )
             machine_code = value | 0x8000
-            
+
             # Create metadata with safe source line handling
             try:
-                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+                source_line = (
+                    self.state.source_lines[token.line - 1]
+                    if token.line > 0 and token.line <= len(self.state.source_lines)
+                    else ""
+                )
             except IndexError:
                 source_line = ""
-                
+
             return InstructionMetadata(
                 type=InstructionType.BYTE_CODE,
                 value=machine_code,
                 token=token,
                 filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
+                line=token.line if hasattr(token, "line") else 0,
+                column=token.column if hasattr(token, "column") else 0,
                 source_line=source_line,
                 instr_text=str(token),  # Use token string directly
                 num_value=value,
@@ -531,17 +561,21 @@ class J1Assembler(Transformer):
 
             # Create metadata with safe source line handling
             try:
-                source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+                source_line = (
+                    self.state.source_lines[token.line - 1]
+                    if token.line > 0 and token.line <= len(self.state.source_lines)
+                    else ""
+                )
             except IndexError:
                 source_line = ""
-                
+
             return InstructionMetadata(
                 type=InstructionType.BYTE_CODE,
                 value=machine_code,
                 token=token,
                 filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
+                line=token.line if hasattr(token, "line") else 0,
+                column=token.column if hasattr(token, "column") else 0,
                 source_line=source_line,
                 instr_text=str(token),  # Use token string directly
                 num_value=value,
@@ -559,9 +593,13 @@ class J1Assembler(Transformer):
                 value=machine_code,
                 token=token,
                 filename=self.state.current_file,
-                line=token.line if hasattr(token, 'line') else 0,
-                column=token.column if hasattr(token, 'column') else 0,
-                source_line=self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else "",
+                line=token.line if hasattr(token, "line") else 0,
+                column=token.column if hasattr(token, "column") else 0,
+                source_line=(
+                    self.state.source_lines[token.line - 1]
+                    if token.line > 0 and token.line <= len(self.state.source_lines)
+                    else ""
+                ),
                 instr_text=str(token),
                 num_value=value,
                 word_addr=self.addr_space.get_word_address(),
@@ -596,21 +634,25 @@ class J1Assembler(Transformer):
             value = ord(token_str[1])
         else:
             raise ValueError(f"Unknown token type: {token.type}")
-            
+
         # Raw numbers don't become instructions, they're just values
         # Create metadata with safe source line handling
         try:
-            source_line = self.state.source_lines[token.line - 1] if token.line > 0 and token.line <= len(self.state.source_lines) else ""
+            source_line = (
+                self.state.source_lines[token.line - 1]
+                if token.line > 0 and token.line <= len(self.state.source_lines)
+                else ""
+            )
         except IndexError:
             source_line = ""
-            
+
         return InstructionMetadata(
             type=InstructionType.NUMBER,  # This is a raw number value, not an instruction
             value=value & 0xFFFF,  # Ensure 16-bit value
             token=token,
             filename=self.state.current_file,
-            line=token.line if hasattr(token, 'line') else 0,
-            column=token.column if hasattr(token, 'column') else 0,
+            line=token.line if hasattr(token, "line") else 0,
+            column=token.column if hasattr(token, "column") else 0,
             source_line=source_line,
             instr_text=str(token),  # Use token string directly
             num_value=value,
@@ -737,7 +779,7 @@ class J1Assembler(Transformer):
 
     def generate_listing(self, filename: str) -> None:
         """Generate listing file with both byte and word addresses."""
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             # Write header with column labels aligned with data columns
             f.write("BYTE     WORD     CODE            #:col    SOURCE\n")
             f.write("-" * 70 + "\n")  # Extended line to match wider format
@@ -775,13 +817,18 @@ class J1Assembler(Transformer):
         # Process instructions in order by address
         for word_addr in sorted(self.instruction_metadata.keys()):
             inst = self.instruction_metadata[word_addr]
-            
+
             # Fill gaps with zeros
             while prev_word_addr < word_addr:
                 bytecodes.append(0x0000)
                 prev_word_addr += 1
 
-            if inst.type == InstructionType.BYTE_CODE or inst.type == InstructionType.JUMP or inst.type == InstructionType.NUMBER or inst.type == InstructionType.LABEL_REF:
+            if (
+                inst.type == InstructionType.BYTE_CODE
+                or inst.type == InstructionType.JUMP
+                or inst.type == InstructionType.NUMBER
+                or inst.type == InstructionType.LABEL_REF
+            ):
                 bytecodes.append(inst.value)
                 prev_word_addr = word_addr + 1
 
@@ -793,7 +840,7 @@ class J1Assembler(Transformer):
             raise ValueError("Cannot generate output before assembling")
 
         bytecodes = self.get_bytecodes()
-        
+
         with open(output_file, "w") as f:
             for code in bytecodes:
                 print(f"{code:04x}", file=f)
@@ -838,7 +885,7 @@ class J1Assembler(Transformer):
         if word in ["i", "j", "k"]:
             # Get loop depth from control structures
             depth = self.control_structures.get_do_loop_depth()
-            
+
             if not self.control_structures.is_in_do_loop():
                 self.logger.warning(
                     f"{self.state.current_file}:{token.line}:{token.column}: "
@@ -876,11 +923,11 @@ class J1Assembler(Transformer):
             instr_text = f"CALL {word}"
             return InstructionMetadata.from_token(
                 inst_type=InstructionType.JUMP,
-                value=JUMP_OPS["CALL"],   # Corresponds to the subroutine call op-code
+                value=JUMP_OPS["CALL"],  # Corresponds to the subroutine call op-code
                 token=token,
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
-                label_name=word,          # This is the subroutine label referenced by the CALL
+                label_name=word,  # This is the subroutine label referenced by the CALL
                 instr_text=instr_text,
                 word_addr=self.addr_space.get_word_address(),
             )
@@ -924,7 +971,9 @@ class J1Assembler(Transformer):
             self.state.include_stack.append(include_stack_entry)
 
             # Set new current state
-            self.state.current_file = str(resolved_path)  # Use resolved path as current file
+            self.state.current_file = str(
+                resolved_path
+            )  # Use resolved path as current file
             self.state.source_lines = included_lines
 
             # Parse and process the included file
@@ -958,31 +1007,36 @@ class J1Assembler(Transformer):
     def org_directive(self, items):
         """Handle ORG directive with word address"""
         number = items[1]  # This should be raw_number now
-        
+
         address = number.num_value & 0xFFFF  # Ensure 16-bit
         self.addr_space.set_org(address)
-        
+
         # Create metadata with safe source line handling
         try:
-            source_line = self.state.source_lines[number.token.line - 1] if number.token.line > 0 and number.token.line <= len(self.state.source_lines) else ""
+            source_line = (
+                self.state.source_lines[number.token.line - 1]
+                if number.token.line > 0
+                and number.token.line <= len(self.state.source_lines)
+                else ""
+            )
         except IndexError:
             source_line = ""
-            
+
         # Create metadata for listing
         return InstructionMetadata(
             type=InstructionType.DIRECTIVE,
             value=address,
             token=number.token,
             filename=self.state.current_file,
-            line=number.token.line if hasattr(number.token, 'line') else 0,
-            column=number.token.column if hasattr(number.token, 'column') else 0,
+            line=number.token.line if hasattr(number.token, "line") else 0,
+            column=number.token.column if hasattr(number.token, "column") else 0,
             source_line=source_line,
             instr_text=f"ORG {number.instr_text}",
         )
 
     def _generate_unique_label(self, base: str) -> str:
         """Generate a unique temporary label for control structures."""
-        if not hasattr(self, '_label_counter'):
+        if not hasattr(self, "_label_counter"):
             self._label_counter = 0
         label_name = f"{base}_{self._label_counter}"
         self._label_counter += 1
@@ -991,15 +1045,15 @@ class J1Assembler(Transformer):
     def if_then(self, items):
         """
         Transform an IF THEN control structure.
-        
+
         Grammar rule:
             if_then: IF block THEN
-            
+
         Because the block instructions have already been assigned addresses,
-        we first determine the starting address of the block. Then, we insert a 
+        we first determine the starting address of the block. Then, we insert a
         conditional jump at that address and adjust the addresses of all block
         instructions by incrementing them by one.
-        
+
         This method generates:
         1. A conditional jump (ZJMP) inserted before the block.
         2. The adjusted block instructions.
@@ -1016,8 +1070,8 @@ class J1Assembler(Transformer):
         # Process the block instructions (they already have addresses).
         if not isinstance(block_tree, Tree):
             raise ValueError("Block tree is not a valid tree")
-        
-        block_instructions = [] 
+
+        block_instructions = []
         for instruction in block_tree.children:
             if isinstance(instruction, list):
                 block_instructions.extend(instruction)
@@ -1069,7 +1123,6 @@ class J1Assembler(Transformer):
             word_addr=end_label_addr,
         )
 
-
         # Return the complete sequence:
         # 1. The conditional jump,
         # 2. The adjusted block instructions,
@@ -1079,10 +1132,10 @@ class J1Assembler(Transformer):
     def if_else_then(self, items):
         """
         Transform an IF ELSE THEN control structure.
-        
+
         Grammar rule:
             if_else_then: IF block ELSE block THEN
-            
+
         This transformation converts:
             IF
                 true_block
@@ -1100,7 +1153,7 @@ class J1Assembler(Transformer):
             +if_end_label:         ; Continue with next instruction
             next_instr
 
-        The + indicates instructions/labels we insert. Because the block 
+        The + indicates instructions/labels we insert. Because the block
         instructions already have addresses assigned, we:
         1. Insert ZJMP before true_block (adjust true_block addresses by +1)
         2. Insert JMP after true_block
@@ -1130,7 +1183,7 @@ class J1Assembler(Transformer):
         if not isinstance(true_block_tree, Tree):
             raise ValueError("TRUE block tree is not a valid tree")
 
-        true_instructions = [] 
+        true_instructions = []
         for instruction in true_block_tree.children:
             if isinstance(instruction, list):
                 true_instructions.extend(instruction)
@@ -1150,8 +1203,8 @@ class J1Assembler(Transformer):
         # Process the block instructions (they already have addresses).
         if not isinstance(false_block_tree, Tree):
             raise ValueError("FALSE block tree is not a valid tree")
-        
-        false_instructions = [] 
+
+        false_instructions = []
         for instruction in false_block_tree.children:
             if isinstance(instruction, list):
                 false_instructions.extend(instruction)
@@ -1185,7 +1238,7 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             label_name=false_label,
             instr_text=f"ZJMP {false_label}: IF",
-            word_addr=(true_start_addr-1),
+            word_addr=(true_start_addr - 1),
         )
 
         ##############################################################################
@@ -1205,7 +1258,7 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             label_name=end_label,
             instr_text=f"JMP {end_label}: ELSE",
-            word_addr=(true_end_addr+1),
+            word_addr=(true_end_addr + 1),
         )
 
         ##############################################################################
@@ -1246,7 +1299,7 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             instr_text=f"{end_label}: THEN",
             label_name=end_label,
-            word_addr=(false_end_addr+1),
+            word_addr=(false_end_addr + 1),
         )
 
         ##############################################################################
@@ -1254,7 +1307,6 @@ class J1Assembler(Transformer):
         ##############################################################################
         self.addr_space.advance()
         self.addr_space.advance()
-
 
         ##############################################################################
         # Return the complete sequence:
@@ -1265,21 +1317,27 @@ class J1Assembler(Transformer):
         # 5. The adjusted false block instructions.
         # 6. The THEN label instruction.
         ##############################################################################
-        return [cond_jump] + true_instructions + [uncond_jump, false_label_instr] + false_instructions + [end_label_instr]
+        return (
+            [cond_jump]
+            + true_instructions
+            + [uncond_jump, false_label_instr]
+            + false_instructions
+            + [end_label_instr]
+        )
 
     def loop_until(self, items):
         """
         Transform a BEGIN ... UNTIL loop structure.
-        
+
         Grammar rule:
             loop_until: BEGIN block UNTIL
-            
+
         This transforms:
             BEGIN
                 block           ; Block leaves test condition on stack
             UNTIL
             next_instr
-            
+
         Into:
             +begin_label:
             block              ; Block code, leaves condition on stack
@@ -1287,16 +1345,16 @@ class J1Assembler(Transformer):
             next_instr
         """
         begin_token = items[0]  # BEGIN token
-        block_tree = items[1]   # block tree
+        block_tree = items[1]  # block tree
         until_token = items[2]  # UNTIL token
-        
+
         # Generate unique label for loop start
         begin_label = self._generate_unique_label("begin")
-        
+
         # Process block instructions
         if not isinstance(block_tree, Tree):
             raise ValueError("Block tree is not a valid tree")
-        
+
         block_instructions = []
         for instruction in block_tree.children:
             if isinstance(instruction, list):
@@ -1305,7 +1363,7 @@ class J1Assembler(Transformer):
                 block_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
-                
+
         # Create begin label at start of block
         begin_label_instr = InstructionMetadata.from_token(
             inst_type=InstructionType.LABEL,
@@ -1315,9 +1373,9 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             instr_text=f"{begin_label}: BEGIN",
             label_name=begin_label,
-            word_addr=block_instructions[0].word_addr
+            word_addr=block_instructions[0].word_addr,
         )
-        
+
         # Create conditional jump back to begin
         jump_instr = InstructionMetadata.from_token(
             inst_type=InstructionType.JUMP,
@@ -1327,22 +1385,22 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             label_name=begin_label,
             instr_text=f"ZJMP {begin_label}: UNTIL",
-            word_addr=block_instructions[-1].word_addr + 1
+            word_addr=block_instructions[-1].word_addr + 1,
         )
-        
+
         # Advance address space for the jump instruction
         self.addr_space.advance()
-        
+
         # Return complete sequence
         return [begin_label_instr] + block_instructions + [jump_instr]
 
     def loop_while(self, items):
         """
         Transform a BEGIN ... WHILE ... REPEAT loop structure.
-        
+
         Grammar rule:
             loop_while: BEGIN block WHILE block REPEAT
-            
+
         This transforms:
             BEGIN
                 block1          ; First block executes unconditionally
@@ -1350,7 +1408,7 @@ class J1Assembler(Transformer):
                 block2          ; Second block executes if condition is true
             REPEAT             ; Jump back to BEGIN
             next_instr
-            
+
         Into:
             +begin_label:
             block1             ; First block code
@@ -1360,22 +1418,22 @@ class J1Assembler(Transformer):
             +exit_label:       ; Target for condition == false
             next_instr
         """
-        begin_token = items[0]    # BEGIN token
-        block1_tree = items[1]    # First block tree
-        while_token = items[2]    # WHILE token
-        block2_tree = items[3]    # Second block tree
-        repeat_token = items[4]   # REPEAT token
-        
+        begin_token = items[0]  # BEGIN token
+        block1_tree = items[1]  # First block tree
+        while_token = items[2]  # WHILE token
+        block2_tree = items[3]  # Second block tree
+        repeat_token = items[4]  # REPEAT token
+
         # Generate unique labels for loop start and exit
         begin_label = self._generate_unique_label("begin")
         exit_label = self._generate_unique_label("exit")
-        
+
         ##############################################################################
         # Process block1 instructions
         ##############################################################################
         if not isinstance(block1_tree, Tree):
             raise ValueError("Block1 tree is not a valid tree")
-        
+
         block1_instructions = []
         for instruction in block1_tree.children:
             if isinstance(instruction, list):
@@ -1384,13 +1442,13 @@ class J1Assembler(Transformer):
                 block1_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
-            
+
         ##############################################################################
         # Process block2 instructions
         ##############################################################################
         if not isinstance(block2_tree, Tree):
             raise ValueError("Block2 tree is not a valid tree")
-        
+
         block2_instructions = []
         for instruction in block2_tree.children:
             if isinstance(instruction, list):
@@ -1399,11 +1457,11 @@ class J1Assembler(Transformer):
                 block2_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
-        
+
         # Increment addresses of block2 instructions by 1 to make room for the ZJMP
         for instr in block2_instructions:
             instr.word_addr += 1
-        
+
         ##############################################################################
         # Create begin label at start of block1
         ##############################################################################
@@ -1415,9 +1473,9 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             instr_text=f"{begin_label}: BEGIN",
             label_name=begin_label,
-            word_addr=block1_instructions[0].word_addr
+            word_addr=block1_instructions[0].word_addr,
         )
-        
+
         ##############################################################################
         # Create conditional jump to exit after WHILE condition
         ##############################################################################
@@ -1429,9 +1487,9 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             label_name=exit_label,
             instr_text=f"ZJMP {exit_label}: WHILE",
-            word_addr=block1_instructions[-1].word_addr + 1
+            word_addr=block1_instructions[-1].word_addr + 1,
         )
-        
+
         ##############################################################################
         # Create unconditional jump back to begin at end of block2
         ##############################################################################
@@ -1443,9 +1501,9 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             label_name=begin_label,
             instr_text=f"JMP {begin_label}: REPEAT",
-            word_addr=block2_instructions[-1].word_addr + 1
+            word_addr=block2_instructions[-1].word_addr + 1,
         )
-        
+
         ##############################################################################
         # Create exit label after the loop
         ##############################################################################
@@ -1457,13 +1515,13 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             instr_text=f"{exit_label}: END-WHILE",
             label_name=exit_label,
-            word_addr=repeat_jump.word_addr + 1
+            word_addr=repeat_jump.word_addr + 1,
         )
-        
+
         # Advance address space for both jump instructions
         self.addr_space.advance()  # For ZJMP
         self.addr_space.advance()  # For JMP
-        
+
         # Return complete sequence:
         # 1. Begin label
         # 2. Block1 instructions
@@ -1471,8 +1529,13 @@ class J1Assembler(Transformer):
         # 4. Block2 instructions
         # 5. Unconditional jump back to begin
         # 6. Exit label
-        return [begin_label_instr] + block1_instructions + [cond_jump] + \
-               block2_instructions + [repeat_jump, exit_label_instr]
+        return (
+            [begin_label_instr]
+            + block1_instructions
+            + [cond_jump]
+            + block2_instructions
+            + [repeat_jump, exit_label_instr]
+        )
 
     def do_loop(self, items):
         """Delegate DO LOOP processing to control structures handler."""
@@ -1493,10 +1556,10 @@ class J1Assembler(Transformer):
     def do_plus_loop(self, items):
         """
         Transform a DO +LOOP control structure.
-        
+
         Grammar rule:
             do_plus_loop: DO block PLUS_LOOP
-            
+
         This transforms:
         10 0 DO     ; limit=10, index=0
            block    ; Loop body
@@ -1526,15 +1589,15 @@ class J1Assembler(Transformer):
         do_token = items[0]  # DO token
         block_tree = items[1]  # block tree
         plus_loop_token = items[2]  # +LOOP token
-        
+
         # Generate unique labels for loop start and skip_swap
         do_label = self._generate_unique_label("do")
         skip_swap_label = self._generate_unique_label("skip_swap")
-        
+
         # Process block instructions
         if not isinstance(block_tree, Tree):
             raise ValueError("Block tree is not a valid tree")
-        
+
         block_instructions = []
         for instruction in block_tree.children:
             if isinstance(instruction, list):
@@ -1543,11 +1606,11 @@ class J1Assembler(Transformer):
                 block_instructions.append(instruction)
             else:
                 raise ValueError("Block instruction is not a valid instruction")
-        
+
         # Increment addresses of block instructions by 2 to make room for the >r >r setup
         for instr in block_instructions:
             instr.word_addr += 2
-        
+
         # Create setup instructions (>r >r)
         setup_instrs = [
             # >r for index
@@ -1558,7 +1621,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T[T->R]  \\ Save index to R stack",
-                word_addr=block_instructions[0].word_addr - 2
+                word_addr=block_instructions[0].word_addr - 2,
             ),
             # >r for limit
             InstructionMetadata.from_token(
@@ -1568,10 +1631,10 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T[T->R]  \\ Save limit to R stack",
-                word_addr=block_instructions[0].word_addr - 1
-            )
+                word_addr=block_instructions[0].word_addr - 1,
+            ),
         ]
-        
+
         # Create loop start label
         do_label_instr = InstructionMetadata.from_token(
             inst_type=InstructionType.LABEL,
@@ -1581,9 +1644,9 @@ class J1Assembler(Transformer):
             source_lines=self.state.source_lines,
             instr_text=f"{do_label}: DO",
             label_name=do_label,
-            word_addr=block_instructions[0].word_addr
+            word_addr=block_instructions[0].word_addr,
         )
-        
+
         # Create loop end instructions
         loop_end_instrs = [
             # r> get limit
@@ -1594,7 +1657,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="rT  \\ Get limit",
-                word_addr=block_instructions[-1].word_addr + 1
+                word_addr=block_instructions[-1].word_addr + 1,
             ),
             # r> get index
             InstructionMetadata.from_token(
@@ -1604,7 +1667,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="rT  \\ Get index",
-                word_addr=block_instructions[-1].word_addr + 2
+                word_addr=block_instructions[-1].word_addr + 2,
             ),
             # + add increment to index
             InstructionMetadata.from_token(
@@ -1614,7 +1677,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T+N  \\ Add increment to index",
-                word_addr=block_instructions[-1].word_addr + 3
+                word_addr=block_instructions[-1].word_addr + 3,
             ),
             # dup to check if increment is negative
             InstructionMetadata.from_token(
@@ -1624,7 +1687,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T[T->N,d+1]  \\ Duplicate increment",
-                word_addr=block_instructions[-1].word_addr + 4
+                word_addr=block_instructions[-1].word_addr + 4,
             ),
             # Check if increment is negative (compare with 0)
             InstructionMetadata.from_token(
@@ -1634,7 +1697,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="N<T  \\ Check if increment < 0",
-                word_addr=block_instructions[-1].word_addr + 5
+                word_addr=block_instructions[-1].word_addr + 5,
             ),
             # ZJMP to skip_swap if increment >= 0
             InstructionMetadata.from_token(
@@ -1645,7 +1708,7 @@ class J1Assembler(Transformer):
                 source_lines=self.state.source_lines,
                 label_name=skip_swap_label,
                 instr_text=f"ZJMP {skip_swap_label}  \\ Skip swap if increment >= 0",
-                word_addr=block_instructions[-1].word_addr + 6
+                word_addr=block_instructions[-1].word_addr + 6,
             ),
             # swap if increment is negative
             InstructionMetadata.from_token(
@@ -1655,7 +1718,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="N[T->N]  \\ Swap if increment negative",
-                word_addr=block_instructions[-1].word_addr + 7
+                word_addr=block_instructions[-1].word_addr + 7,
             ),
             # skip_swap label and 2dup< share the same address
             InstructionMetadata.from_token(
@@ -1666,7 +1729,7 @@ class J1Assembler(Transformer):
                 source_lines=self.state.source_lines,
                 label_name=skip_swap_label,
                 instr_text=f"{skip_swap_label}:",
-                word_addr=block_instructions[-1].word_addr + 8
+                word_addr=block_instructions[-1].word_addr + 8,
             ),
             # 2dup< at same address as label
             InstructionMetadata.from_token(
@@ -1676,7 +1739,8 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="N<T[T->N,d+1]  \\ 2dup<",
-                word_addr=block_instructions[-1].word_addr + 8  # Same address as skip_swap label
+                word_addr=block_instructions[-1].word_addr
+                + 8,  # Same address as skip_swap label
             ),
             # >r save new index
             InstructionMetadata.from_token(
@@ -1686,7 +1750,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T[T->R]  \\ Save new index back",
-                word_addr=block_instructions[-1].word_addr + 9
+                word_addr=block_instructions[-1].word_addr + 9,
             ),
             # >r save limit
             InstructionMetadata.from_token(
@@ -1696,7 +1760,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="T[T->R]  \\ Save limit back",
-                word_addr=block_instructions[-1].word_addr + 10
+                word_addr=block_instructions[-1].word_addr + 10,
             ),
             # ZJMP do_label
             InstructionMetadata.from_token(
@@ -1707,7 +1771,7 @@ class J1Assembler(Transformer):
                 source_lines=self.state.source_lines,
                 label_name=do_label,
                 instr_text=f"ZJMP {do_label}  \\ Jump if comparison true",
-                word_addr=block_instructions[-1].word_addr + 11
+                word_addr=block_instructions[-1].word_addr + 11,
             ),
             # drop (first)
             InstructionMetadata.from_token(
@@ -1717,7 +1781,7 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="N  \\ Clean up index",
-                word_addr=block_instructions[-1].word_addr + 12
+                word_addr=block_instructions[-1].word_addr + 12,
             ),
             # drop (second)
             InstructionMetadata.from_token(
@@ -1727,14 +1791,14 @@ class J1Assembler(Transformer):
                 filename=self.state.current_file,
                 source_lines=self.state.source_lines,
                 instr_text="N  \\ Clean up limit",
-                word_addr=block_instructions[-1].word_addr + 13
-            )
+                word_addr=block_instructions[-1].word_addr + 13,
+            ),
         ]
-        
+
         # Advance address space for all the instructions we added
         for _ in range(2 + len(loop_end_instrs)):  # 2 setup + loop end instructions
             self.addr_space.advance()
-        
+
         # Return complete sequence:
         # 1. Setup instructions (>r >r)
         # 2. Loop start label
@@ -1748,7 +1812,7 @@ class J1Assembler(Transformer):
         # items[1] should be COMMA token
         token = items[0]
         instr_text = f"{token},"
-        
+
         # Handle raw hex literal
         if token.type == "STACK_HEX":
             value = int(str(token)[1:], 16)
@@ -1757,11 +1821,13 @@ class J1Assembler(Transformer):
         elif token.type == "STACK_CHAR":
             token_str = str(token)
             if len(token_str) != 3:
-                raise ValueError(f"Invalid raw character literal in memory initialization: {token_str}")
+                raise ValueError(
+                    f"Invalid raw character literal in memory initialization: {token_str}"
+                )
             value = ord(token_str[1])
         else:
             raise ValueError(f"Unexpected token type: {token.type}")
-        
+
         # Create metadata and assign address
         addr = self.addr_space.advance()
         metadata = InstructionMetadata(
@@ -1776,14 +1842,22 @@ class J1Assembler(Transformer):
             word_addr=addr,
             num_value=value,
         )
-        
+
         # Add to tracked instructions
         self.instruction_metadata[addr] = metadata
         self.instructions.append(metadata)
-        
+
         # Return the metadata
         return metadata
-        
+
+    def arch_flag_directive(self, items):
+        """Handle architecture flag directives, delegating to the directives class"""
+        return self.directives.arch_flag_directive(items)
+
+    def define_directive(self, items):
+        """Handle constant definition directives, delegating to the directives class"""
+        return self.directives.define_directive(items)
+
 
 @click.command()
 @click.argument("input", type=click.Path(exists=True))
@@ -1880,9 +1954,6 @@ def main(input, output, debug, symbols, listing, include, no_stdlib):
 
             logger.debug(traceback.format_exc())
         raise click.Abort()
-
-
-
 
 
 if __name__ == "__main__":

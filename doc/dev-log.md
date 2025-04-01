@@ -1,5 +1,22 @@
 # Development Log
 
+## 2025-04-01
+
+- Create a new branch called refactor/main_faster_dir
+    - Purpose re-integrate the directives.py
+    - Test refactor/main_faster to make sure it is still main_faster
+
+
+
+## 2025-03-29
+
+- Added back directives.py
+- test_arch_flags.py passing
+- test_Define_directives.py passing
+- pytest still running fast: ~6.2 seconds on laptop
+- Work on test_files/constant.asm debug next
+- Work on pytest test_integration.py test
+
 ## 2025-03-28
 
 - Cleand up warn_ijk test so works on Windows and Linux and deals with absolute paths

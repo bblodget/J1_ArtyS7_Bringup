@@ -50,6 +50,8 @@ PLUS_LOOP.2: "+LOOP"
 
 // Add to directive tokens
 ORG.2: "ORG"
+ARCH_FLAG.2: ".arch_flag"
+DEFINE.2: ".define"
 
 // Add tick token for label referencing
 _TICK: "'"
