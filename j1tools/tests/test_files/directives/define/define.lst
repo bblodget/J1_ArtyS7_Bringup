@@ -1,9 +1,11 @@
 BYTE     WORD     CODE            #:col    SOURCE
 ----------------------------------------------------------------------
-0000     0000     ----           15:3    :main                             //  
-0000     0000     800a           16:5      #10                             //  Push MIN_VALUE (10) onto stack
-0002     0001     8064           17:5      #100                            //  Push MAX_VALUE (100) onto stack
-0004     0002     6203           18:5      T+N[d-1]                        //  Add top two stack items
-0006     0003     ----           20:3    :wait_forever                     //  
-0006     0003     6000           21:5      T[d+0]                          //  NOOP
-0008     0004     0003           22:5      JMP 'wait_forever               //  Loop forever
+0000     0000     ----           14:3    :main                             //  
+0000     0000     800a           15:5      10                              //  Push MIN_VALUE (10) onto stack
+0002     0001     8064           16:5      100                             //  Push MAX_VALUE (100) onto stack
+0004     0002     6203           17:5      T+N[d-1]                        //  Add top two stack items
+0006     0003     8041           19:5      65                              //  Push ASCII_A ('A') onto stack
+0008     0004     6203           20:5      T+N[d-1]                        //  Add top two stack items
+000a     0005     ----           22:3    :wait_forever                     //  
+000a     0005     6000           23:5      T[d+0]                          //  NOOP
+000c     0006     0005           24:5      JMP 'wait_forever               //  Loop forever

@@ -132,13 +132,14 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive )*
+program: (statement | org_directive | define_directive)*
 
 //program: program_type (_WS_REQ program_type)*
 //program_type: statement | org_directive
 
 //org_directive: ORG raw_number
 org_directive: ORG stack_number
+define_directive: DEFINE IDENT (STACK_HEX | STACK_DECIMAL | STACK_CHAR | IDENT)
 
 statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (include_stmt _WS_REQ)  | (control_structure _WS_REQ) | (memory_init_statement _WS_REQ)
 

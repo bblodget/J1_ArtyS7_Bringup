@@ -910,6 +910,21 @@ class J1Assembler(Transformer):
             else:  # k
                 return self.control_structures._generate_rstack_access(2, token)
 
+        # Check if the identifier is a defined constant
+        if self.directives.constant_exists(word):
+            # Expand as a constant
+            # Get value
+            value = self.directives.constants[word]
+            # Create the stack_number token
+            stack_number_token = Token(
+                type="STACK_DECIMAL",
+                value=value,
+                line=token.line,
+                column=token.column,
+            )
+            return self.stack_number([stack_number_token])
+            # return self.directives.expand_constant(word, token)
+
         # Check if the identifier is a defined macro
         if self.macro_processor.is_macro(word):
             # Expand as a macro

@@ -1,10 +1,26 @@
 # Development Log
 
+## 2025-04-03
+
+- refactor/main_faster_dir
+    - created test_files/directives/define/define.asm
+    - Updates asm.py to handle the define directive
+    - It is working!!
+
+## 2025-04-02
+
+- Working on the call_expr method in asm.py
+    - So now call_expr can be macro, word, or .define constant
+    - Check if identifier is a defined constant
+    - If so, expand the constant into a stack_number token
+    - Need to run debuger to see how stack_number token is defined
+
 ## 2025-04-01
 
 - Create a new branch called refactor/main_faster_dir
     - Purpose re-integrate the directives.py
     - Test refactor/main_faster to make sure it is still main_faster
+    - Discovered that running Cursor slows down pytest from 6.2 seconds to 19 seconds.
 
 
 

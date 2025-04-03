@@ -67,13 +67,13 @@ class Directives:
                 value = self.assembler.labels[value_name]
             else:
                 raise ValueError(f"Referenced constant or label '{value_name}' is not defined")
-        elif hasattr(value_item, 'type') and value_item.type == "RAW_HEX":
+        elif hasattr(value_item, 'type') and value_item.type == "STACK_HEX":
             # Hex value (remove $ prefix)
             value = int(str(value_item)[1:], 16)
-        elif hasattr(value_item, 'type') and value_item.type == "RAW_DECIMAL":
+        elif hasattr(value_item, 'type') and value_item.type == "STACK_DECIMAL":
             # Decimal value
             value = int(str(value_item), 10)
-        elif hasattr(value_item, 'type') and value_item.type == "RAW_CHAR":
+        elif hasattr(value_item, 'type') and value_item.type == "STACK_CHAR":
             # Character value
             token_str = str(value_item)
             if len(token_str) != 3:
@@ -139,3 +139,4 @@ class Directives:
     def constant_exists(self, name: str) -> bool:
         """Check if a constant with the given name exists."""
         return name in self.constants 
+    
