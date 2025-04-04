@@ -19,8 +19,8 @@ def test_define_decimal_constant():
     """Test defining a decimal constant"""
     assembler = J1Assembler(debug=False)
     
-    # Create a mock decimal item (RAW_DECIMAL)
-    value_item = MockItem("RAW_DECIMAL", "42")
+    # Create a mock decimal item (STACK_DECIMAL)
+    value_item = MockItem("STACK_DECIMAL", "42")
     
     # Manually call the define_directive method
     items = ['.define', 'ANSWER', value_item]
@@ -35,8 +35,8 @@ def test_define_hex_constant():
     """Test defining a hex constant"""
     assembler = J1Assembler(debug=False)
     
-    # Create a mock hex item (RAW_HEX)
-    value_item = MockItem("RAW_HEX", "$2A")
+    # Create a mock hex item (STACK_HEX)
+    value_item = MockItem("STACK_HEX", "$2A")
     
     # Manually call the define_directive method
     items = ['.define', 'ANSWER_HEX', value_item]
@@ -51,8 +51,8 @@ def test_define_char_constant():
     """Test defining a character constant"""
     assembler = J1Assembler(debug=False)
     
-    # Create a mock char item (RAW_CHAR)
-    value_item = MockItem("RAW_CHAR", "'A'")
+    # Create a mock char item (STACK_CHAR)
+    value_item = MockItem("STACK_CHAR", "'A'")
     
     # Manually call the define_directive method
     items = ['.define', 'ASCII_A', value_item]
@@ -68,7 +68,7 @@ def test_reference_existing_constant():
     assembler = J1Assembler(debug=False)
     
     # First define a constant
-    value_item1 = MockItem("RAW_DECIMAL", "42")
+    value_item1 = MockItem("STACK_DECIMAL", "42")
     items1 = ['.define', 'ANSWER', value_item1]
     assembler.define_directive(items1)
     
