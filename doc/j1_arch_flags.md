@@ -18,7 +18,7 @@ The J1 assembler defines standard constants for configuration options:
 
 ## Architecture Configuration
 
-Architecture flags are set using the `.arch_flag` directive:
+Architecture flags are set using the `.arch_flag` directive, which requires named constants for both the flag name and value:
 
 ```verilog
 // Configure memory access pattern
@@ -28,12 +28,28 @@ Architecture flags are set using the `.arch_flag` directive:
 .arch_flag ARCH_ALU_OPS ALU_OPS_EXTENDED
 ```
 
+Note: The `.arch_flag` directive requires named constants for both the flag name and value. Raw numbers are not allowed. This ensures type safety and makes the code more self-documenting.
+
 Each `.arch_flag` directive automatically defines a corresponding constant that can be queried in conditional code:
 
 ```verilog
 ARCH_FETCH_TYPE  // 0 = FETCH_TYPE_QUICKSTORE, 1 = FETCH_TYPE_DUALPORT
 ARCH_ALU_OPS     // 0 = ALU_OPS_ORIGINAL, 1 = ALU_OPS_EXTENDED
 ```
+
+### Default Values
+
+The assembler provides default values for architecture flags if they are not explicitly set:
+
+```verilog
+ARCH_FETCH_TYPE = 0  // Defaults to FETCH_TYPE_QUICKSTORE
+ARCH_ALU_OPS    = 0  // Defaults to ALU_OPS_ORIGINAL
+```
+
+These defaults ensure that:
+1. The assembler always has valid values for architecture flags
+2. Code will work even if architecture flags are not explicitly set
+3. The most conservative (widely compatible) options are used by default
 
 ## Memory Configuration Details
 

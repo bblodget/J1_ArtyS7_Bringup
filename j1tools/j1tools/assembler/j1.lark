@@ -140,6 +140,7 @@ program: (statement | org_directive | define_directive)*
 //org_directive: ORG raw_number
 org_directive: ORG stack_number
 define_directive: DEFINE IDENT (STACK_HEX | STACK_DECIMAL | STACK_CHAR | IDENT)
+arch_flag_directive: ARCH_FLAG IDENT IDENT
 
 statement: (label _WS_REQ) | (instruction _WS_REQ) | (macro_def _WS_REQ) | (include_stmt _WS_REQ)  | (control_structure _WS_REQ) | (memory_init_statement _WS_REQ)
 

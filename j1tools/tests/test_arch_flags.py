@@ -3,117 +3,114 @@ import pytest
 from pathlib import Path
 
 from j1tools.assembler.asm import J1Assembler
+from j1tools.assembler.directives import Directives
+from j1tools.assembler.asm_types import AssemblerState
+
 
 def test_default_arch_flags():
     """Test default architecture flags"""
-    assembler = J1Assembler(debug=False)
-    
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
     # Check default flags
-    assert assembler.arch_flags["fetch_type"] == "quickstore"
-    assert assembler.arch_flags["alu_ops"] == "extended"
-    
+    assert (
+        directives.constants["ARCH_FETCH_TYPE"] == 0
+    )  # Defaults to FETCH_TYPE_QUICKSTORE
+    assert directives.constants["ARCH_ALU_OPS"] == 0  # Defaults to ALU_OPS_ORIGINAL
+
     # Check default constants
-    assert assembler.constants["ARCH_FETCH_TYPE"] == 0
-    assert assembler.constants["ARCH_ALU_OPS"] == 1
+    assert directives.constants["FETCH_TYPE_QUICKSTORE"] == 0
+    assert directives.constants["FETCH_TYPE_DUALPORT"] == 1
+    assert directives.constants["ALU_OPS_ORIGINAL"] == 0
+    assert directives.constants["ALU_OPS_EXTENDED"] == 1
 
 
-def test_set_fetch_type_symbolic():
-    """Test setting fetch_type flag with symbolic value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'fetch_type', 'dualport']
-    assembler.arch_flag_directive(items)
-    
+def test_set_fetch_type():
+    """Test setting fetch_type flag"""
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Set fetch_type to dualport
+    items = [".arch_flag", "fetch_type", "FETCH_TYPE_DUALPORT"]
+    directives.arch_flag_directive(items)
+
     # Check flags
-    assert assembler.arch_flags["fetch_type"] == "dualport"
-    assert assembler.constants["ARCH_FETCH_TYPE"] == 1
+    assert directives.constants["ARCH_FETCH_TYPE"] == 1  # FETCH_TYPE_DUALPORT value
 
 
-def test_set_fetch_type_numeric():
-    """Test setting fetch_type flag with numeric value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'fetch_type', '1']
-    assembler.arch_flag_directive(items)
-    
+def test_set_alu_ops():
+    """Test setting alu_ops flag"""
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Set alu_ops to extended
+    items = [".arch_flag", "alu_ops", "ALU_OPS_EXTENDED"]
+    directives.arch_flag_directive(items)
+
     # Check flags
-    assert assembler.arch_flags["fetch_type"] == "dualport"
-    assert assembler.constants["ARCH_FETCH_TYPE"] == 1
-
-
-def test_set_alu_ops_symbolic():
-    """Test setting alu_ops flag with symbolic value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'alu_ops', 'original']
-    assembler.arch_flag_directive(items)
-    
-    # Check flags
-    assert assembler.arch_flags["alu_ops"] == "original"
-    assert assembler.constants["ARCH_ALU_OPS"] == 0
-
-
-def test_set_alu_ops_numeric():
-    """Test setting alu_ops flag with numeric value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'alu_ops', '0']
-    assembler.arch_flag_directive(items)
-    
-    # Check flags
-    assert assembler.arch_flags["alu_ops"] == "original"
-    assert assembler.constants["ARCH_ALU_OPS"] == 0
+    assert directives.constants["ARCH_ALU_OPS"] == 1  # ALU_OPS_EXTENDED value
 
 
 def test_invalid_flag_name():
     """Test error on invalid flag name"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'invalid_flag', 'value']
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Try to set invalid flag
+    items = [".arch_flag", "invalid_flag", "value"]
     with pytest.raises(ValueError, match="Unknown architecture flag: invalid_flag"):
-        assembler.arch_flag_directive(items)
+        directives.arch_flag_directive(items)
 
 
 def test_invalid_fetch_type_value():
     """Test error on invalid fetch_type value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'fetch_type', 'invalid_value']
-    with pytest.raises(ValueError, match="Invalid value for fetch_type"):
-        assembler.arch_flag_directive(items)
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Try to set invalid fetch_type value
+    items = [".arch_flag", "fetch_type", "INVALID_VALUE"]
+    with pytest.raises(ValueError, match="Invalid value for fetch_type: INVALID_VALUE"):
+        directives.arch_flag_directive(items)
 
 
 def test_invalid_alu_ops_value():
     """Test error on invalid alu_ops value"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items = ['.arch_flag', 'alu_ops', 'invalid_value']
-    with pytest.raises(ValueError, match="Invalid value for alu_ops"):
-        assembler.arch_flag_directive(items)
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Try to set invalid alu_ops value
+    items = [".arch_flag", "alu_ops", "INVALID_VALUE"]
+    with pytest.raises(ValueError, match="Invalid value for alu_ops: INVALID_VALUE"):
+        directives.arch_flag_directive(items)
 
 
 def test_multiple_arch_flags():
     """Test setting multiple architecture flags"""
-    assembler = J1Assembler(debug=False)
-    
-    # Manually call the arch_flag_directive method
-    items1 = ['.arch_flag', 'fetch_type', 'dualport']
-    items2 = ['.arch_flag', 'alu_ops', 'original']
-    
-    assembler.arch_flag_directive(items1)
-    assembler.arch_flag_directive(items2)
-    
+    state = AssemblerState(
+        current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
+    )
+    directives = Directives(state, debug=False)
+
+    # Set fetch_type to dualport
+    items1 = [".arch_flag", "fetch_type", "FETCH_TYPE_DUALPORT"]
+    directives.arch_flag_directive(items1)
+
+    # Set alu_ops to extended
+    items2 = [".arch_flag", "alu_ops", "ALU_OPS_EXTENDED"]
+    directives.arch_flag_directive(items2)
+
     # Check flags
-    assert assembler.arch_flags["fetch_type"] == "dualport"
-    assert assembler.arch_flags["alu_ops"] == "original"
-    
-    # Check constants
-    assert assembler.constants["ARCH_FETCH_TYPE"] == 1
-    assert assembler.constants["ARCH_ALU_OPS"] == 0 
+    assert directives.constants["ARCH_FETCH_TYPE"] == 1  # FETCH_TYPE_DUALPORT value
+    assert directives.constants["ARCH_ALU_OPS"] == 1  # ALU_OPS_EXTENDED value

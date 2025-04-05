@@ -95,24 +95,8 @@ class J1Assembler(Transformer):
         # Initialize control structures handler
         self.control_structures = ControlStructures(self.state, self.addr_space, debug)
 
-        # Directive data structures
-
-        # Architecture flags
-        self.arch_flags = {
-            "fetch_type": "quickstore",  # Default to quickstore
-            "alu_ops": "extended",  # Default to extended ALU
-        }
-
-        # Architecture constants - automatically defined based on flags
-        self.constants = {
-            "ARCH_FETCH_TYPE": 0,  # 0 = quickstore, 1 = dualport
-            "ARCH_ALU_OPS": 1,  # 0 = original, 1 = extended
-        }
-
         # Instantiate Directives
-        self.directives = Directives(
-            self.state, self.arch_flags, self.constants, debug=debug
-        )
+        self.directives = Directives(self.state, debug=debug)
         self.directives.set_assembler(self)
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
