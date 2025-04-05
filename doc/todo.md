@@ -280,7 +280,7 @@
 ## Next
  - [ ] Make sure we have all the functionality from refactor/code_cleanup branch
    - [ ] Add architecture flag support (.arch_flag directive)
-   - [ ] Add define support (.define directive)
+   - [x] Add define support (.define directive)
    - [ ] Update grammar and assembler implementation
  - [ ] Need profile stuff
  - [ ] Need all the tests

@@ -5,6 +5,7 @@ Based on instructionset-16kb-dualport.fs
 
 # ALU Operations (base operations without stack effects)
 ALU_OPS = {
+    # Basic operations ALU_OPS_ORIGINAL
     "T": 0x0000,
     "N": 0x0100,
     "T+N": 0x0200,
@@ -22,6 +23,7 @@ ALU_OPS = {
     "status": 0x0E00,
     "Nu<T": 0x0F00,
     # Specials for HX8K
+    # Extended ops ALU_OPS_EXTENDED
     "NlshiftT": 0x1000,
     "NrshiftT": 0x1100,
     "NarshiftT": 0x1200,
