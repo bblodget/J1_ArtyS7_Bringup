@@ -292,12 +292,20 @@ loop_op: LOOP
 plus_loop_op: PLUS_LOOP
 
 // Conditional directives
-if_directive: IF_DIRECTIVE IDENT EQUALS IDENT block ENDIF_DIRECTIVE
-            | IF_DIRECTIVE IDENT EQUALS IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
+if_directive: IF_DIRECTIVE IDENT EQUALS IDENT directive_true_block ENDIF_DIRECTIVE
+//            | IF_DIRECTIVE IDENT EQUALS IDENT directive_true_block ELSE_DIRECTIVE directive_false_block ENDIF_DIRECTIVE
 
-ifdef_directive: IFDEF_DIRECTIVE IDENT block ENDIF_DIRECTIVE
-               | IFDEF_DIRECTIVE IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
+ifdef_directive: IFDEF_DIRECTIVE IDENT directive_true_block ENDIF_DIRECTIVE
+               | IFDEF_DIRECTIVE IDENT directive_true_block ELSE_DIRECTIVE directive_false_block ENDIF_DIRECTIVE
 
-ifndef_directive: IFNDEF_DIRECTIVE IDENT block ENDIF_DIRECTIVE
-                | IFNDEF_DIRECTIVE IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
+ifndef_directive: IFNDEF_DIRECTIVE IDENT directive_true_block ENDIF_DIRECTIVE
+                | IFNDEF_DIRECTIVE IDENT directive_true_block ELSE_DIRECTIVE directive_false_block ENDIF_DIRECTIVE
+
+// Define directive blocks
+directive_true_block: (directive_block_item)+
+directive_false_block: (directive_block_item)+
+
+?directive_block_item: instruction
+                    | label
+                    | control_structure
 

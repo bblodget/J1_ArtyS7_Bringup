@@ -154,3 +154,13 @@ class Directives:
     def constant_exists(self, name: str) -> bool:
         """Check if a constant with the given name exists."""
         return name in self.constants
+
+    def process_if_directive(self, items: List[Any]) -> None:
+        """Process .if directive with equality comparison.
+
+        Args:
+            items: List containing [".if", left_operand, "==", right_operand, block]
+        """
+        # For now, just log that we received the directive
+        self.logger.debug(f"Received .if directive: {items}")
+        # TODO: Implement actual conditional processing

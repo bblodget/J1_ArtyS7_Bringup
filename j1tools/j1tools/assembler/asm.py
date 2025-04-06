@@ -1854,8 +1854,16 @@ class J1Assembler(Transformer):
         return self.directives.arch_flag_directive(items)
 
     def define_directive(self, items):
-        """Handle constant definition directives, delegating to the directives class"""
-        return self.directives.define_directive(items)
+        """Handle .define directive"""
+        self.directives.define_directive(items)
+
+    def if_directive(self, items):
+        """Handle .if directive with equality comparison.
+
+        Args:
+            items: List containing [".if", left_operand, "==", right_operand, block]
+        """
+        self.directives.process_if_directive(items)
 
 
 @click.command()

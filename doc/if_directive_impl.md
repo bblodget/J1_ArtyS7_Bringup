@@ -13,32 +13,72 @@ This document outlines the step-by-step implementation plan for adding condition
   - `.ifdef`
   - `.ifndef`
 - Add grammar rules for conditional blocks
-- Add grammar rules for conditional expressions
+- Add grammar rules for equality comparison expressions
 - Test point: Run `pytest tests/test_assembler.py` to verify grammar changes
 
-### Step 2: Expression Evaluation
+### Step 2: Basic Directive Stub
+- Add implementation for `if_directive` in `J1Assembler` class
+    - Ade a new method `process_if_directive` in the `Directives` class
+        - This method will be called by the if_directive method in the `J1Assembler` class
+        - This method can be a stub for now.
+- Ensure the stub doesn't break existing functionality
+- Test point: Run `pytest tests/test_assembler.py` to verify no regressions
+
+### Step 2.5: Conditional Block Handling Strategy
+- Update grammar to use `directive_true_block` and `directive_false_block` instead of `block`
+- Add state tracking in `Directives` class to handle conditional blocks
+- When processing `.if` directive:
+  - Store the condition and block
+  - Use `undo_advance()` to roll back any address allocation
+  - Mark instructions in the block as not yet placed
+- When processing `.endif`:
+  - Evaluate the condition
+  - If true, process the block and allocate addresses
+  - If false, skip the block
+- This approach is similar to how macros handle block processing
+- Test point: Run `pytest tests/test_assembler.py` to verify block handling
+
+### Step 3: Implement the `process_if_directive` method
+
+Implement the `process_if_directive` method in the `Directives` class
+
+Example items value.  This is from the conditional.asm test case. Here are the Tokens in the items list:
+
+0: Token('IF_DIRECTIVE', '.if')
+1: Token('IDENT', 'TEST_CONST')
+2: Token('EQUALS', '==')
+3: Token('IDENT', '42')
+4: Token('BLOCK', 'block')
+5: Token('ENDIF_DIRECTIVE', '.endif')
+
+We should update our items type hint in asm.py:if_directive and directives.py:process_if_directive to be a List of Tokens.
+
+
+
+
+### Step 4: Expression Evaluation
 - Add expression evaluation support to `Directives` class
 - Support only equality comparison expressions (e.g., "a == b")
 - Support constant substitution in expressions
 - Test point: Run `pytest tests/test_assembler.py` to verify expression handling
 
-### Step 3: Conditional Block Processing
+### Step 5: Basic Conditional Processing
 - Add conditional block state tracking to `J1Assembler`
 - Implement basic `.if` directive processing
 - Implement `.endif` directive processing
 - Test point: Run `pytest tests/test_assembler.py` to verify basic conditional processing
 
-### Step 4: Else Clause Support
+### Step 6: Else Clause Support
 - Add `.else` directive processing
 - Handle nested conditionals
 - Test point: Run `pytest tests/test_assembler.py` to verify else clause handling
 
-### Step 5: Ifdef/Ifndef Support
+### Step 7: Ifdef/Ifndef Support
 - Add `.ifdef` directive processing
 - Add `.ifndef` directive processing
 - Test point: Run `pytest tests/test_assembler.py` to verify ifdef/ifndef handling
 
-### Step 6: Integration Testing
+### Step 8: Integration Testing
 - Add comprehensive test cases for all conditional directives
 - Test nested conditionals
 - Test equality comparison expressions
