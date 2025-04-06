@@ -52,6 +52,11 @@ PLUS_LOOP.2: "+LOOP"
 ORG.2: "ORG"
 ARCH_FLAG.2: ".arch_flag"
 DEFINE.2: ".define"
+IF_DIRECTIVE.2: ".if"
+ELSE_DIRECTIVE.2: ".else"
+ENDIF_DIRECTIVE.2: ".endif"
+IFDEF_DIRECTIVE.2: ".ifdef"
+IFNDEF_DIRECTIVE.2: ".ifndef"
 
 // Add tick token for label referencing
 _TICK: "'"
@@ -67,6 +72,7 @@ COLON: ":"
 LBRACKET: "["
 RBRACKET: "]"
 COMMA.2: ","
+EQUALS.2: "=="
 
 // Macro tokens
 MACRO.2: "macro:"
@@ -132,7 +138,7 @@ R_MINUS_2: "r-2"
 
 // Program structure
 ?start: program
-program: (statement | org_directive | define_directive | arch_flag_directive)*
+program: (statement | org_directive | define_directive | arch_flag_directive | if_directive | ifdef_directive | ifndef_directive)*
 
 //program: program_type (_WS_REQ program_type)*
 //program_type: statement | org_directive
@@ -284,4 +290,14 @@ block: (block_item)+
 do_op: DO
 loop_op: LOOP
 plus_loop_op: PLUS_LOOP
+
+// Conditional directives
+if_directive: IF_DIRECTIVE IDENT EQUALS IDENT block ENDIF_DIRECTIVE
+            | IF_DIRECTIVE IDENT EQUALS IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
+
+ifdef_directive: IFDEF_DIRECTIVE IDENT block ENDIF_DIRECTIVE
+               | IFDEF_DIRECTIVE IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
+
+ifndef_directive: IFNDEF_DIRECTIVE IDENT block ENDIF_DIRECTIVE
+                | IFNDEF_DIRECTIVE IDENT block ELSE_DIRECTIVE block ENDIF_DIRECTIVE
 

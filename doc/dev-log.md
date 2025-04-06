@@ -1,5 +1,11 @@
 # Development Log
 
+## 2025-04-06
+
+- Was working on the refactor/main_faster_dir branch
+- Creating new branch called feature/if_directive
+
+
 ## 2025-04-03
 
 - refactor/main_faster_dir
