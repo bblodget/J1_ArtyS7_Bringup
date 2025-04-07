@@ -25,9 +25,9 @@ STACK_COMMENT: /\([^)]*\)/
 //STACK_DECIMAL: /#-?[0-9]+/
 //STACK_CHAR: /#'[^']'/
 
-STACK_HEX: /\$[0-9a-fA-F]+/
-STACK_DECIMAL: /-?[0-9]+/
-STACK_CHAR: /'[^']'/
+STACK_HEX.2: /\$[0-9a-fA-F]+/
+STACK_DECIMAL.2: /-?[0-9]+/
+STACK_CHAR.2: /'[^']'/
 
 //RAW_HEX: /\$[0-9a-fA-F]+/
 //RAW_DECIMAL: /-?[0-9]+/
@@ -62,7 +62,8 @@ IFNDEF_DIRECTIVE.2: ".ifndef"
 _TICK: "'"
 
 // Simplified IDENT pattern to allow identifiers to start with letters, numbers, or symbols
-IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+//IDENT: /(?!\/\/)[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
+IDENT: /(?!\/\/)[0-9]*[0-9a-zA-Z_!@#$%^&*\+\-=<>,.\?\/\\|~;>]+/
 
 // Add string literal support for includes
 STRING: /"[^"]*"/
@@ -110,9 +111,9 @@ THIRD_OS: "3OS"
 MEM_T: "mem[T]"
 
 // Jump Operations
-JMP: "JMP"
-ZJMP: "ZJMP"
-CALL: "CALL"
+JMP.2: "JMP"
+ZJMP.2: "ZJMP"
+CALL.2: "CALL"
 
 // Stack Effect Modifiers
 T_TO_N: "T->N"
@@ -292,7 +293,7 @@ loop_op: LOOP
 plus_loop_op: PLUS_LOOP
 
 // Conditional directives
-if_directive: IF_DIRECTIVE IDENT EQUALS IDENT directive_true_block ENDIF_DIRECTIVE
+if_directive: IF_DIRECTIVE IDENT EQUALS (STACK_DECIMAL | STACK_HEX | IDENT) directive_true_block ENDIF_DIRECTIVE
 //            | IF_DIRECTIVE IDENT EQUALS IDENT directive_true_block ELSE_DIRECTIVE directive_false_block ENDIF_DIRECTIVE
 
 ifdef_directive: IFDEF_DIRECTIVE IDENT directive_true_block ENDIF_DIRECTIVE

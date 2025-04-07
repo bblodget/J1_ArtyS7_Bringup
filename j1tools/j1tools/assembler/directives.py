@@ -36,6 +36,10 @@ class Directives:
         self.constants["ARCH_FETCH_TYPE"] = 0
         self.constants["ARCH_ALU_OPS"] = 0
 
+        # Conditional block state
+        self.conditional_blocks = []  # Stack of conditional blocks
+        self.current_block = None  # Current block being processed
+
     def set_assembler(self, assembler):
         """Set a reference to the assembler for accessing labels"""
         self.assembler = assembler
@@ -155,12 +159,69 @@ class Directives:
         """Check if a constant with the given name exists."""
         return name in self.constants
 
-    def process_if_directive(self, items: List[Any]) -> None:
+    def process_if_directive(
+        self, items: List[Any]
+    ) -> Optional[List[InstructionMetadata]]:
         """Process .if directive with equality comparison.
 
         Args:
-            items: List containing [".if", left_operand, "==", right_operand, block]
+            items: List containing [".if", left_operand, "==", right_operand, directive_true_block, ".endif"]
+
+        Returns:
+            List of InstructionMetadata objects if condition is true, None if false
         """
-        # For now, just log that we received the directive
-        self.logger.debug(f"Received .if directive: {items}")
-        # TODO: Implement actual conditional processing
+        # Extract condition parts
+        left_operand = str(items[1])
+        right_operand = str(items[3])
+        block = items[4]  # This is the directive_true_block
+
+        # Get the value of the left operand (must be an identifier)
+        left_value = self.constants.get(left_operand)
+        if left_value is None:
+            raise ValueError(f"Undefined constant in condition: {left_operand}")
+
+        # Get the value of the right operand (can be identifier or literal)
+        if hasattr(items[3], "type"):
+            if items[3].type == "IDENT":
+                # Right operand is an identifier
+                right_value = self.constants.get(right_operand)
+                if right_value is None:
+                    raise ValueError(
+                        f"Undefined constant in condition: {right_operand}"
+                    )
+            elif items[3].type == "STACK_HEX":
+                # Right operand is a hex literal (remove $ prefix)
+                right_value = int(right_operand[1:], 16)
+            elif items[3].type == "STACK_DECIMAL":
+                # Right operand is a decimal literal
+                right_value = int(right_operand, 10)
+            else:
+                raise ValueError(f"Invalid right operand type: {items[3].type}")
+        else:
+            # Try to interpret as a raw value
+            try:
+                right_value = int(right_operand, 0)
+            except ValueError:
+                raise ValueError(f"Invalid right operand value: {right_operand}")
+
+        # If condition is true, process the block and return instructions
+        if left_value == right_value:
+            self.logger.debug(
+                f"Condition true, processing block: {left_operand} == {right_operand}"
+            )
+            instructions = []
+            # Process each item in the block
+            for item in block.children:
+                if isinstance(item, InstructionMetadata):
+                    instructions.append(item)
+                else:
+                    # Throw an error for any other type of item
+                    raise ValueError(f"Invalid item type in directive block: {type(item)}")
+            return instructions
+        else:
+            self.logger.debug(
+                f"Condition false, skipping block: {left_operand} == {right_operand}"
+            )
+            # undo the advance for the count of instructions in the block
+            self.assembler.undo_advance(len(instructions))
+            return None

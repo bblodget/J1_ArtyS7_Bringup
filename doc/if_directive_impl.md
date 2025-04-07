@@ -27,16 +27,26 @@ This document outlines the step-by-step implementation plan for adding condition
 ### Step 2.5: Conditional Block Handling Strategy
 - Update grammar to use `directive_true_block` and `directive_false_block` instead of `block`
 - Add state tracking in `Directives` class to handle conditional blocks
-- When processing `.if` directive:
-  - Store the condition and block
-  - Use `undo_advance()` to roll back any address allocation
-  - Mark instructions in the block as not yet placed
-- When processing `.endif`:
+- In `process_if_directive`:
+  - Extract condition parts (left_operand, right_operand)
+  - Get the directive_true_block
   - Evaluate the condition
-  - If true, process the block and allocate addresses
-  - If false, skip the block
+  - If true:
+    - Process the block and allocate addresses
+  - If false:
+    - Skip the block
 - This approach is similar to how macros handle block processing
 - Test point: Run `pytest tests/test_assembler.py` to verify block handling
+
+Example items value.  This is from the conditional.asm test case. Here is the items list
+that is passed to process_if_directive:
+
+0: Token('IF_DIRECTIVE', '.if')
+1: Token('IDENT', 'TEST_CONST')
+2: Token('EQUALS', '==')
+3: Token('IDENT', '42')
+4: Tree(Token('RULE', 'directive_true_block'),[instruction:]BYTE_CODE 1, instruction:JUMP CALL JMP, instruction:LABEL_REF 'wait_forever])
+5: Token('ENDIF_DIRECTIVE', '.endif')
 
 ### Step 3: Implement the `process_if_directive` method
 

@@ -15,7 +15,7 @@ from .instructionset_16kb_dualport import (
     JUMP_OPS,
 )
 import click
-from typing import List, Tuple, Dict, Optional, Union
+from typing import List, Tuple, Dict, Optional, Union, Any
 from .asm_types import (
     InstructionType,
     InstructionMetadata,
@@ -1857,13 +1857,16 @@ class J1Assembler(Transformer):
         """Handle .define directive"""
         self.directives.define_directive(items)
 
-    def if_directive(self, items):
-        """Handle .if directive with equality comparison.
+    def if_directive(self, items: List[Any]) -> Optional[List[InstructionMetadata]]:
+        """Process .if directive.
 
         Args:
-            items: List containing [".if", left_operand, "==", right_operand, block]
+            items: List containing [".if", left_operand, "==", right_operand, directive_true_block, ".endif"]
+
+        Returns:
+            List of InstructionMetadata objects if condition is true, None if false
         """
-        self.directives.process_if_directive(items)
+        return self.directives.process_if_directive(items)
 
 
 @click.command()
