@@ -4,7 +4,15 @@
 
 - Was working on the refactor/main_faster_dir branch
 - Creating new branch called feature/if_directive
-
+- Implemented conditional assembly directives:
+  - Added grammar rules for .if, .else, .endif, .ifdef, .ifndef
+  - Created process_if_directive method in Directives class
+  - Added support for equality comparison expressions
+  - Implemented conditional block handling with proper address space management
+  - Added test cases for conditional assembly functionality
+  - Verified correct handling of true/false branches
+  - Added proper error handling for undefined constants
+  - Documented implementation in if_directive_impl.md
 
 ## 2025-04-03
 
