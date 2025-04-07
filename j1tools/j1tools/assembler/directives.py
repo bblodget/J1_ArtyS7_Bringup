@@ -2,13 +2,21 @@
 
 import logging
 from typing import List, Dict, Any, Optional, Union
-from .asm_types import AssemblerState, InstructionMetadata, InstructionType
+from .asm_types import (
+    AssemblerState,
+    InstructionMetadata,
+    InstructionType,
+)
+from .address_space import AddressSpace
 import re
 
 
 class Directives:
-    def __init__(self, state: AssemblerState, debug: bool = False):
+    def __init__(
+        self, state: AssemblerState, addr_space: AddressSpace, debug: bool = False
+    ):
         self.state = state
+        self.addr_space = addr_space
         self.logger = logging.getLogger("j1asm.directives")
         if debug:
             self.logger.setLevel(logging.DEBUG)
@@ -216,12 +224,17 @@ class Directives:
                     instructions.append(item)
                 else:
                     # Throw an error for any other type of item
-                    raise ValueError(f"Invalid item type in directive block: {type(item)}")
+                    raise ValueError(
+                        f"Invalid item type in directive block: {type(item)}"
+                    )
             return instructions
         else:
             self.logger.debug(
                 f"Condition false, skipping block: {left_operand} == {right_operand}"
             )
-            # undo the advance for the count of instructions in the block
-            self.assembler.undo_advance(len(instructions))
+            # Count how many instructions we would have processed
+            instruction_count = len(block.children)
+            # Undo the address space advance for the skipped instructions
+            for _ in range(instruction_count):
+                self.addr_space.undo_advance()
             return None

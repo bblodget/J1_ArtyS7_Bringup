@@ -1,2 +1,4 @@
 0000 main
-0003 wait_forever
+0000 positive_test
+0003 negative_test
+0004 wait_forever

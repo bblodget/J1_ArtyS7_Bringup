@@ -11,9 +11,19 @@
     .define ANOTHER_CONST 100
 
     // Test .if with equality expressions
+: positive_test
     .if TEST_CONST == 42
         // This should be assembled
-        1
+        42
+        JMP 'negative_test
+    .endif
+
+    0
+
+: negative_test
+    .if TEST_CONST == 43
+        // This should not be assembled
+        43
         JMP 'wait_forever
     .endif
 

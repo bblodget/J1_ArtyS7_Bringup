@@ -96,7 +96,7 @@ class J1Assembler(Transformer):
         self.control_structures = ControlStructures(self.state, self.addr_space, debug)
 
         # Instantiate Directives
-        self.directives = Directives(self.state, debug=debug)
+        self.directives = Directives(self.state, self.addr_space, debug=debug)
         self.directives.set_assembler(self)
 
     def parse(self, source: str, filename: str = "<unknown>") -> Tree:
