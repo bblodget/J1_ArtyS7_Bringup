@@ -5,6 +5,7 @@ from pathlib import Path
 from j1tools.assembler.asm import J1Assembler
 from j1tools.assembler.directives import Directives
 from j1tools.assembler.asm_types import AssemblerState
+from j1tools.assembler.address_space import AddressSpace
 
 
 def test_default_arch_flags():
@@ -12,7 +13,8 @@ def test_default_arch_flags():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Check default flags
     assert (
@@ -32,7 +34,8 @@ def test_set_fetch_type():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Set fetch_type to dualport
     items = [".arch_flag", "fetch_type", "FETCH_TYPE_DUALPORT"]
@@ -47,7 +50,8 @@ def test_set_alu_ops():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Set alu_ops to extended
     items = [".arch_flag", "alu_ops", "ALU_OPS_EXTENDED"]
@@ -62,7 +66,8 @@ def test_invalid_flag_name():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Try to set invalid flag
     items = [".arch_flag", "invalid_flag", "value"]
@@ -75,7 +80,8 @@ def test_invalid_fetch_type_value():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Try to set invalid fetch_type value
     items = [".arch_flag", "fetch_type", "INVALID_VALUE"]
@@ -88,7 +94,8 @@ def test_invalid_alu_ops_value():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Try to set invalid alu_ops value
     items = [".arch_flag", "alu_ops", "INVALID_VALUE"]
@@ -101,7 +108,8 @@ def test_multiple_arch_flags():
     state = AssemblerState(
         current_file="<unknown>", include_paths=[], include_stack=[], source_lines=[]
     )
-    directives = Directives(state, debug=False)
+    addr_space = AddressSpace()
+    directives = Directives(state, addr_space, debug=False)
 
     # Set fetch_type to dualport
     items1 = [".arch_flag", "fetch_type", "FETCH_TYPE_DUALPORT"]
